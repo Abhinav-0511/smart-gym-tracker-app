@@ -1,0 +1,75 @@
+import type { AchievementDefinition } from "@/types/achievement";
+
+export const achievementDefinitions = [
+  {
+    key: "first_workout",
+    title: "First Workout",
+    description: "Complete your first workout",
+    icon: "\u{1F3CB}\u{FE0F}",
+    category: "milestones",
+    metric: "completedWorkouts",
+    target: 1,
+  },
+  {
+    key: "beast_mode",
+    title: "Beast Mode",
+    description: "Complete 100 workouts",
+    icon: "\u{1F981}",
+    category: "milestones",
+    metric: "completedWorkouts",
+    target: 100,
+  },
+  {
+    key: "week_warrior",
+    title: "Week Warrior",
+    description: "Train 7 days in a row",
+    icon: "\u{1F525}",
+    category: "consistency",
+    metric: "longestStreak",
+    target: 7,
+  },
+  {
+    key: "iron_will",
+    title: "Iron Will",
+    description: "Reach a 30-day workout streak",
+    icon: "\u{26A1}",
+    category: "consistency",
+    metric: "longestStreak",
+    target: 30,
+  },
+  {
+    key: "pr_crusher",
+    title: "PR Crusher",
+    description: "Set 5 personal records",
+    icon: "\u{1F3C6}",
+    category: "strength",
+    metric: "personalRecords",
+    target: 5,
+  },
+  {
+    key: "centurion",
+    title: "Centurion",
+    description: "Bench press 100 kg",
+    icon: "\u{1F4AA}",
+    category: "strength",
+    metric: "benchPressBestKg",
+    target: 100,
+    unit: "kg",
+  },
+  {
+    key: "tracking_started",
+    title: "Tracking Started",
+    description: "Log your first body-weight entry",
+    icon: "\u{2696}\u{FE0F}",
+    category: "tracking",
+    metric: "bodyWeightEntries",
+    target: 1,
+  },
+] as const satisfies readonly AchievementDefinition[];
+
+export const achievementCategoryLabels = {
+  milestones: "Milestones",
+  consistency: "Consistency",
+  strength: "Strength",
+  tracking: "Tracking",
+} as const;

@@ -7,15 +7,9 @@ import PlanPage from "./PlanPage";
 import PRsPage from "./PRsPage";
 import ProgressPage from "./ProgressPage";
 import ProfilePage from "./ProfilePage";
-import AuthPage from "./AuthPage";
 
 const Index = () => {
   const [activePage, setActivePage] = useState("home");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  if (!isAuthenticated) {
-    return <AuthPage onLogin={() => setIsAuthenticated(true)} />;
-  }
 
   const renderPage = () => {
     switch (activePage) {
@@ -30,7 +24,7 @@ const Index = () => {
       case "progress":
         return <ProgressPage />;
       case "profile":
-        return <ProfilePage onNavigate={setActivePage} />;
+        return <ProfilePage />;
       default:
         return <DashboardPage onNavigate={setActivePage} />;
     }

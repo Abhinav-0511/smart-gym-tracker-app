@@ -1,4 +1,7 @@
 import { Home, Dumbbell, Calendar, Trophy, User, BarChart3, Flame } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { formatProfileValue, getProfileInitials } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 interface SidebarNavProps {
@@ -15,8 +18,12 @@ const navItems = [
   { id: "profile", label: "Profile", icon: User },
 ];
 
-const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => (
-  <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 glass border-r border-[hsl(var(--glass-border))] z-40">
+const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
+  const { profile } = useAuth();
+  const fullName = profile?.full_name ?? "FitTrack Member";
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 glass border-r border-[hsl(var(--glass-border))] z-40">
     <div className="p-6">
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
@@ -45,17 +52,23 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => (
     <div className="p-4">
       <div className="glass-card p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-            AJ
-          </div>
+          <Avatar>
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt={fullName} />
+            <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">
+              {getProfileInitials(fullName)}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <p className="text-sm font-medium text-foreground">Alex Johnson</p>
-            <p className="text-xs text-muted-foreground">Intermediate</p>
+            <p className="text-sm font-medium text-foreground line-clamp-1">{fullName}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatProfileValue(profile?.experience_level ?? null)}
+            </p>
           </div>
         </div>
       </div>
     </div>
-  </aside>
-);
+    </aside>
+  );
+};
 
 export default SidebarNav;
