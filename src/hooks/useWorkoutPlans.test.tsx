@@ -10,6 +10,9 @@ const serviceMocks = vi.hoisted(() => ({
   activateWorkoutPlan: vi.fn(),
   addPlanExercise: vi.fn(),
   addPlanSet: vi.fn(),
+  createWorkoutPlan: vi.fn(),
+  createWorkoutPlanDay: vi.fn(),
+  createExerciseCatalogItem: vi.fn(),
   deleteWorkoutPlan: vi.fn(),
   fetchExerciseCatalog: vi.fn(),
   fetchWorkoutPlans: vi.fn(),
@@ -22,6 +25,10 @@ const serviceMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/services/workout-plans", () => serviceMocks);
+vi.mock("@/services/exercise-catalog", () => ({
+  createExerciseCatalogItem: serviceMocks.createExerciseCatalogItem,
+  fetchExerciseCatalog: serviceMocks.fetchExerciseCatalog,
+}));
 
 const plans: WorkoutPlan[] = [
   {
@@ -92,6 +99,15 @@ describe("useWorkoutPlans", () => {
     serviceMocks.updateWorkoutPlanDay.mockResolvedValue(undefined);
     serviceMocks.activateWorkoutPlan.mockResolvedValue(undefined);
     serviceMocks.addPlanExercise.mockResolvedValue(undefined);
+    serviceMocks.createWorkoutPlan.mockResolvedValue("plan-3");
+    serviceMocks.createWorkoutPlanDay.mockResolvedValue("day-2");
+    serviceMocks.createExerciseCatalogItem.mockResolvedValue({
+      id: "exercise-3",
+      name: "Machine Chest Press",
+      category: "other",
+      equipment: null,
+      usesBodyweight: false,
+    });
     serviceMocks.removePlanExercise.mockResolvedValue(undefined);
     serviceMocks.reorderPlanExercises.mockResolvedValue(undefined);
     serviceMocks.updatePlanSet.mockResolvedValue(undefined);
@@ -127,6 +143,48 @@ describe("useWorkoutPlans", () => {
     expect(serviceMocks.updateWorkoutPlan).toHaveBeenCalledWith("plan-1", {
       name: "Updated Plan",
     });
+  });
+
+  it("creates a plan and a workout day", async () => {
+    const { result } = renderHook(() => useWorkoutPlans("user-1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.plansQuery.isSuccess).toBe(true));
+    await act(() => result.current.createPlanMutation.mutateAsync("New Plan"));
+    await act(() =>
+      result.current.createDayMutation.mutateAsync({
+        planId: "plan-3",
+        dayOfWeek: 1,
+        workoutType: "Push",
+      }),
+    );
+
+    expect(serviceMocks.createWorkoutPlan).toHaveBeenCalledWith(
+      "user-1",
+      "New Plan",
+    );
+    expect(serviceMocks.createWorkoutPlanDay).toHaveBeenCalledWith(
+      "plan-3",
+      1,
+      "Push",
+    );
+  });
+
+  it("creates an exercise and refreshes the shared catalog", async () => {
+    const { result } = renderHook(() => useWorkoutPlans("user-1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.catalogQuery.isSuccess).toBe(true));
+    await act(() =>
+      result.current.createExerciseMutation.mutateAsync("Machine Chest Press"),
+    );
+
+    expect(serviceMocks.createExerciseCatalogItem).toHaveBeenCalledWith(
+      "Machine Chest Press",
+    );
+    expect(serviceMocks.fetchExerciseCatalog).toHaveBeenCalledTimes(2);
   });
 
   it("reorders exercises", async () => {

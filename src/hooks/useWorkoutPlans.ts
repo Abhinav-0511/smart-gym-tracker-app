@@ -9,8 +9,9 @@ import {
   activateWorkoutPlan,
   addPlanExercise,
   addPlanSet,
+  createWorkoutPlan,
+  createWorkoutPlanDay,
   deleteWorkoutPlan,
-  fetchExerciseCatalog,
   fetchWorkoutPlans,
   removePlanExercise,
   removePlanSet,
@@ -19,7 +20,15 @@ import {
   updateWorkoutPlan,
   updateWorkoutPlanDay,
 } from "@/services/workout-plans";
-import type { PlannedSetUpdate, WorkoutPlan } from "@/types/workout-plan";
+import {
+  createExerciseCatalogItem,
+  fetchExerciseCatalog,
+} from "@/services/exercise-catalog";
+import type {
+  ExerciseCatalogItem,
+  PlannedSetUpdate,
+  WorkoutPlan,
+} from "@/types/workout-plan";
 
 export const workoutPlanKeys = {
   all: ["workout-plans"] as const,
@@ -49,6 +58,41 @@ export function useWorkoutPlans(userId: string | undefined) {
     queryFn: fetchExerciseCatalog,
     staleTime: 1000 * 60 * 30,
     enabled: Boolean(userId),
+  });
+
+  const createExerciseMutation = useMutation({
+    mutationFn: createExerciseCatalogItem,
+    onSuccess: async (createdExercise) => {
+      queryClient.setQueryData<ExerciseCatalogItem[]>(
+        workoutPlanKeys.catalog,
+        (catalog = []) =>
+          [
+            ...catalog.filter((exercise) => exercise.id !== createdExercise.id),
+            createdExercise,
+          ].sort((left, right) => left.name.localeCompare(right.name)),
+      );
+      await queryClient.invalidateQueries({
+        queryKey: workoutPlanKeys.catalog,
+      });
+    },
+  });
+
+  const createPlanMutation = useMutation({
+    mutationFn: (name: string) => createWorkoutPlan(resolvedUserId, name),
+    onSuccess: () => invalidatePlans(queryClient, resolvedUserId),
+  });
+
+  const createDayMutation = useMutation({
+    mutationFn: ({
+      planId,
+      dayOfWeek,
+      workoutType,
+    }: {
+      planId: string;
+      dayOfWeek: number;
+      workoutType: string;
+    }) => createWorkoutPlanDay(planId, dayOfWeek, workoutType),
+    onSuccess: () => invalidatePlans(queryClient, resolvedUserId),
   });
 
   const updatePlanMutation = useMutation({
@@ -165,6 +209,9 @@ export function useWorkoutPlans(userId: string | undefined) {
   return {
     plansQuery,
     catalogQuery,
+    createExerciseMutation,
+    createPlanMutation,
+    createDayMutation,
     updatePlanMutation,
     updateDayMutation,
     activatePlanMutation,

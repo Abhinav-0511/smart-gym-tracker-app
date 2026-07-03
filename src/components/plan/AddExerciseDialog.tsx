@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { useState } from "react";
 
+import ExercisePicker from "@/components/exercises/ExercisePicker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,13 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { ExerciseCatalogItem } from "@/types/workout-plan";
 
 interface AddExerciseDialogProps {
@@ -24,8 +17,10 @@ interface AddExerciseDialogProps {
   catalog: ExerciseCatalogItem[];
   existingExerciseIds: string[];
   saving: boolean;
+  creating?: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (exerciseId: string) => Promise<void>;
+  onCreate?: (name: string) => Promise<ExerciseCatalogItem>;
 }
 
 const AddExerciseDialog = ({
@@ -33,77 +28,59 @@ const AddExerciseDialog = ({
   catalog,
   existingExerciseIds,
   saving,
+  creating = false,
   onOpenChange,
   onAdd,
+  onCreate,
 }: AddExerciseDialogProps) => {
-  const [exerciseId, setExerciseId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const availableExercises = useMemo(
-    () => catalog.filter((exercise) => !existingExerciseIds.includes(exercise.id)),
-    [catalog, existingExerciseIds],
-  );
 
-  useEffect(() => {
-    if (open) {
-      setExerciseId("");
-      setError(null);
-    }
-  }, [open]);
-
-  const handleAdd = async () => {
-    if (!exerciseId) {
-      setError("Choose an exercise to add.");
-      return;
-    }
-
+  const handleSelect = async (exercise: ExerciseCatalogItem) => {
     try {
-      await onAdd(exerciseId);
+      setError(null);
+      await onAdd(exercise.id);
       onOpenChange(false);
     } catch (addError) {
-      setError(addError instanceof Error ? addError.message : "Couldn’t add exercise.");
+      const message =
+        addError instanceof Error ? addError.message : "Couldn’t add exercise.";
+      setError(message);
+      throw addError;
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !saving && onOpenChange(nextOpen)}>
-      <DialogContent className="sm:max-w-sm">
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!saving && !creating) {
+          setError(null);
+          onOpenChange(nextOpen);
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Exercise</DialogTitle>
-          <DialogDescription>Add a catalog exercise with three starter sets.</DialogDescription>
+          <DialogDescription>
+            Search the catalog or create an exercise. Three starter sets will be added.
+          </DialogDescription>
         </DialogHeader>
-        {availableExercises.length ? (
-          <Select value={exerciseId} onValueChange={setExerciseId} disabled={saving}>
-            <SelectTrigger aria-label="Exercise">
-              <SelectValue placeholder="Choose an exercise" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableExercises.map((exercise) => (
-                <SelectItem key={exercise.id} value={exercise.id}>
-                  {exercise.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Every catalog exercise is already included in this day.
-          </p>
-        )}
+        <ExercisePicker
+          key={open ? "open" : "closed"}
+          exercises={catalog}
+          excludedExerciseIds={existingExerciseIds}
+          busy={saving || creating}
+          onSelect={handleSelect}
+          onCreate={onCreate}
+        />
         {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
         <DialogFooter>
           <Button
             variant="outline"
-            disabled={saving}
+            disabled={saving || creating}
             onClick={() => onOpenChange(false)}
           >
-            Cancel
-          </Button>
-          <Button
-            disabled={saving || !availableExercises.length}
-            onClick={() => void handleAdd()}
-          >
-            {saving && <LoaderCircle className="animate-spin" />}
-            Add Exercise
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>

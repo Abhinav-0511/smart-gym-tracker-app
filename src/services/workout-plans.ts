@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { Tables } from "@/types/database";
 import type {
-  ExerciseCatalogItem,
   PlannedSetUpdate,
   WorkoutPlan,
 } from "@/types/workout-plan";
@@ -130,21 +129,67 @@ export async function fetchWorkoutPlans(userId: string): Promise<WorkoutPlan[]> 
   }));
 }
 
-export async function fetchExerciseCatalog(): Promise<ExerciseCatalogItem[]> {
+export async function createWorkoutPlan(
+  userId: string,
+  name: string,
+): Promise<string> {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    throw new Error("Plan name is required.");
+  }
+
+  const { data: existingPlans, error: existingPlansError } = await supabase
+    .from("workout_plans")
+    .select("id")
+    .eq("user_id", userId);
+
+  throwIfError(existingPlansError);
+
   const { data, error } = await supabase
-    .from("exercise_catalog")
-    .select("*")
-    .order("name", { ascending: true });
+    .from("workout_plans")
+    .insert({
+      user_id: userId,
+      name: normalizedName,
+      is_active: !existingPlans?.length,
+    })
+    .select("id")
+    .single();
 
   throwIfError(error);
+  if (!data) throw new Error("The workout plan could not be created.");
+  return data.id;
+}
 
-  return (data ?? []).map((exercise) => ({
-    id: exercise.id,
-    name: exercise.name,
-    category: exercise.category,
-    equipment: exercise.equipment,
-    usesBodyweight: exercise.uses_bodyweight,
-  }));
+export async function createWorkoutPlanDay(
+  planId: string,
+  dayOfWeek: number,
+  workoutType: string,
+): Promise<string> {
+  const normalizedType = workoutType.trim();
+  if (!Number.isInteger(dayOfWeek) || dayOfWeek < 1 || dayOfWeek > 7) {
+    throw new Error("Choose a valid workout day.");
+  }
+  if (!normalizedType) {
+    throw new Error("Workout type is required.");
+  }
+
+  const { data, error } = await supabase
+    .from("workout_plan_days")
+    .insert({
+      workout_plan_id: planId,
+      day_of_week: dayOfWeek,
+      workout_type: normalizedType,
+      is_rest_day: false,
+    })
+    .select("id")
+    .single();
+
+  if (error?.message.toLowerCase().includes("duplicate")) {
+    throw new Error("That day is already part of this workout plan.");
+  }
+  throwIfError(error);
+  if (!data) throw new Error("The workout day could not be created.");
+  return data.id;
 }
 
 export async function updateWorkoutPlan(

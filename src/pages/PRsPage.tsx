@@ -159,6 +159,17 @@ const PRsPage = () => {
             Complete a workout or add a manual record to begin.
           </p>
           <Button
+            size="sm"
+            className="mt-3"
+            onClick={() => {
+              setEditingRecord(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus size={14} />
+            Add Manual PR
+          </Button>
+          <Button
             variant="ghost"
             size="sm"
             className="mt-3"

@@ -22,8 +22,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrentBodyWeight } from "@/hooks/useCurrentBodyWeight";
 import { formatProfileValue, getProfileInitials } from "@/lib/profile";
 import type { ProfileUpdate } from "@/services/profiles";
+import { getLocalDateString } from "@/types/dashboard";
 
 function formatMemberSince(createdAt: string | undefined): string {
   if (!createdAt) return "Not available";
@@ -48,6 +50,7 @@ const ProfilePage = () => {
   const [signingOut, setSigningOut] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const achievementsQuery = useAchievements(user?.id);
+  const { currentWeightQuery, updateWeightMutation } = useCurrentBodyWeight(user?.id);
 
   const handleLogout = async () => {
     if (signingOut) return;
@@ -66,8 +69,23 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSave = async (updates: ProfileUpdate) => {
-    await updateProfile(updates);
+  const handleSave = async (
+    updates: ProfileUpdate,
+    currentWeightKg: number | null,
+  ) => {
+    const weightChanged =
+      currentWeightKg !== null
+      && currentWeightKg !== currentWeightQuery.data?.weightKg;
+
+    await Promise.all([
+      updateProfile(updates),
+      weightChanged
+        ? updateWeightMutation.mutateAsync({
+            recordedOn: getLocalDateString(new Date(), updates.timezone ?? profile?.timezone ?? "UTC"),
+            weightKg: currentWeightKg,
+          })
+        : Promise.resolve(),
+    ]);
     toast({
       title: "Profile updated",
       description: "Your changes have been saved.",
@@ -152,7 +170,14 @@ const ProfilePage = () => {
               label: "Experience",
               value: formatProfileValue(profile.experience_level),
             },
-            { label: "Weight", value: "Not tracked" },
+            {
+              label: "Weight",
+              value: currentWeightQuery.isPending
+                ? "Loading…"
+                : currentWeightQuery.data
+                  ? `${currentWeightQuery.data.weightKg} kg`
+                  : "Not tracked",
+            },
             {
               label: "Height",
               value: profile.height_cm ? `${profile.height_cm} cm` : "Not set",
@@ -332,6 +357,8 @@ const ProfilePage = () => {
       <EditProfileDialog
         open={editOpen}
         profile={profile}
+        currentWeightKg={currentWeightQuery.data?.weightKg ?? null}
+        weightLoading={currentWeightQuery.isPending}
         onOpenChange={setEditOpen}
         onSave={handleSave}
       />

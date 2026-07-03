@@ -103,6 +103,9 @@ const ProgressPage = () => {
     selectedExercise && selectedExercise.points.length > 1
       ? selectedExercise.points.at(-1)!.value - selectedExercise.points[0].value
       : null;
+  const hasCompletedWorkouts = data.weeklyFrequency.some(
+    (period) => period.value > 0,
+  );
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -110,6 +113,16 @@ const ProgressPage = () => {
         <h1 className="text-2xl font-bold text-foreground">Progress</h1>
         <p className="text-sm text-muted-foreground">Track your fitness journey</p>
       </div>
+
+      {!hasCompletedWorkouts && data.bodyWeight.length === 0 && (
+        <GlassCard className="text-center py-6">
+          <p className="font-semibold text-foreground">No progress history yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Complete a workout to populate training charts, or add your current
+            weight from Profile to begin weight tracking.
+          </p>
+        </GlassCard>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <StatCard
@@ -168,7 +181,7 @@ const ProgressPage = () => {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyChart message="No body-weight entries yet." />
+            <EmptyChart message="Add your current weight from Profile to start this chart." />
           )}
         </div>
       </GlassCard>
@@ -210,7 +223,7 @@ const ProgressPage = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyChart message="No completed weighted sets yet." />
+            <EmptyChart message="Complete weighted workout sets to start this chart." />
           )}
         </div>
       </GlassCard>

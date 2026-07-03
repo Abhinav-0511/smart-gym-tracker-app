@@ -24,8 +24,10 @@ import type { Profile, ProfileUpdate } from "@/services/profiles";
 interface EditProfileDialogProps {
   open: boolean;
   profile: Profile;
+  currentWeightKg: number | null;
+  weightLoading: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (updates: ProfileUpdate) => Promise<void>;
+  onSave: (updates: ProfileUpdate, currentWeightKg: number | null) => Promise<void>;
 }
 
 function isValidTimezone(timezone: string): boolean {
@@ -40,6 +42,8 @@ function isValidTimezone(timezone: string): boolean {
 const EditProfileDialog = ({
   open,
   profile,
+  currentWeightKg,
+  weightLoading,
   onOpenChange,
   onSave,
 }: EditProfileDialogProps) => {
@@ -50,6 +54,7 @@ const EditProfileDialog = ({
     profile.experience_level ?? "not_set",
   );
   const [height, setHeight] = useState(profile.height_cm?.toString() ?? "");
+  const [weight, setWeight] = useState(currentWeightKg?.toString() ?? "");
   const [timezone, setTimezone] = useState(profile.timezone);
   const [theme, setTheme] = useState(profile.theme);
   const [saving, setSaving] = useState(false);
@@ -63,10 +68,11 @@ const EditProfileDialog = ({
     setFitnessGoal(profile.fitness_goal ?? "");
     setExperienceLevel(profile.experience_level ?? "not_set");
     setHeight(profile.height_cm?.toString() ?? "");
+    setWeight(currentWeightKg?.toString() ?? "");
     setTimezone(profile.timezone);
     setTheme(profile.theme);
     setError(null);
-  }, [open, profile]);
+  }, [currentWeightKg, open, profile]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,6 +81,7 @@ const EditProfileDialog = ({
     const normalizedName = fullName.trim();
     const normalizedTimezone = timezone.trim();
     const parsedHeight = height.trim() ? Number(height) : null;
+    const parsedWeight = weight.trim() ? Number(weight) : null;
 
     if (!normalizedName) {
       setError("Full name is required.");
@@ -86,6 +93,14 @@ const EditProfileDialog = ({
       && (!Number.isFinite(parsedHeight) || parsedHeight < 50 || parsedHeight > 300)
     ) {
       setError("Height must be between 50 and 300 cm.");
+      return;
+    }
+
+    if (
+      parsedWeight !== null
+      && (!Number.isFinite(parsedWeight) || parsedWeight < 20 || parsedWeight > 500)
+    ) {
+      setError("Current weight must be between 20 and 500 kg.");
       return;
     }
 
@@ -110,16 +125,19 @@ const EditProfileDialog = ({
     setError(null);
 
     try {
-      await onSave({
-        full_name: normalizedName,
-        avatar_url: avatarUrl.trim() || null,
-        fitness_goal: fitnessGoal.trim() || null,
-        experience_level:
-          experienceLevel === "not_set" ? null : experienceLevel,
-        height_cm: parsedHeight,
-        timezone: normalizedTimezone,
-        theme,
-      });
+      await onSave(
+        {
+          full_name: normalizedName,
+          avatar_url: avatarUrl.trim() || null,
+          fitness_goal: fitnessGoal.trim() || null,
+          experience_level:
+            experienceLevel === "not_set" ? null : experienceLevel,
+          height_cm: parsedHeight,
+          timezone: normalizedTimezone,
+          theme,
+        },
+        parsedWeight,
+      );
       onOpenChange(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Couldn’t save your profile.");
@@ -188,6 +206,24 @@ const EditProfileDialog = ({
                 <SelectItem value="advanced">Advanced</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="profile-weight">Current weight (kg)</Label>
+            <Input
+              id="profile-weight"
+              type="number"
+              min={20}
+              max={500}
+              step="0.1"
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              placeholder={weightLoading ? "Loading…" : "Not tracked"}
+              disabled={saving || weightLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Saving creates or updates today&apos;s body-weight entry.
+            </p>
           </div>
 
           <div className="space-y-2">

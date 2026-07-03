@@ -206,8 +206,23 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
             </div>
           </GlassCard>
         ) : (
-          <GlassCard className="text-center text-sm text-muted-foreground py-7">
-            No workout is scheduled for today.
+          <GlassCard className="text-center py-7">
+            <p className="font-medium text-foreground">
+              {activePlan ? "No workout is scheduled for today" : "Create your first workout plan"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {activePlan
+                ? "Add today to your active plan if you want to train."
+                : "Add training days and exercises before starting a workout."}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3"
+              onClick={() => onNavigate("plan")}
+            >
+              {activePlan ? "Edit Plan" : "Create Plan"}
+            </Button>
           </GlassCard>
         )}
       </div>
@@ -215,10 +230,14 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
       <Button
         size="lg"
         className="w-full text-base font-bold"
-        onClick={() => onNavigate("workout")}
+        onClick={() => onNavigate(activePlan || activeSession ? "workout" : "plan")}
       >
         <Dumbbell size={20} />
-        {activeSession ? "Continue Workout" : "Start Workout"}
+        {activeSession
+          ? "Continue Workout"
+          : activePlan
+            ? "Start Workout"
+            : "Create Workout Plan"}
       </Button>
 
       <div>
@@ -277,7 +296,9 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
               </p>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">No completed workouts yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Complete your first planned workout to see its summary here.
+            </p>
           )}
         </GlassCard>
 
@@ -298,7 +319,13 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
               </p>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">No active plan.</p>
+            <button
+              type="button"
+              className="text-left text-sm text-primary hover:underline"
+              onClick={() => onNavigate("plan")}
+            >
+              No active plan. Create one to get started.
+            </button>
           )}
         </GlassCard>
       </div>
@@ -327,8 +354,13 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
             ))}
           </div>
         ) : (
-          <GlassCard className="text-center text-sm text-muted-foreground">
-            No personal records yet.
+          <GlassCard className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Complete weighted sets to build your personal-record history.
+            </p>
+            <Button variant="ghost" size="sm" className="mt-2" onClick={() => onNavigate("prs")}>
+              View Personal Records
+            </Button>
           </GlassCard>
         )}
       </div>

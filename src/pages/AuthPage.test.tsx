@@ -89,4 +89,28 @@ describe("AuthPage", () => {
       password: "password",
     });
   });
+
+  it("shows a clear duplicate-email signup error", async () => {
+    authMocks.signup.mockRejectedValue(
+      new Error("An account with this email already exists."),
+    );
+    render(<AuthPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    fireEvent.change(screen.getByLabelText("Full Name"), {
+      target: { value: "Alex Johnson" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "existing@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    expect(
+      await screen.findByText("An account with this email already exists."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
+  });
 });

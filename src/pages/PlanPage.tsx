@@ -10,6 +10,7 @@ import {
 
 import GlassCard from "@/components/GlassCard";
 import AddExerciseDialog from "@/components/plan/AddExerciseDialog";
+import AddWorkoutDayDialog from "@/components/plan/AddWorkoutDayDialog";
 import PlanExerciseEditor from "@/components/plan/PlanExerciseEditor";
 import PlanTextDialog from "@/components/plan/PlanTextDialog";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,9 @@ const PlanPage = () => {
   const {
     plansQuery,
     catalogQuery,
+    createExerciseMutation,
+    createPlanMutation,
+    createDayMutation,
     updatePlanMutation,
     updateDayMutation,
     activatePlanMutation,
@@ -49,6 +53,8 @@ const PlanPage = () => {
     removeSetMutation,
   } = useWorkoutPlans(user?.id);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
+  const [createPlanOpen, setCreatePlanOpen] = useState(false);
+  const [addDayOpen, setAddDayOpen] = useState(false);
   const [editPlanOpen, setEditPlanOpen] = useState(false);
   const [editDayOpen, setEditDayOpen] = useState(false);
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
@@ -148,18 +154,37 @@ const PlanPage = () => {
 
   if (!displayedPlan) {
     return (
-      <div className="space-y-5 animate-fade-in">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Workout Plan</h1>
-          <p className="text-sm text-muted-foreground">Your weekly training schedule</p>
+      <>
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Workout Plan</h1>
+            <p className="text-sm text-muted-foreground">Your weekly training schedule</p>
+          </div>
+          <GlassCard className="text-center py-10">
+            <p className="font-semibold text-foreground">No workout plan yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create your first plan, then add training days, exercises, and sets.
+            </p>
+            <Button className="mt-4" onClick={() => setCreatePlanOpen(true)}>
+              <Plus size={16} />
+              Create Plan
+            </Button>
+          </GlassCard>
         </div>
-        <GlassCard className="text-center py-10">
-          <p className="font-semibold text-foreground">No workout plan yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create your first plan before adding training days and exercises.
-          </p>
-        </GlassCard>
-      </div>
+        <PlanTextDialog
+          open={createPlanOpen}
+          title="Create Workout Plan"
+          description="Name your plan. Your first plan becomes active automatically."
+          label="Plan name"
+          value=""
+          saving={createPlanMutation.isPending}
+          onOpenChange={setCreatePlanOpen}
+          onSave={async (name) => {
+            await createPlanMutation.mutateAsync(name);
+            toast({ title: "Workout plan created" });
+          }}
+        />
+      </>
     );
   }
 
@@ -183,10 +208,16 @@ const PlanPage = () => {
             {planTypes || "Workout Plan"} · {trainingDays} training days
           </p>
         </div>
-        <Button variant="glass" size="sm" onClick={() => setEditPlanOpen(true)}>
-          <Edit3 size={14} />
-          Edit
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setCreatePlanOpen(true)}>
+            <Plus size={14} />
+            New
+          </Button>
+          <Button variant="glass" size="sm" onClick={() => setEditPlanOpen(true)}>
+            <Edit3 size={14} />
+            Edit
+          </Button>
+        </div>
       </div>
 
       {plans.length > 1 && (
@@ -262,10 +293,22 @@ const PlanPage = () => {
             );
           })}
           {!displayedPlan.days.length && (
-            <GlassCard className="text-center text-sm text-muted-foreground py-8">
-              This plan does not have any scheduled days yet.
+            <GlassCard className="text-center py-8">
+              <p className="font-medium text-foreground">No workout days yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add a day to start building this plan.
+              </p>
             </GlassCard>
           )}
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={displayedPlan.days.length >= 7}
+            onClick={() => setAddDayOpen(true)}
+          >
+            <Plus size={16} />
+            {displayedPlan.days.length >= 7 ? "All Days Added" : "Add Workout Day"}
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -354,6 +397,37 @@ const PlanPage = () => {
       )}
 
       <PlanTextDialog
+        open={createPlanOpen}
+        title="Create Workout Plan"
+        description="Create another plan. You can activate it when you are ready."
+        label="Plan name"
+        value=""
+        saving={createPlanMutation.isPending}
+        onOpenChange={setCreatePlanOpen}
+        onSave={async (name) => {
+          await createPlanMutation.mutateAsync(name);
+          setSelectedDayId(null);
+          toast({ title: "Workout plan created" });
+        }}
+      />
+
+      <AddWorkoutDayDialog
+        open={addDayOpen}
+        unavailableDays={displayedPlan.days.map((day) => day.dayOfWeek)}
+        saving={createDayMutation.isPending}
+        onOpenChange={setAddDayOpen}
+        onAdd={async (dayOfWeek, workoutType) => {
+          const dayId = await createDayMutation.mutateAsync({
+            planId: displayedPlan.id,
+            dayOfWeek,
+            workoutType,
+          });
+          setSelectedDayId(dayId);
+          toast({ title: "Workout day added" });
+        }}
+      />
+
+      <PlanTextDialog
         open={editPlanOpen}
         title="Edit Workout Plan"
         description="Update the name shown for this training plan."
@@ -391,7 +465,9 @@ const PlanPage = () => {
               (exercise) => exercise.exerciseId,
             )}
             saving={addExerciseMutation.isPending}
+            creating={createExerciseMutation.isPending}
             onOpenChange={setAddExerciseOpen}
+            onCreate={(name) => createExerciseMutation.mutateAsync(name)}
             onAdd={async (exerciseId) => {
               await addExerciseMutation.mutateAsync({
                 dayId: selectedDay.id,

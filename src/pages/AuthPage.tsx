@@ -5,22 +5,7 @@ import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-
-function getErrorMessage(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return "Something went wrong. Please try again.";
-  }
-
-  if (error.message.toLowerCase().includes("invalid login credentials")) {
-    return "The email or password you entered is incorrect.";
-  }
-
-  if (error.message.toLowerCase().includes("email not confirmed")) {
-    return "Please confirm your email address before logging in.";
-  }
-
-  return error.message;
-}
+import { getAuthErrorMessage } from "@/services/auth";
 
 const AuthPage = () => {
   const { login, signup } = useAuth();
@@ -88,7 +73,10 @@ const AuthPage = () => {
         }
       }
     } catch (submitError) {
-      const message = getErrorMessage(submitError);
+      const message = getAuthErrorMessage(
+        submitError,
+        isLogin ? "login" : "signup",
+      );
       setError(message);
       toast({
         variant: "destructive",

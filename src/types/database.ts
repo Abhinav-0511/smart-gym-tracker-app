@@ -477,7 +477,14 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_exercise_catalog_item: {
+        Args: {
+          p_name: string;
+        };
+        Returns: Database["public"]["Tables"]["exercise_catalog"]["Row"];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
