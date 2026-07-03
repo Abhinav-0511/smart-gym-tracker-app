@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Award,
+  CalendarDays,
   ChevronRight,
   Edit3,
   LoaderCircle,
@@ -15,8 +16,11 @@ import GlassCard from "@/components/GlassCard";
 import EditProfileDialog from "@/components/profile/EditProfileDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { achievements } from "@/data/mockData";
+import {
+  achievementCategoryLabels,
+} from "@/data/achievements";
 import { useToast } from "@/hooks/use-toast";
+import { useAchievements } from "@/hooks/useAchievements";
 import { useAuth } from "@/hooks/useAuth";
 import { formatProfileValue, getProfileInitials } from "@/lib/profile";
 import type { ProfileUpdate } from "@/services/profiles";
@@ -43,6 +47,7 @@ const ProfilePage = () => {
   const { toast } = useToast();
   const [signingOut, setSigningOut] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const achievementsQuery = useAchievements(user?.id);
 
   const handleLogout = async () => {
     if (signingOut) return;
@@ -169,17 +174,124 @@ const ProfilePage = () => {
           <h3 className="font-semibold text-foreground">Achievements</h3>
           <Award size={18} className="text-primary" />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {achievements.map((achievement) => (
-            <GlassCard
-              key={achievement.id}
-              className={`text-center py-3 ${!achievement.unlocked ? "opacity-40" : ""}`}
+        {achievementsQuery.isPending ? (
+          <GlassCard className="py-6 text-center" role="status">
+            <LoaderCircle className="mx-auto animate-spin text-primary" size={20} />
+            <span className="sr-only">Loading achievements</span>
+          </GlassCard>
+        ) : achievementsQuery.isError || !achievementsQuery.data ? (
+          <GlassCard className="py-5 text-center">
+            <p className="text-sm text-muted-foreground">
+              Couldn&apos;t load achievements.
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              onClick={() => void achievementsQuery.refetch()}
             >
-              <span className="text-2xl">{achievement.icon}</span>
-              <p className="text-[10px] font-medium text-foreground mt-1">{achievement.title}</p>
-            </GlassCard>
-          ))}
-        </div>
+              <RefreshCw size={14} />
+              Retry
+            </Button>
+          </GlassCard>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(achievementCategoryLabels).map(([category, label]) => {
+              const categoryAchievements = achievementsQuery.data.achievements.filter(
+                (achievement) => achievement.category === category,
+              );
+              if (categoryAchievements.length === 0) return null;
+
+              return (
+                <section key={category} aria-labelledby={`achievement-${category}`}>
+                  <h4
+                    id={`achievement-${category}`}
+                    className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {label}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {categoryAchievements.map((achievement) => (
+                      <GlassCard
+                        key={achievement.key}
+                        className={`text-center py-3 ${
+                          achievement.unlocked ? "" : "opacity-60"
+                        }`}
+                      >
+                        <span
+                          className="text-2xl"
+                          aria-label={achievement.unlocked ? "Unlocked" : "Locked"}
+                          role="img"
+                        >
+                          {achievement.icon}
+                        </span>
+                        <p className="mt-1 text-xs font-medium text-foreground">
+                          {achievement.title}
+                        </p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {achievement.description}
+                        </p>
+                        <div
+                          className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary"
+                          role="progressbar"
+                          aria-label={`${achievement.title} progress`}
+                          aria-valuemin={0}
+                          aria-valuemax={achievement.progress.target}
+                          aria-valuenow={achievement.progress.current}
+                        >
+                          <div
+                            className="h-full rounded-full bg-primary transition-[width]"
+                            style={{ width: `${achievement.progress.percentage}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {achievement.progress.current}
+                          {achievement.progress.unit ?? ""} /{" "}
+                          {achievement.progress.target}
+                          {achievement.progress.unit ?? ""}
+                        </p>
+                      </GlassCard>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+            {achievementsQuery.data.history.length > 0 && (
+              <section aria-labelledby="achievement-history">
+                <h4
+                  id="achievement-history"
+                  className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                >
+                  Achievement history
+                </h4>
+                <GlassCard className="space-y-3">
+                  {achievementsQuery.data.history.map((achievement) => (
+                    <div
+                      key={achievement.key}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="text-xl" aria-hidden="true">
+                          {achievement.icon}
+                        </span>
+                        <span className="truncate text-sm font-medium text-foreground">
+                          {achievement.title}
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays size={12} />
+                        {new Intl.DateTimeFormat(undefined, {
+                          dateStyle: "medium",
+                        }).format(new Date(achievement.unlockedAt!))}
+                      </span>
+                    </div>
+                  ))}
+                </GlassCard>
+              </section>
+            )}
+          </div>
+        )}
       </div>
 
       <GlassCard>

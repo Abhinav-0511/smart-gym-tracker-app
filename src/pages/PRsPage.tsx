@@ -1,98 +1,318 @@
-import { Trophy, TrendingUp, Plus, ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  ArrowUpRight,
+  Edit3,
+  LoaderCircle,
+  Plus,
+  RefreshCw,
+  Trash2,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
 import GlassCard from "@/components/GlassCard";
-import { prRecords } from "@/data/mockData";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import ManualPRDialog from "@/components/prs/ManualPRDialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { usePersonalRecords } from "@/hooks/usePersonalRecords";
+import {
+  buildPRChartData,
+  type ManualPRInput,
+  type PersonalRecord,
+} from "@/types/personal-record";
 
-const benchData = [
-  { month: "Oct", weight: 80 }, { month: "Nov", weight: 85 },
-  { month: "Dec", weight: 90 }, { month: "Jan", weight: 92.5 },
-  { month: "Feb", weight: 97.5 }, { month: "Mar", weight: 100 },
-];
+const tooltipStyle = {
+  background: "hsl(var(--popover))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "12px",
+  color: "hsl(var(--popover-foreground))",
+};
 
-const PRsPage = () => (
-  <div className="space-y-5 animate-fade-in">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Personal Records</h1>
-        <p className="text-sm text-muted-foreground">{prRecords.length} records tracked</p>
+const PRsPage = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedExerciseId, setSelectedExerciseId] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<PersonalRecord | null>(null);
+  const {
+    recordsQuery,
+    historyQuery,
+    detectMutation,
+    createMutation,
+    updateMutation,
+    deleteMutation,
+  } = usePersonalRecords(user?.id, selectedExerciseId);
+
+  const data = recordsQuery.data;
+  const selectedExerciseName =
+    data?.catalog.find((exercise) => exercise.id === selectedExerciseId)?.name
+    ?? "Exercise";
+
+  useEffect(() => {
+    if (!selectedExerciseId && data?.lifetimeBests.length) {
+      setSelectedExerciseId(data.lifetimeBests[0].exerciseId);
+    }
+  }, [data?.lifetimeBests, selectedExerciseId]);
+
+  const chartData = useMemo(
+    () => buildPRChartData(historyQuery.data ?? []),
+    [historyQuery.data],
+  );
+
+  const handleSave = async (input: ManualPRInput) => {
+    if (editingRecord) {
+      await updateMutation.mutateAsync({ recordId: editingRecord.id, input });
+    } else {
+      await createMutation.mutateAsync(input);
+    }
+    toast({ title: editingRecord ? "PR updated" : "Manual PR added" });
+  };
+
+  if (recordsQuery.isPending) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center" role="status">
+        <LoaderCircle className="animate-spin text-primary" />
+        <span className="sr-only">Loading personal records</span>
       </div>
-      <Button variant="glass" size="sm">
-        <Plus size={14} />
-        Add PR
-      </Button>
-    </div>
+    );
+  }
 
-    {/* Top 3 PR Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {prRecords.slice(0, 3).map((pr) => (
-        <GlassCard key={pr.id} hover className="text-center">
-          <Trophy size={24} className="text-primary mx-auto mb-2" />
-          <h3 className="font-bold text-foreground">{pr.exercise}</h3>
-          <p className="text-2xl font-bold text-gradient mt-1">{pr.weight}kg</p>
-          {pr.previousWeight && (
-            <span className="text-xs text-primary flex items-center justify-center gap-1 mt-1">
-              <ArrowUpRight size={12} />
-              +{(pr.weight - pr.previousWeight).toFixed(1)}kg
-            </span>
-          )}
-        </GlassCard>
-      ))}
-    </div>
+  if (recordsQuery.isError) {
+    return (
+      <GlassCard className="text-center py-8">
+        <AlertCircle className="text-destructive mx-auto mb-3" />
+        <p className="font-semibold text-foreground">Couldn’t load personal records</p>
+        <p className="text-sm text-muted-foreground mt-1">{recordsQuery.error.message}</p>
+        <Button className="mt-4" onClick={() => void recordsQuery.refetch()}>
+          <RefreshCw size={16} />
+          Retry
+        </Button>
+      </GlassCard>
+    );
+  }
 
-    {/* PR Progress Chart */}
-    <GlassCard>
-      <h3 className="font-semibold text-foreground mb-4">Bench Press Progress</h3>
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={benchData}>
-            <defs>
-              <linearGradient id="prGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="month" tick={{ fill: "hsl(0,0%,55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "hsl(0,0%,55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ background: "hsl(0,0%,8%)", border: "1px solid hsl(0,0%,16%)", borderRadius: "12px", color: "hsl(0,0%,95%)" }}
-            />
-            <Area type="monotone" dataKey="weight" stroke="hsl(142, 100%, 60%)" fill="url(#prGrad)" strokeWidth={2} />
-          </AreaChart>
-        </ResponsiveContainer>
+  return (
+    <div className="space-y-5 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Personal Records</h1>
+          <p className="text-sm text-muted-foreground">
+            {data?.records.length ?? 0} records tracked
+          </p>
+        </div>
+        <Button
+          variant="glass"
+          size="sm"
+          onClick={() => {
+            setEditingRecord(null);
+            setDialogOpen(true);
+          }}
+        >
+          <Plus size={14} />
+          Add PR
+        </Button>
       </div>
-    </GlassCard>
 
-    {/* PR History */}
-    <div>
-      <h3 className="font-semibold text-foreground mb-3">History</h3>
-      <div className="space-y-2">
-        {prRecords.map((pr) => (
-          <GlassCard key={pr.id}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <TrendingUp size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-sm">{pr.exercise}</p>
-                  <p className="text-xs text-muted-foreground">{pr.date}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-foreground">{pr.weight}kg</p>
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                  pr.type === "auto" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
-                }`}>
-                  {pr.type}
+      {data?.lifetimeBests.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {data.lifetimeBests.slice(0, 3).map((record) => (
+            <GlassCard
+              key={record.exerciseId}
+              hover
+              className="text-center"
+              onClick={() => setSelectedExerciseId(record.exerciseId)}
+            >
+              <Trophy size={24} className="text-primary mx-auto mb-2" />
+              <h3 className="font-bold text-foreground">{record.exerciseName}</h3>
+              <p className="text-2xl font-bold text-gradient mt-1">{record.weightKg}kg</p>
+              {record.previousWeightKg !== null && record.weightKg > record.previousWeightKg && (
+                <span className="text-xs text-primary flex items-center justify-center gap-1 mt-1">
+                  <ArrowUpRight size={12} />
+                  +{(record.weightKg - record.previousWeightKg).toFixed(1)}kg
                 </span>
-              </div>
+              )}
+            </GlassCard>
+          ))}
+        </div>
+      ) : (
+        <GlassCard className="text-center py-8">
+          <Trophy className="text-muted-foreground mx-auto mb-3" />
+          <p className="font-semibold text-foreground">No personal records yet</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Complete a workout or add a manual record to begin.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            disabled={detectMutation.isPending}
+            onClick={() =>
+              detectMutation.mutate(undefined, {
+                onError: (error) =>
+                  toast({
+                    variant: "destructive",
+                    title: "Couldn’t check completed workouts",
+                    description: error instanceof Error ? error.message : "Please try again.",
+                  }),
+              })
+            }
+          >
+            <RefreshCw size={14} />
+            Check Completed Workouts
+          </Button>
+        </GlassCard>
+      )}
+
+      <GlassCard>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="font-semibold text-foreground">
+            {selectedExerciseName} History
+          </h3>
+          {data?.lifetimeBests.length ? (
+            <Select value={selectedExerciseId} onValueChange={setSelectedExerciseId}>
+              <SelectTrigger className="w-40" aria-label="Chart exercise">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {data.lifetimeBests.map((record) => (
+                  <SelectItem key={record.exerciseId} value={record.exerciseId}>
+                    {record.exerciseName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+        </div>
+        <div className="h-48">
+          {historyQuery.isPending ? (
+            <div className="h-full flex items-center justify-center">
+              <LoaderCircle className="animate-spin text-primary" />
             </div>
-          </GlassCard>
-        ))}
+          ) : chartData.length ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="prGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Area type="monotone" dataKey="weight" stroke="hsl(142, 100%, 45%)" fill="url(#prGrad)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+              No completed-set history for this exercise.
+            </div>
+          )}
+        </div>
+      </GlassCard>
+
+      <div>
+        <h3 className="font-semibold text-foreground mb-3">PR Timeline</h3>
+        <div className="space-y-2">
+          {data?.records.map((record) => (
+            <GlassCard key={record.id}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <TrendingUp size={18} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm">{record.exerciseName}</p>
+                    <p className="text-xs text-muted-foreground">{record.achievedOn}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="font-bold text-foreground">{record.weightKg}kg</p>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                      record.source === "auto"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-accent/10 text-accent"
+                    }`}>
+                      {record.source}
+                    </span>
+                  </div>
+                  {record.source === "manual" && (
+                    <div className="flex">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setEditingRecord(record);
+                          setDialogOpen(true);
+                        }}
+                        aria-label={`Edit ${record.exerciseName} PR`}
+                      >
+                        <Edit3 size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => {
+                          if (window.confirm("Delete this manual personal record?")) {
+                            deleteMutation.mutate(record.id, {
+                              onError: (error) =>
+                                toast({
+                                  variant: "destructive",
+                                  title: "Couldn’t delete PR",
+                                  description: error instanceof Error ? error.message : "Please try again.",
+                                }),
+                            });
+                          }
+                        }}
+                        aria-label={`Delete ${record.exerciseName} PR`}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </GlassCard>
+          ))}
+          {!data?.records.length && (
+            <GlassCard className="text-center text-sm text-muted-foreground">
+              Your PR timeline is empty.
+            </GlassCard>
+          )}
+        </div>
       </div>
+
+      <ManualPRDialog
+        open={dialogOpen}
+        catalog={data?.catalog ?? []}
+        record={editingRecord}
+        saving={createMutation.isPending || updateMutation.isPending}
+        onOpenChange={setDialogOpen}
+        onSave={handleSave}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 export default PRsPage;

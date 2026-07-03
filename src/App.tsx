@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AchievementSync from "@/components/achievements/AchievementSync";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
+import PersonalRecordSync from "@/components/prs/PersonalRecordSync";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +25,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ProfileThemeSync />
+            <PersonalRecordSync />
+            <AchievementSync />
             <Routes>
             <Route
               path="/auth"
