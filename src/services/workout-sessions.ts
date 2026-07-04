@@ -158,73 +158,21 @@ export async function startWorkoutSession({
   const existingSession = await fetchActiveWorkoutSession(userId);
   if (existingSession) return existingSession;
 
-  const startedAt = new Date().toISOString();
+  const { data: sessionId, error: startError } = await supabase.rpc(
+    "start_workout_session",
+    { p_plan_day_id: planDay.id },
+  );
+  throwIfError(startError);
+  if (!sessionId) throw new Error("Workout session could not be created.");
+
   const { data: session, error: sessionError } = await supabase
     .from("workout_sessions")
-    .insert({
-      user_id: userId,
-      workout_plan_day_id: planDay.id,
-      title: `${planDay.workoutType} Day`,
-      status: "in_progress",
-      started_at: startedAt,
-    })
     .select("*")
+    .eq("id", sessionId)
     .single();
-
   throwIfError(sessionError);
-  if (!session) throw new Error("Workout session could not be created.");
-
-  try {
-    if (planDay.exercises.length) {
-      const { data: sessionExercises, error: exerciseError } = await supabase
-        .from("workout_session_exercises")
-        .insert(
-          planDay.exercises.map((exercise, index) => ({
-            workout_session_id: session.id,
-            exercise_id: exercise.exerciseId,
-            workout_plan_exercise_id: exercise.id,
-            position: index + 1,
-          })),
-        )
-        .select("*");
-
-      throwIfError(exerciseError);
-
-      const sessionExerciseByTemplateId = new Map(
-        (sessionExercises ?? []).map((exercise) => [
-          exercise.workout_plan_exercise_id,
-          exercise,
-        ]),
-      );
-      const setRows = planDay.exercises.flatMap((exercise) => {
-        const sessionExercise = sessionExerciseByTemplateId.get(exercise.id);
-        if (!sessionExercise) {
-          throw new Error("Workout exercises could not be copied.");
-        }
-
-        return exercise.sets.map((set) => ({
-          workout_session_exercise_id: sessionExercise.id,
-          set_number: set.setNumber,
-          reps: set.targetReps,
-          weight_kg: set.targetWeightKg,
-          is_completed: false,
-          completed_at: null,
-        }));
-      });
-
-      if (setRows.length) {
-        const { error: setError } = await supabase
-          .from("workout_session_sets")
-          .insert(setRows);
-        throwIfError(setError);
-      }
-    }
-
-    return hydrateSession(session);
-  } catch (copyError) {
-    await supabase.from("workout_sessions").delete().eq("id", session.id);
-    throw copyError;
-  }
+  if (!session) throw new Error("Workout session could not be loaded.");
+  return hydrateSession(session);
 }
 
 export async function updateWorkoutSessionSet(
@@ -282,17 +230,10 @@ async function closeWorkoutSession(
   sessionId: string,
   status: "completed" | "cancelled",
 ): Promise<void> {
-  const { data, error } = await supabase
-    .from("workout_sessions")
-    .update({
-      status,
-      completed_at: new Date().toISOString(),
-    })
-    .eq("id", sessionId)
-    .eq("status", "in_progress")
-    .select("id")
-    .maybeSingle();
-
+  const { data, error } = await supabase.rpc("close_workout_session", {
+    p_session_id: sessionId,
+    p_status: status,
+  });
   throwIfError(error);
   if (!data) throw new Error("This workout is already locked.");
 }
@@ -309,45 +250,11 @@ export async function addWorkoutSessionExercise(
   sessionId: string,
   exerciseId: string,
 ): Promise<void> {
-  await assertSessionInProgress(sessionId);
-
-  const { data: lastExercise, error: positionError } = await supabase
-    .from("workout_session_exercises")
-    .select("position")
-    .eq("workout_session_id", sessionId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  throwIfError(positionError);
-
-  const { data: exercise, error } = await supabase
-    .from("workout_session_exercises")
-    .insert({
-      workout_session_id: sessionId,
-      exercise_id: exerciseId,
-      position: (lastExercise?.position ?? 0) + 1,
-    })
-    .select("id")
-    .single();
-
+  const { error } = await supabase.rpc("add_workout_session_exercise", {
+    p_session_id: sessionId,
+    p_exercise_id: exerciseId,
+  });
   throwIfError(error);
-  if (!exercise) throw new Error("Exercise could not be added.");
-
-  const { error: setsError } = await supabase.from("workout_session_sets").insert(
-    [1, 2, 3].map((setNumber) => ({
-      workout_session_exercise_id: exercise.id,
-      set_number: setNumber,
-      reps: 10,
-      weight_kg: null,
-      is_completed: false,
-    })),
-  );
-
-  if (setsError) {
-    await supabase.from("workout_session_exercises").delete().eq("id", exercise.id);
-    throw setsError;
-  }
 }
 
 export async function removeWorkoutSessionExercise(

@@ -1,7 +1,7 @@
 import { Home, Dumbbell, Calendar, Trophy, User, BarChart3, Flame } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { useAuth } from "@/hooks/useAuth";
-import { formatProfileValue, getProfileInitials } from "@/lib/profile";
+import { formatProfileValue } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 interface SidebarNavProps {
@@ -52,12 +52,11 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
     <div className="p-4">
       <div className="glass-card p-4">
         <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={profile?.avatar_url ?? undefined} alt={fullName} />
-            <AvatarFallback className="bg-primary/20 text-primary font-bold text-sm">
-              {getProfileInitials(fullName)}
-            </AvatarFallback>
-          </Avatar>
+          <ProfileAvatar
+            avatarPath={profile?.avatar_url}
+            fullName={fullName}
+            fallbackClassName="text-sm"
+          />
           <div>
             <p className="text-sm font-medium text-foreground line-clamp-1">{fullName}</p>
             <p className="text-xs text-muted-foreground">

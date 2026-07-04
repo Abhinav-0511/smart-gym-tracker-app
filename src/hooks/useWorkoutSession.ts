@@ -108,7 +108,15 @@ export function useWorkoutSession(userId: string | undefined) {
 
   const completeMutation = useMutation({
     mutationFn: completeWorkoutSession,
-    onSuccess: () => queryClient.setQueryData(queryKey, null),
+    onSuccess: async () => {
+      queryClient.setQueryData(queryKey, null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["personal-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["achievements"] }),
+      ]);
+    },
   });
 
   const cancelMutation = useMutation({

@@ -48,7 +48,6 @@ const EditProfileDialog = ({
   onSave,
 }: EditProfileDialogProps) => {
   const [fullName, setFullName] = useState(profile.full_name);
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
   const [fitnessGoal, setFitnessGoal] = useState(profile.fitness_goal ?? "");
   const [experienceLevel, setExperienceLevel] = useState(
     profile.experience_level ?? "not_set",
@@ -64,7 +63,6 @@ const EditProfileDialog = ({
     if (!open) return;
 
     setFullName(profile.full_name);
-    setAvatarUrl(profile.avatar_url ?? "");
     setFitnessGoal(profile.fitness_goal ?? "");
     setExperienceLevel(profile.experience_level ?? "not_set");
     setHeight(profile.height_cm?.toString() ?? "");
@@ -109,18 +107,6 @@ const EditProfileDialog = ({
       return;
     }
 
-    if (avatarUrl.trim()) {
-      try {
-        const url = new URL(avatarUrl.trim());
-        if (!["http:", "https:"].includes(url.protocol)) {
-          throw new Error();
-        }
-      } catch {
-        setError("Avatar must be a valid HTTP or HTTPS URL.");
-        return;
-      }
-    }
-
     setSaving(true);
     setError(null);
 
@@ -128,7 +114,6 @@ const EditProfileDialog = ({
       await onSave(
         {
           full_name: normalizedName,
-          avatar_url: avatarUrl.trim() || null,
           fitness_goal: fitnessGoal.trim() || null,
           experience_level:
             experienceLevel === "not_set" ? null : experienceLevel,
@@ -163,18 +148,6 @@ const EditProfileDialog = ({
               onChange={(event) => setFullName(event.target.value)}
               disabled={saving}
               maxLength={100}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="profile-avatar">Avatar URL</Label>
-            <Input
-              id="profile-avatar"
-              type="url"
-              value={avatarUrl}
-              onChange={(event) => setAvatarUrl(event.target.value)}
-              placeholder="https://example.com/avatar.jpg"
-              disabled={saving}
             />
           </div>
 

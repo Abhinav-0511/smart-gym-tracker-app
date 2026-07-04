@@ -7,21 +7,12 @@ import {
 
 const supabaseMock = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
   supabase: supabaseMock,
 }));
-
-function existingPlansQuery(plans: Array<{ id: string }>) {
-  const chain = {
-    select: vi.fn(),
-    eq: vi.fn(),
-  };
-  chain.select.mockReturnValue(chain);
-  chain.eq.mockResolvedValue({ data: plans, error: null });
-  return chain;
-}
 
 function insertQuery(id: string) {
   const chain = {
@@ -41,32 +32,22 @@ describe("workout-plan creation", () => {
   });
 
   it("automatically activates a user's first plan", async () => {
-    const existing = existingPlansQuery([]);
-    const insert = insertQuery("plan-1");
-    supabaseMock.from
-      .mockReturnValueOnce(existing)
-      .mockReturnValueOnce(insert);
+    supabaseMock.rpc.mockResolvedValue({ data: "plan-1", error: null });
 
     await expect(createWorkoutPlan("user-1", "My Plan")).resolves.toBe("plan-1");
-    expect(insert.insert).toHaveBeenCalledWith({
-      user_id: "user-1",
-      name: "My Plan",
-      is_active: true,
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("create_workout_plan", {
+      p_name: "My Plan",
     });
   });
 
-  it("leaves additional plans inactive for explicit switching", async () => {
-    const existing = existingPlansQuery([{ id: "plan-1" }]);
-    const insert = insertQuery("plan-2");
-    supabaseMock.from
-      .mockReturnValueOnce(existing)
-      .mockReturnValueOnce(insert);
+  it("does not send a caller-controlled user id into plan creation", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: "plan-2", error: null });
 
     await createWorkoutPlan("user-1", "Second Plan");
 
-    expect(insert.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ is_active: false }),
-    );
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("create_workout_plan", {
+      p_name: "Second Plan",
+    });
   });
 
   it("creates an editable workout day on the selected plan", async () => {

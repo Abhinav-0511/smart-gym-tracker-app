@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Award,
   CalendarDays,
+  Camera,
   ChevronRight,
   Edit3,
   LoaderCircle,
@@ -13,8 +14,9 @@ import {
 } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
+import AvatarUploadDialog from "@/components/profile/AvatarUploadDialog";
 import EditProfileDialog from "@/components/profile/EditProfileDialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import {
   achievementCategoryLabels,
@@ -23,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentBodyWeight } from "@/hooks/useCurrentBodyWeight";
-import { formatProfileValue, getProfileInitials } from "@/lib/profile";
+import { formatProfileValue } from "@/lib/profile";
 import type { ProfileUpdate } from "@/services/profiles";
 import { getLocalDateString } from "@/types/dashboard";
 
@@ -49,6 +51,7 @@ const ProfilePage = () => {
   const { toast } = useToast();
   const [signingOut, setSigningOut] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const achievementsQuery = useAchievements(user?.id);
   const { currentWeightQuery, updateWeightMutation } = useCurrentBodyWeight(user?.id);
 
@@ -137,12 +140,22 @@ const ProfilePage = () => {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-col items-center text-center">
-        <Avatar className="w-20 h-20 mb-3">
-          <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name} />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-bold text-primary-foreground">
-            {getProfileInitials(profile.full_name)}
-          </AvatarFallback>
-        </Avatar>
+        <button
+          type="button"
+          className="group relative mb-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label="Change profile avatar"
+          onClick={() => setAvatarOpen(true)}
+        >
+          <ProfileAvatar
+            avatarPath={profile.avatar_url}
+            fullName={profile.full_name}
+            className="h-20 w-20"
+            fallbackClassName="bg-gradient-to-br from-primary to-accent text-2xl text-primary-foreground"
+          />
+          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/65 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Camera size={20} aria-hidden="true" />
+          </span>
+        </button>
         <h1 className="text-xl font-bold text-foreground">{profile.full_name}</h1>
         <p className="text-sm text-muted-foreground">{user?.email ?? "Email unavailable"}</p>
         <div className="flex gap-6 mt-4">
@@ -361,6 +374,16 @@ const ProfilePage = () => {
         weightLoading={currentWeightQuery.isPending}
         onOpenChange={setEditOpen}
         onSave={handleSave}
+      />
+      <AvatarUploadDialog
+        open={avatarOpen}
+        userId={user!.id}
+        fullName={profile.full_name}
+        currentAvatarPath={profile.avatar_url}
+        onOpenChange={setAvatarOpen}
+        onSaveReference={async (path) => {
+          await updateProfile({ avatar_url: path });
+        }}
       />
     </div>
   );

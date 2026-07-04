@@ -4,6 +4,7 @@ import { reconcileAchievements } from "@/services/achievements";
 
 const supabaseMock = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -51,21 +52,21 @@ describe("achievement reconciliation", () => {
         unlocked_at: "2026-01-01T10:00:00.000Z",
       },
     ]);
-    const upsert = vi.fn();
+    supabaseMock.rpc.mockResolvedValue({ data: [], error: null });
 
     supabaseMock.from.mockImplementation((table: string) => {
       if (table === "workout_sessions") return workouts;
       if (table === "personal_records") return records;
       if (table === "body_weight_entries") return weights;
       if (table === "exercise_catalog") return bench;
-      if (table === "user_achievements") return { ...unlocks, upsert };
+      if (table === "user_achievements") return unlocks;
       throw new Error(`Unexpected table ${table}`);
     });
 
     const result = await reconcileAchievements("user-1");
 
     expect(result.newlyUnlocked).toEqual([]);
-    expect(upsert).not.toHaveBeenCalled();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("reconcile_achievements");
   });
 
   it("persists a newly qualified achievement with its historical date", async () => {
@@ -89,33 +90,20 @@ describe("achievement reconciliation", () => {
       ],
       error: null,
     };
-    const insertSelect = vi.fn().mockResolvedValue(inserted);
-    const upsert = vi.fn().mockReturnValue({ select: insertSelect });
+    supabaseMock.rpc.mockResolvedValue(inserted);
 
     supabaseMock.from.mockImplementation((table: string) => {
       if (table === "workout_sessions") return workouts;
       if (table === "personal_records") return records;
       if (table === "body_weight_entries") return weights;
       if (table === "exercise_catalog") return bench;
-      if (table === "user_achievements") return { ...unlocks, upsert };
+      if (table === "user_achievements") return unlocks;
       throw new Error(`Unexpected table ${table}`);
     });
 
     const result = await reconcileAchievements("user-1");
 
-    expect(upsert).toHaveBeenCalledWith(
-      [
-        {
-          user_id: "user-1",
-          achievement_key: "first_workout",
-          unlocked_at: "2026-01-01T10:00:00.000Z",
-        },
-      ],
-      {
-        onConflict: "user_id,achievement_key",
-        ignoreDuplicates: true,
-      },
-    );
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("reconcile_achievements");
     expect(result.newlyUnlocked.map(({ key }) => key)).toEqual(["first_workout"]);
   });
 });

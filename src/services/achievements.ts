@@ -93,41 +93,15 @@ export async function reconcileAchievements(
 ): Promise<ReconciliationResult> {
   const { source, persisted } = await fetchAchievementInputs(userId);
   const current = calculateAchievements(achievementDefinitions, source, persisted);
-  const persistedKeys = new Set(persisted.map((row) => row.key));
-  const qualified = current.achievements.filter(
-    (achievement) =>
-      achievement.qualified
-      && achievement.qualifiedAt
-      && !persistedKeys.has(achievement.key),
+  const { data: insertedRows, error } = await supabase.rpc(
+    "reconcile_achievements",
   );
-
-  if (qualified.length === 0) {
-    return { data: current, newlyUnlocked: [] };
-  }
-
-  const { data: insertedRows, error } = await supabase
-    .from("user_achievements")
-    .upsert(
-      qualified.map((achievement) => ({
-        user_id: userId,
-        achievement_key: achievement.key,
-        unlocked_at: achievement.qualifiedAt!,
-      })),
-      {
-        onConflict: "user_id,achievement_key",
-        ignoreDuplicates: true,
-      },
-    )
-    .select("id, achievement_key, unlocked_at");
 
   if (error) throw error;
 
-  const insertedKeys = new Set(
-    (insertedRows ?? []).map((row) => row.achievement_key),
-  );
-  const newlyUnlocked = qualified.filter((achievement) =>
-    insertedKeys.has(achievement.key),
-  );
+  const insertedKeys = new Set((insertedRows ?? []).map((row) => row.achievement_key));
+  const newlyUnlocked = current.achievements.filter((achievement) =>
+    insertedKeys.has(achievement.key));
   const mergedPersisted: PersistedAchievement[] = [
     ...persisted,
     ...(insertedRows ?? []).map((row) => ({
