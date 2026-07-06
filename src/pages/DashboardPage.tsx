@@ -92,10 +92,10 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <p className="text-muted-foreground text-sm">{greeting},</p>
-        <h1 className="text-2xl font-bold text-foreground">{profile.full_name} 👋</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{profile.full_name} 👋</h1>
       </div>
 
-      <GlassCard className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+      <GlassCard className="border-primary/25 bg-primary/[.06]">
         <div className="flex items-center gap-3">
           <Zap className="text-primary" size={24} />
           <div>
@@ -152,7 +152,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             {activeSession ? "Workout in Progress" : "Today’s Workout"}
           </h2>
           <span className="text-xs text-primary font-medium">
@@ -163,7 +163,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
           <GlassCard hover className="group" onClick={() => onNavigate("workout")}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-foreground text-lg">{activeSession.title}</h3>
+                <h3 className="text-lg font-semibold text-foreground">{activeSession.title}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   {activeSession.exercises.length} exercises · autosaved
                 </p>
@@ -179,7 +179,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-foreground text-lg">
+                <h3 className="text-lg font-semibold text-foreground">
                   {todayPlanDay.workoutType}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -229,7 +229,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
 
       <Button
         size="lg"
-        className="w-full text-base font-bold"
+        className="w-full text-base font-semibold"
         onClick={() => onNavigate(activePlan || activeSession ? "workout" : "plan")}
       >
         <Dumbbell size={20} />
@@ -241,7 +241,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
       </Button>
 
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-3">This Week</h2>
+        <h2 className="mb-3 text-lg font-semibold tracking-tight text-foreground">This Week</h2>
         <div className="flex gap-2">
           {aggregate.weeklyDays.map((day) => {
             const planDay = activePlan?.days.find(
@@ -260,7 +260,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
                       : "bg-secondary"
                 }`}
               >
-                <span className="text-[10px] text-muted-foreground font-medium">
+                <span className="text-xs text-muted-foreground font-medium">
                   {day.shortDay}
                 </span>
                 <div className={`w-2.5 h-2.5 rounded-full ${
@@ -270,7 +270,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
                       ? "bg-muted-foreground/30"
                       : "bg-muted-foreground/50"
                 }`} />
-                <span className="text-[9px] text-muted-foreground truncate max-w-full">
+                <span className="max-w-full truncate text-[11px] text-muted-foreground">
                   {isRest ? "Rest" : planDay?.workoutType ?? "—"}
                 </span>
               </div>
@@ -332,7 +332,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-foreground">Recent PRs</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">Recent PRs</h2>
           <Button variant="ghost" size="sm" onClick={() => onNavigate("prs")}>
             View All
           </Button>

@@ -4,7 +4,6 @@ import {
   AlertCircle,
   Clock3,
   Dumbbell,
-  LoaderCircle,
   RefreshCw,
   Target,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import {
 import GlassCard from "@/components/GlassCard";
 import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import {
   Select,
   SelectContent,
@@ -69,12 +69,7 @@ const ProgressPage = () => {
   }, [data?.exerciseProgressions, selectedExerciseId]);
 
   if (progressQuery.isPending) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center" role="status">
-        <LoaderCircle className="animate-spin text-primary" />
-        <span className="sr-only">Loading progress</span>
-      </div>
-    );
+    return <PageSkeleton label="Loading progress" variant="analytics" />;
   }
 
   if (progressQuery.isError || !data) {
@@ -110,7 +105,7 @@ const ProgressPage = () => {
   return (
     <div className="space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Progress</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Progress</h1>
         <p className="text-sm text-muted-foreground">Track your fitness journey</p>
       </div>
 
@@ -170,14 +165,14 @@ const ProgressPage = () => {
               <AreaChart data={data.bodyWeight}>
                 <defs>
                   <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(200, 100%, 55%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(200, 100%, 55%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis domain={["dataMin - 1", "dataMax + 1"]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="weight" stroke="hsl(200, 100%, 55%)" fill="url(#weightGrad)" strokeWidth={2} />
+                <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" fill="url(#weightGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
@@ -219,7 +214,7 @@ const ProgressPage = () => {
                 <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="value" name="Weight" stroke="hsl(142, 100%, 45%)" strokeWidth={2} />
+                <Line type="monotone" dataKey="value" name="Weight" stroke="hsl(var(--primary))" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -242,7 +237,7 @@ const ProgressPage = () => {
                   <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="value" name="Workouts" fill="hsl(142, 100%, 45%)" radius={[6, 6, 0, 0]} opacity={0.8} />
+                  <Bar dataKey="value" name="Workouts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -254,7 +249,7 @@ const ProgressPage = () => {
                   <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="value" name="Workouts" fill="hsl(200, 100%, 55%)" radius={[6, 6, 0, 0]} opacity={0.8} />
+                  <Bar dataKey="value" name="Workouts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -270,7 +265,7 @@ const ProgressPage = () => {
               <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="value" name="Volume" stroke="hsl(45, 100%, 50%)" fill="hsl(45, 100%, 50%)" fillOpacity={0.15} strokeWidth={2} />
+              <Area type="monotone" dataKey="value" name="Volume" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.12} strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -284,7 +279,7 @@ const ProgressPage = () => {
               <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Line type="monotone" dataKey="value" name="Minutes" stroke="hsl(200, 100%, 55%)" strokeWidth={2} />
+              <Line type="monotone" dataKey="value" name="Minutes" stroke="hsl(var(--primary))" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>

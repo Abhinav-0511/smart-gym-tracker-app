@@ -157,7 +157,7 @@ const PlanPage = () => {
       <>
         <div className="space-y-5 animate-fade-in">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Workout Plan</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Workout Plan</h1>
             <p className="text-sm text-muted-foreground">Your weekly training schedule</p>
           </div>
           <GlassCard className="text-center py-10">
@@ -201,7 +201,7 @@ const PlanPage = () => {
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-foreground truncate">
+          <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
             {displayedPlan.name}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -317,7 +317,7 @@ const PlanPage = () => {
           </Button>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
                 {getWeekday(selectedDay.dayOfWeek).day} — {selectedDay.workoutType}
               </h2>
               <p className="text-sm text-muted-foreground">

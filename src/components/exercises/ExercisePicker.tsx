@@ -113,7 +113,7 @@ const ExercisePicker = ({
                     value={exercise.id}
                     disabled={excluded || busy || creating}
                     onSelect={() => void selectExercise(exercise)}
-                    className="gap-3 py-2.5"
+                    className="min-h-11 gap-3 py-3"
                   >
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
                       <Dumbbell size={15} aria-hidden="true" />

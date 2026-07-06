@@ -14,6 +14,7 @@ import GlassCard from "@/components/GlassCard";
 import AddExerciseDialog from "@/components/plan/AddExerciseDialog";
 import SessionExerciseCard from "@/components/workout/SessionExerciseCard";
 import { Button } from "@/components/ui/button";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import {
   Select,
   SelectContent,
@@ -193,12 +194,7 @@ const WorkoutPage = () => {
   };
 
   if (sessionQuery.isPending || plansQuery.isPending) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center" role="status">
-        <LoaderCircle className="animate-spin text-primary" />
-        <span className="sr-only">Loading workout</span>
-      </div>
-    );
+    return <PageSkeleton label="Loading workout" variant="detail" />;
   }
 
   if (sessionQuery.isError) {
@@ -229,9 +225,9 @@ const WorkoutPage = () => {
 
     return (
       <div className="space-y-5 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="sticky top-[65px] z-20 -mx-4 flex items-center justify-between border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-sm md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{session.title}</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">{session.title}</h1>
             <p className="text-sm text-muted-foreground">
               {session.exercises.length} exercises · {completedSets}/{allSets.length} sets
             </p>
@@ -242,7 +238,7 @@ const WorkoutPage = () => {
           </div>
         </div>
 
-        <GlassCard className="bg-gradient-to-r from-primary/5 to-transparent border-primary/10">
+        <GlassCard className="border-primary/20 bg-primary/[.04]">
           <div className="flex items-center gap-2">
             <Save size={16} className="text-primary" />
             <p className="text-sm text-foreground">
