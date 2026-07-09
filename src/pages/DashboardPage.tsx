@@ -1,10 +1,12 @@
 import {
   AlertCircle,
   CalendarDays,
+  CheckCircle2,
   ChevronRight,
   Clock3,
   Dumbbell,
   Flame,
+  Pencil,
   RefreshCw,
   Target,
   TrendingUp,
@@ -86,6 +88,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
   const todayDayOfWeek = todayDate.getUTCDay() === 0 ? 7 : todayDate.getUTCDay();
   const todayPlanDay =
     activePlan?.days.find((day) => day.dayOfWeek === todayDayOfWeek) ?? null;
+  const todayCompletedWorkout = aggregate.todayCompletedWorkout;
   const greeting = getGreeting(new Date(), timezone);
 
   return (
@@ -102,6 +105,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
             <p className="font-semibold text-foreground text-sm">
               {activeSession
                 ? "Your workout is ready to continue"
+                : todayCompletedWorkout
+                  ? "Today's workout is completed"
                 : aggregate.currentStreak > 0
                   ? "Keep your streak moving"
                   : "Ready for your next workout?"}
@@ -109,6 +114,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
             <p className="text-xs text-muted-foreground">
               {activeSession
                 ? `${activeSession.title} has been autosaved.`
+                : todayCompletedWorkout
+                  ? "Review your saved workout history or edit the saved entry."
                 : aggregate.currentStreak > 0
                   ? `You’re on a ${aggregate.currentStreak}-day streak.`
                   : "Completed workouts will build your consistency streak."}
@@ -169,6 +176,28 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
                 </p>
               </div>
               <ChevronRight className="text-primary" />
+            </div>
+          </GlassCard>
+        ) : todayCompletedWorkout ? (
+          <GlassCard className="border-primary/25 bg-primary/[.04]">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 text-primary" size={20} />
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Today's workout completed
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {todayCompletedWorkout.title} is saved to your history.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button onClick={() => onNavigate("workout")}>
+                  <Pencil size={16} />
+                  Review Workout
+                </Button>
+              </div>
             </div>
           </GlassCard>
         ) : todayPlanDay ? (
@@ -232,9 +261,11 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         className="w-full text-base font-semibold"
         onClick={() => onNavigate(activePlan || activeSession ? "workout" : "plan")}
       >
-        <Dumbbell size={20} />
+        {todayCompletedWorkout ? <Pencil size={20} /> : <Dumbbell size={20} />}
         {activeSession
           ? "Continue Workout"
+          : todayCompletedWorkout
+            ? "Review Workout"
           : activePlan
             ? "Start Workout"
             : "Create Workout Plan"}

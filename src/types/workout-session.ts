@@ -39,4 +39,5 @@ export interface WorkoutSetUpdate {
 export interface StartWorkoutInput {
   userId: string;
   planDay: WorkoutPlanDay;
+  workoutDate: string;
 }

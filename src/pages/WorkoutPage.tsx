@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   CheckCircle2,
@@ -26,6 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkoutPlans } from "@/hooks/useWorkoutPlans";
 import { useWorkoutSession } from "@/hooks/useWorkoutSession";
+import { fetchCompletedWorkoutSessionForPlanDay } from "@/services/workout-sessions";
+import { getLocalDateString } from "@/types/dashboard";
 import { getWeekday } from "@/types/workout-plan";
 import type { WorkoutSetUpdate } from "@/types/workout-session";
 
@@ -46,20 +49,27 @@ function getCurrentDayOfWeek(timezone: string): number {
   return weekdays.indexOf(weekday) + 1;
 }
 
-function useWorkoutDuration(startedAt: string | undefined): string {
+function useWorkoutDuration(
+  startedAt: string | undefined,
+  completedAt: string | null | undefined,
+): string {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    if (!startedAt) return;
+    if (!startedAt || completedAt) return;
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(interval);
-  }, [startedAt]);
+  }, [completedAt, startedAt]);
 
   if (!startedAt) return "00:00";
 
   const seconds = Math.max(
     0,
-    Math.floor((now - new Date(startedAt).getTime()) / 1000),
+    Math.floor(
+      ((completedAt ? new Date(completedAt).getTime() : now)
+        - new Date(startedAt).getTime())
+        / 1000,
+    ),
   );
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -79,6 +89,8 @@ const WorkoutPage = () => {
     sessionQuery,
     startMutation,
     setMutation,
+    addSetMutation,
+    removeSetMutation,
     notesMutation,
     completeMutation,
     cancelMutation,
@@ -97,8 +109,33 @@ const WorkoutPage = () => {
   );
   const selectedDay =
     trainingDays.find((day) => day.id === selectedDayId) ?? trainingDays[0] ?? null;
-  const session = sessionQuery.data ?? null;
-  const duration = useWorkoutDuration(session?.startedAt);
+  const today = getLocalDateString(new Date(), profile?.timezone ?? "UTC");
+  const completedSessionQuery = useQuery({
+    queryKey: [
+      "workout-session",
+      "completed",
+      user?.id ?? "",
+      selectedDay?.id ?? "",
+      today,
+      profile?.timezone ?? "UTC",
+    ],
+    queryFn: () =>
+      fetchCompletedWorkoutSessionForPlanDay(
+        user?.id ?? "",
+        selectedDay?.id ?? "",
+        today,
+        profile?.timezone ?? "UTC",
+      ),
+    enabled: Boolean(user?.id && selectedDay?.id && !sessionQuery.data),
+    retry: false,
+  });
+  const activeSession = sessionQuery.data ?? null;
+  const completedSession = completedSessionQuery.data ?? null;
+  const session = activeSession ?? completedSession;
+  const isSavedWorkout = Boolean(!activeSession && completedSession);
+  const canEditWorkout = Boolean(session);
+  const shouldLoadCompletedSession = Boolean(user?.id && selectedDay?.id && !activeSession);
+  const duration = useWorkoutDuration(session?.startedAt, session?.completedAt);
 
   useEffect(() => {
     if (!trainingDays.length || selectedDayId) return;
@@ -113,12 +150,17 @@ const WorkoutPage = () => {
   }, [session?.id, session?.notes]);
 
   useEffect(() => {
-    if (!session || notes === session.notes) return;
+    if (!session || !canEditWorkout || notes === session.notes) return;
 
     const timer = window.setTimeout(() => {
       notesMutation.mutate(
         { sessionId: session.id, notes },
         {
+          onSuccess: () => {
+            if (isSavedWorkout) {
+              void completedSessionQuery.refetch();
+            }
+          },
           onError: (error) =>
             toast({
               variant: "destructive",
@@ -130,12 +172,15 @@ const WorkoutPage = () => {
     }, 750);
 
     return () => window.clearTimeout(timer);
-  }, [notes, notesMutation, session, toast]);
+  }, [canEditWorkout, completedSessionQuery, isSavedWorkout, notes, notesMutation, session, toast]);
 
   const handleSetUpdate = async (setId: string, updates: WorkoutSetUpdate) => {
-    if (!session) return;
+    if (!session || !canEditWorkout) return;
     try {
       await setMutation.mutateAsync({ sessionId: session.id, setId, updates });
+      if (isSavedWorkout) {
+        await completedSessionQuery.refetch();
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -146,11 +191,43 @@ const WorkoutPage = () => {
     }
   };
 
+  const handleAddSet = async (sessionExerciseId: string) => {
+    if (!session || !canEditWorkout) return;
+    try {
+      await addSetMutation.mutateAsync({ sessionId: session.id, sessionExerciseId });
+      if (isSavedWorkout) {
+        await completedSessionQuery.refetch();
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Couldn’t add set",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
+  };
+
+  const handleRemoveSet = async (setId: string) => {
+    if (!session || !canEditWorkout) return;
+    try {
+      await removeSetMutation.mutateAsync({ sessionId: session.id, setId });
+      if (isSavedWorkout) {
+        await completedSessionQuery.refetch();
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Couldn’t remove set",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
+  };
+
   const handleStart = async () => {
     if (!selectedDay) return;
     setOutcome(null);
     try {
-      await startMutation.mutateAsync({ planDay: selectedDay });
+      await startMutation.mutateAsync({ planDay: selectedDay, workoutDate: today });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -166,7 +243,7 @@ const WorkoutPage = () => {
       if (notes !== session.notes) {
         await notesMutation.mutateAsync({ sessionId: session.id, notes });
       }
-      await completeMutation.mutateAsync(session.id);
+      await completeMutation.mutateAsync(session);
       setOutcome("Workout completed and saved to your history.");
     } catch (error) {
       toast({
@@ -193,7 +270,11 @@ const WorkoutPage = () => {
     }
   };
 
-  if (sessionQuery.isPending || plansQuery.isPending) {
+  if (
+    sessionQuery.isPending
+    || plansQuery.isPending
+    || (shouldLoadCompletedSession && completedSessionQuery.isPending)
+  ) {
     return <PageSkeleton label="Loading workout" variant="detail" />;
   }
 
@@ -218,10 +299,13 @@ const WorkoutPage = () => {
     const completedSets = allSets.filter((set) => set.isCompleted).length;
     const busy =
       setMutation.isPending
+      || addSetMutation.isPending
+      || removeSetMutation.isPending
       || completeMutation.isPending
       || cancelMutation.isPending
       || addExerciseMutation.isPending
       || removeExerciseMutation.isPending;
+    const controlsDisabled = busy || !canEditWorkout;
 
     return (
       <div className="space-y-5 animate-fade-in">
@@ -239,11 +323,19 @@ const WorkoutPage = () => {
         </div>
 
         <GlassCard className="border-primary/20 bg-primary/[.04]">
-          <div className="flex items-center gap-2">
-            <Save size={16} className="text-primary" />
-            <p className="text-sm text-foreground">
-              Workout changes are saved automatically.
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              {isSavedWorkout ? (
+                <CheckCircle2 size={16} className="text-primary" />
+              ) : (
+                <Save size={16} className="text-primary" />
+              )}
+              <p className="text-sm text-foreground">
+                {isSavedWorkout
+                  ? "Editing a saved workout. Changes will update history, progress, and PRs."
+                  : "Workout changes are saved automatically."}
+              </p>
+            </div>
           </div>
         </GlassCard>
 
@@ -252,8 +344,10 @@ const WorkoutPage = () => {
             <SessionExerciseCard
               key={exercise.id}
               exercise={exercise}
-              disabled={busy}
+              disabled={controlsDisabled}
               onUpdateSet={handleSetUpdate}
+              onAddSet={handleAddSet}
+              onRemoveSet={handleRemoveSet}
               onRemove={async (sessionExerciseId) => {
                 try {
                   await removeExerciseMutation.mutateAsync({
@@ -272,15 +366,17 @@ const WorkoutPage = () => {
           ))}
         </div>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          disabled={catalogQuery.isPending || busy}
-          onClick={() => setAddExerciseOpen(true)}
-        >
-          <Plus size={18} />
-          Add Exercise
-        </Button>
+        {!isSavedWorkout && (
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={catalogQuery.isPending || busy}
+            onClick={() => setAddExerciseOpen(true)}
+          >
+            <Plus size={18} />
+            Add Exercise
+          </Button>
+        )}
 
         <GlassCard>
           <label htmlFor="workout-notes" className="text-sm font-medium text-foreground block mb-2">
@@ -289,10 +385,20 @@ const WorkoutPage = () => {
           <textarea
             id="workout-notes"
             value={notes}
+            disabled={!canEditWorkout || busy}
             onChange={(event) => setNotes(event.target.value)}
             onBlur={() => {
-              if (notes !== session.notes) {
-                notesMutation.mutate({ sessionId: session.id, notes });
+              if (canEditWorkout && notes !== session.notes) {
+                notesMutation.mutate(
+                  { sessionId: session.id, notes },
+                  {
+                    onSuccess: () => {
+                      if (isSavedWorkout) {
+                        void completedSessionQuery.refetch();
+                      }
+                    },
+                  },
+                );
               }
             }}
             maxLength={5000}
@@ -304,21 +410,23 @@ const WorkoutPage = () => {
           </p>
         </GlassCard>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            className="text-destructive border-destructive/30"
-            disabled={busy}
-            onClick={() => void handleCancel()}
-          >
-            <XCircle size={18} />
-            Cancel
-          </Button>
-          <Button size="lg" disabled={busy} onClick={() => void handleComplete()}>
-            <CheckCircle2 size={18} />
-            Finish Workout
-          </Button>
-        </div>
+        {!isSavedWorkout && (
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="text-destructive border-destructive/30"
+              disabled={busy}
+              onClick={() => void handleCancel()}
+            >
+              <XCircle size={18} />
+              Cancel
+            </Button>
+            <Button size="lg" disabled={busy} onClick={() => void handleComplete()}>
+              <CheckCircle2 size={18} />
+              Finish Workout
+            </Button>
+          </div>
+        )}
 
         <AddExerciseDialog
           open={addExerciseOpen}

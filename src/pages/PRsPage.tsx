@@ -55,6 +55,7 @@ const PRsPage = () => {
   const {
     recordsQuery,
     historyQuery,
+    completedSetsQuery,
     detectMutation,
     createMutation,
     updateMutation,
@@ -67,10 +68,15 @@ const PRsPage = () => {
     ?? "Exercise";
 
   useEffect(() => {
-    if (!selectedExerciseId && data?.lifetimeBests.length) {
+    if (selectedExerciseId) return;
+
+    const latestHistoryPoint = completedSetsQuery.data?.at(-1);
+    if (latestHistoryPoint) {
+      setSelectedExerciseId(latestHistoryPoint.exerciseId);
+    } else if (data?.lifetimeBests.length) {
       setSelectedExerciseId(data.lifetimeBests[0].exerciseId);
     }
-  }, [data?.lifetimeBests, selectedExerciseId]);
+  }, [completedSetsQuery.data, data?.lifetimeBests, selectedExerciseId]);
 
   const chartData = useMemo(
     () => buildPRChartData(historyQuery.data ?? []),
@@ -234,6 +240,37 @@ const PRsPage = () => {
           )}
         </div>
       </GlassCard>
+
+      <div>
+        <h3 className="font-semibold text-foreground mb-3">Completed Set History</h3>
+        {completedSetsQuery.isPending ? (
+          <GlassCard className="flex items-center justify-center py-8">
+            <LoaderCircle className="animate-spin text-primary" />
+          </GlassCard>
+        ) : completedSetsQuery.data?.length ? (
+          <div className="space-y-2">
+            {[...completedSetsQuery.data].reverse().slice(0, 8).map((point) => (
+              <GlassCard key={point.sessionSetId}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-foreground text-sm">
+                      {point.exerciseName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {point.workoutDate} · {point.reps} reps
+                    </p>
+                  </div>
+                  <p className="font-bold text-foreground">{point.weightKg}kg</p>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="text-center text-sm text-muted-foreground">
+            Complete weighted sets to build workout history.
+          </GlassCard>
+        )}
+      </div>
 
       <div>
         <h3 className="font-semibold text-foreground mb-3">PR Timeline</h3>

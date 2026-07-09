@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { AlertCircle, LogOut, RefreshCw } from "lucide-react";
 
 import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
@@ -13,13 +13,15 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { session, profile, loading, error, refreshProfile, logout } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <AuthLoadingScreen />;
   }
 
   if (!session) {
-    return <Navigate to="/auth" replace />;
+    const redirectTo = `${location.pathname}${location.search}`;
+    return <Navigate to={`/auth?redirect=${encodeURIComponent(redirectTo)}`} replace />;
   }
 
   if (!profile || error) {

@@ -10,9 +10,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "./pages/Index.tsx";
 import AuthPage from "./pages/AuthPage.tsx";
+import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ const App = () => (
             <AchievementSync />
             <Routes>
             <Route
-              path="/auth"
+              path="/"
               element={
                 <PublicOnlyRoute>
                   <AuthPage />
@@ -37,10 +38,67 @@ const App = () => (
               }
             />
             <Route
-              path="/"
+              path="/auth"
+              element={
+                <PublicOnlyRoute>
+                  <AuthPage />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Index />
+                  <Index initialPage="home" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workout"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="workout" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/plan"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="plan" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="profile" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="progress" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prs"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="prs" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="notifications" />
                 </ProtectedRoute>
               }
             />

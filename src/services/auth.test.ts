@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { signupWithPassword } from "@/services/auth";
+import { getAuthErrorMessage, requestPasswordReset, signupWithPassword, updatePassword } from "@/services/auth";
 
 const authMock = vi.hoisted(() => ({
   signUp: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
+  updateUser: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -57,5 +59,36 @@ describe("signupWithPassword", () => {
         password: "password",
       }),
     ).resolves.toBeNull();
+  });
+
+  it("sends a password reset email for a normalized address", async () => {
+    authMock.resetPasswordForEmail.mockResolvedValue({ error: null });
+
+    await requestPasswordReset(" USER@Example.com ");
+
+    expect(authMock.resetPasswordForEmail).toHaveBeenCalledWith(
+      "user@example.com",
+      expect.objectContaining({ redirectTo: expect.stringContaining("/reset-password") }),
+    );
+  });
+
+  it("updates the password using the recovery session", async () => {
+    authMock.updateUser.mockResolvedValue({ data: { user: {} }, error: null });
+
+    await updatePassword("NewPassword123");
+
+    expect(authMock.updateUser).toHaveBeenCalledWith({ password: "NewPassword123" });
+  });
+
+  it("returns a friendly network message for offline failures", () => {
+    expect(getAuthErrorMessage(new Error("Failed to fetch"), "login")).toBe(
+      "Unable to connect. Please check your internet connection and try again.",
+    );
+  });
+
+  it("returns a validation message for invalid email errors", () => {
+    expect(getAuthErrorMessage(new Error("Invalid email"), "signup")).toBe(
+      "Please enter a valid email address.",
+    );
   });
 });

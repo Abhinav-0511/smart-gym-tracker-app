@@ -5,8 +5,22 @@ import type {
   WorkoutPlan,
 } from "@/types/workout-plan";
 
-function throwIfError(error: { message: string } | null): void {
-  if (error) throw error;
+type SupabaseLikeError = {
+  code?: string;
+  details?: string;
+  hint?: string;
+  message: string;
+  status?: number;
+};
+
+function toError(error: SupabaseLikeError): Error {
+  const normalized = new Error(error.message);
+  Object.assign(normalized, error);
+  return normalized;
+}
+
+function throwIfError(error: SupabaseLikeError | null): void {
+  if (error) throw toError(error);
 }
 
 export async function fetchWorkoutPlans(userId: string): Promise<WorkoutPlan[]> {
@@ -247,11 +261,12 @@ export async function reorderPlanExercises(
     throw new Error("Exercise ordering contains duplicate entries.");
   }
 
-  const { error } = await supabase.rpc("reorder_plan_exercises", {
+  const { data, error } = await supabase.rpc("reorder_plan_exercises", {
     p_day_id: dayId,
     p_ordered_ids: orderedExerciseIds,
   });
   throwIfError(error);
+  if (data !== true) throw new Error("Exercise ordering could not be reordered.");
 }
 
 export async function updatePlanSet(
@@ -292,4 +307,18 @@ export async function deleteWorkoutPlan(planId: string): Promise<void> {
     p_plan_id: planId,
   });
   throwIfError(error);
+}
+
+export async function deleteWorkoutPlanDay(dayId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("workout_plan_days")
+    .delete()
+    .eq("id", dayId)
+    .select("id")
+    .maybeSingle();
+
+  throwIfError(error);
+  if (!data) {
+    throw new Error("The workout day could not be removed.");
+  }
 }

@@ -43,6 +43,7 @@ const aggregate = {
     workoutDate: "2026-07-07",
     durationMinutes: 55,
   },
+  todayCompletedWorkout: null,
 };
 
 function makeDashboard(activeSession: object | null) {
@@ -110,5 +111,32 @@ describe("DashboardPage", () => {
 
     expect(screen.getByRole("button", { name: "Start Workout" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue Workout" })).not.toBeInTheDocument();
+  });
+
+  it("shows completed-today actions instead of Start Workout", () => {
+    const onNavigate = vi.fn();
+    dashboardMock.value = {
+      ...makeDashboard(null),
+      aggregateQuery: {
+        data: {
+          ...aggregate,
+          todayCompletedWorkout: {
+            id: "today-1",
+            title: "Triceps Day",
+            workoutDate: "2026-07-07",
+            durationMinutes: 45,
+          },
+        },
+        refetch,
+      },
+    };
+
+    render(<DashboardPage onNavigate={onNavigate} />);
+
+    expect(screen.getByText("Today's workout completed")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start Workout" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "See History" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Review Workout" })[0]);
+    expect(onNavigate).toHaveBeenCalledWith("workout");
   });
 });

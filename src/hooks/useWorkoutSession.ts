@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   addWorkoutSessionExercise,
+  addWorkoutSessionSet,
   cancelWorkoutSession,
   completeWorkoutSession,
   fetchActiveWorkoutSession,
   removeWorkoutSessionExercise,
+  removeWorkoutSessionSet,
   startWorkoutSession,
   updateWorkoutNotes,
   updateWorkoutSessionSet,
@@ -87,7 +89,45 @@ export function useWorkoutSession(userId: string | undefined) {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(queryKey, context?.previousSession ?? null);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        queryClient.invalidateQueries({ queryKey: ["personal-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["achievements"] }),
+      ]);
+    },
+  });
+
+  const addSetMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      sessionExerciseId,
+    }: {
+      sessionId: string;
+      sessionExerciseId: string;
+    }) => addWorkoutSessionSet(sessionId, sessionExerciseId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const removeSetMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      setId,
+    }: {
+      sessionId: string;
+      setId: string;
+    }) => removeWorkoutSessionSet(sessionId, setId),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        queryClient.invalidateQueries({ queryKey: ["personal-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["achievements"] }),
+      ]);
+    },
   });
 
   const notesMutation = useMutation({
@@ -115,6 +155,7 @@ export function useWorkoutSession(userId: string | undefined) {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
         queryClient.invalidateQueries({ queryKey: ["achievements"] }),
+        queryClient.invalidateQueries({ queryKey: ["notifications"] }),
       ]);
     },
   });
@@ -150,6 +191,8 @@ export function useWorkoutSession(userId: string | undefined) {
     sessionQuery,
     startMutation,
     setMutation,
+    addSetMutation,
+    removeSetMutation,
     notesMutation,
     completeMutation,
     cancelMutation,

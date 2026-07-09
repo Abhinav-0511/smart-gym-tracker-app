@@ -1,13 +1,52 @@
 import { supabase } from "@/lib/supabase";
 import type { Tables } from "@/types/database";
+import { getLocalDateString } from "@/types/dashboard";
 import type {
   StartWorkoutInput,
   WorkoutSession,
   WorkoutSetUpdate,
 } from "@/types/workout-session";
 
-function throwIfError(error: { message: string } | null): void {
-  if (error) throw error;
+type SupabaseLikeError = {
+  code?: string;
+  details?: string;
+  hint?: string;
+  message: string;
+  status?: number;
+};
+
+function toError(error: SupabaseLikeError): Error {
+  const normalized = new Error(error.message);
+  Object.assign(normalized, error);
+  return normalized;
+}
+
+function throwIfError(error: SupabaseLikeError | null): void {
+  if (error) throw toError(error);
+}
+
+function isMissingFinalizeRpcError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const code = "code" in error ? String(error.code) : "";
+  return (
+    code === "PGRST202"
+    || (
+      /finalize_workout_session/i.test(error.message)
+      && /could not find|not found|schema cache/i.test(error.message)
+    )
+  );
+}
+
+function isMissingWorkoutDateStartError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const code = "code" in error ? String(error.code) : "";
+  return (
+    code === "PGRST202"
+    || (
+      /start_workout_session/i.test(error.message)
+      && /could not find|not found|schema cache/i.test(error.message)
+    )
+  );
 }
 
 async function assertSessionInProgress(sessionId: string): Promise<void> {
@@ -18,36 +57,8 @@ async function assertSessionInProgress(sessionId: string): Promise<void> {
     .maybeSingle();
 
   throwIfError(error);
-
   if (!data || data.status !== "in_progress") {
     throw new Error("This workout is locked and can no longer be edited.");
-  }
-}
-
-async function assertSetBelongsToSession(
-  sessionId: string,
-  setId: string,
-): Promise<void> {
-  const { data: set, error: setError } = await supabase
-    .from("workout_session_sets")
-    .select("workout_session_exercise_id")
-    .eq("id", setId)
-    .maybeSingle();
-
-  throwIfError(setError);
-
-  if (!set) throw new Error("Workout set not found.");
-
-  const { data: exercise, error: exerciseError } = await supabase
-    .from("workout_session_exercises")
-    .select("workout_session_id")
-    .eq("id", set.workout_session_exercise_id)
-    .maybeSingle();
-
-  throwIfError(exerciseError);
-
-  if (exercise?.workout_session_id !== sessionId) {
-    throw new Error("Workout set does not belong to this session.");
   }
 }
 
@@ -147,9 +158,37 @@ export async function fetchActiveWorkoutSession(
   return data ? hydrateSession(data) : null;
 }
 
+export async function fetchCompletedWorkoutSessionForPlanDay(
+  userId: string,
+  planDayId: string,
+  workoutDate: string,
+  timezone: string,
+): Promise<WorkoutSession | null> {
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("workout_plan_day_id", planDayId)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+    .limit(10);
+
+  throwIfError(error);
+  const completedToday = (data ?? []).find(
+    (session) =>
+      session.workout_date === workoutDate
+      || (
+        session.completed_at
+        && getLocalDateString(new Date(session.completed_at), timezone) === workoutDate
+      ),
+  );
+  return completedToday ? hydrateSession(completedToday) : null;
+}
+
 export async function startWorkoutSession({
   userId,
   planDay,
+  workoutDate,
 }: StartWorkoutInput): Promise<WorkoutSession> {
   if (planDay.isRestDay) {
     throw new Error("A rest day cannot be started as a workout.");
@@ -158,10 +197,14 @@ export async function startWorkoutSession({
   const existingSession = await fetchActiveWorkoutSession(userId);
   if (existingSession) return existingSession;
 
-  const { data: sessionId, error: startError } = await supabase.rpc(
-    "start_workout_session",
-    { p_plan_day_id: planDay.id },
-  );
+  const startResult = await supabase.rpc("start_workout_session", {
+    p_plan_day_id: planDay.id,
+    p_workout_date: workoutDate,
+  });
+  const { data: sessionId, error: startError } =
+    startResult.error && isMissingWorkoutDateStartError(toError(startResult.error))
+      ? await supabase.rpc("start_workout_session", { p_plan_day_id: planDay.id })
+      : startResult;
   throwIfError(startError);
   if (!sessionId) throw new Error("Workout session could not be created.");
 
@@ -180,50 +223,58 @@ export async function updateWorkoutSessionSet(
   setId: string,
   updates: WorkoutSetUpdate,
 ): Promise<void> {
-  await assertSessionInProgress(sessionId);
-  await assertSetBelongsToSession(sessionId, setId);
-
-  const completedAt =
-    updates.isCompleted === undefined
-      ? undefined
-      : updates.isCompleted
-        ? new Date().toISOString()
-        : null;
-
-  const { data, error } = await supabase
-    .from("workout_session_sets")
-    .update({
-      ...(updates.reps === undefined ? {} : { reps: updates.reps }),
-      ...(updates.weightKg === undefined ? {} : { weight_kg: updates.weightKg }),
-      ...(updates.isCompleted === undefined
-        ? {}
-        : {
-            is_completed: updates.isCompleted,
-            completed_at: completedAt,
-          }),
-    })
-    .eq("id", setId)
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("update_workout_session_set", {
+    p_session_id: sessionId,
+    p_set_id: setId,
+    p_reps: updates.reps === undefined ? null : updates.reps,
+    p_reps_provided: updates.reps !== undefined,
+    p_weight_kg: updates.weightKg === undefined ? null : updates.weightKg,
+    p_weight_provided: updates.weightKg !== undefined,
+    p_is_completed: updates.isCompleted === undefined ? null : updates.isCompleted,
+    p_completed_provided: updates.isCompleted !== undefined,
+  });
 
   throwIfError(error);
-  if (!data) throw new Error("Workout set could not be updated.");
+  if (data !== true) throw new Error("Workout set could not be updated.");
+}
+
+export async function addWorkoutSessionSet(
+  sessionId: string,
+  sessionExerciseId: string,
+): Promise<void> {
+  const { data, error } = await supabase.rpc("add_workout_session_set", {
+    p_session_id: sessionId,
+    p_session_exercise_id: sessionExerciseId,
+  });
+
+  throwIfError(error);
+  if (!data) throw new Error("Workout set could not be added.");
+}
+
+export async function removeWorkoutSessionSet(
+  sessionId: string,
+  setId: string,
+): Promise<void> {
+  const { data, error } = await supabase.rpc("remove_workout_session_set", {
+    p_session_id: sessionId,
+    p_set_id: setId,
+  });
+
+  throwIfError(error);
+  if (data !== true) throw new Error("Workout set could not be removed.");
 }
 
 export async function updateWorkoutNotes(
   sessionId: string,
   notes: string,
 ): Promise<void> {
-  const { data, error } = await supabase
-    .from("workout_sessions")
-    .update({ notes })
-    .eq("id", sessionId)
-    .eq("status", "in_progress")
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("update_workout_session_notes", {
+    p_session_id: sessionId,
+    p_notes: notes,
+  });
 
   throwIfError(error);
-  if (!data) throw new Error("This workout is locked and can no longer be edited.");
+  if (data !== true) throw new Error("Workout notes could not be updated.");
 }
 
 async function closeWorkoutSession(
@@ -238,8 +289,65 @@ async function closeWorkoutSession(
   if (!data) throw new Error("This workout is already locked.");
 }
 
-export function completeWorkoutSession(sessionId: string): Promise<void> {
-  return closeWorkoutSession(sessionId, "completed");
+type WorkoutCompletionInput = Pick<WorkoutSession, "id" | "exercises">;
+
+async function completeSessionSets(session: WorkoutCompletionInput): Promise<void> {
+  const incompleteSetsWithReps = session.exercises.flatMap((exercise) =>
+    exercise.sets
+      .filter((set) => !set.isCompleted && set.reps !== null)
+      .map((set) => updateWorkoutSessionSet(session.id, set.id, {
+        isCompleted: true,
+      })),
+  );
+
+  await Promise.all(incompleteSetsWithReps);
+}
+
+export async function completeWorkoutSession(
+  input: string | WorkoutCompletionInput,
+): Promise<void> {
+  const sessionId = typeof input === "string" ? input : input.id;
+
+  if (typeof input !== "string") {
+    await completeSessionSets(input);
+  }
+
+  try {
+    await finalizeWorkoutSession(sessionId);
+  } catch (error) {
+    if (!isMissingFinalizeRpcError(error)) throw error;
+    await closeWorkoutSession(sessionId, "completed");
+    await verifyCompletedWorkoutSession(sessionId);
+  }
+}
+
+async function finalizeWorkoutSession(sessionId: string): Promise<void> {
+  const { data, error } = await supabase.rpc("finalize_workout_session", {
+    p_session_id: sessionId,
+  });
+
+  throwIfError(error);
+  if (
+    !data
+    || data.id !== sessionId
+    || data.status !== "completed"
+    || !data.completed_at
+  ) {
+    throw new Error("Workout completion could not be verified.");
+  }
+}
+
+async function verifyCompletedWorkoutSession(sessionId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("id, status, completed_at")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  throwIfError(error);
+  if (!data || data.status !== "completed" || !data.completed_at) {
+    throw new Error("Workout completion could not be verified.");
+  }
 }
 
 export function cancelWorkoutSession(sessionId: string): Promise<void> {
