@@ -121,6 +121,51 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          action_url: string | null;
+          created_at: string;
+          dedupe_key: string | null;
+          icon: string;
+          id: string;
+          message: string;
+          metadata: Json;
+          priority: string;
+          read_at: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          action_url?: string | null;
+          created_at?: string;
+          dedupe_key?: string | null;
+          icon: string;
+          id?: string;
+          message: string;
+          metadata?: Json;
+          priority?: string;
+          read_at?: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          action_url?: string | null;
+          created_at?: string;
+          dedupe_key?: string | null;
+          icon?: string;
+          id?: string;
+          message?: string;
+          metadata?: Json;
+          priority?: string;
+          read_at?: string | null;
+          title?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -478,11 +523,84 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      activate_workout_plan: {
+        Args: {
+          p_plan_id: string;
+        };
+        Returns: boolean;
+      };
+      add_plan_exercise_with_sets: {
+        Args: {
+          p_allow_duplicate?: boolean;
+          p_day_id: string;
+          p_exercise_id: string;
+        };
+        Returns: string;
+      };
+      add_plan_set: {
+        Args: {
+          p_plan_exercise_id: string;
+        };
+        Returns: string;
+      };
+      add_workout_session_exercise: {
+        Args: {
+          p_exercise_id: string;
+          p_session_id: string;
+        };
+        Returns: string;
+      };
+      close_workout_session: {
+        Args: {
+          p_session_id: string;
+          p_status: string;
+        };
+        Returns: boolean;
+      };
       create_exercise_catalog_item: {
         Args: {
           p_name: string;
         };
         Returns: Database["public"]["Tables"]["exercise_catalog"]["Row"];
+      };
+      create_workout_plan: {
+        Args: {
+          p_name: string;
+        };
+        Returns: string;
+      };
+      delete_workout_plan: {
+        Args: {
+          p_plan_id: string;
+        };
+        Returns: boolean;
+      };
+      reconcile_achievements: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["user_achievements"]["Row"][];
+      };
+      reconcile_personal_records: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      remove_plan_set: {
+        Args: {
+          p_set_id: string;
+        };
+        Returns: boolean;
+      };
+      reorder_plan_exercises: {
+        Args: {
+          p_day_id: string;
+          p_ordered_ids: string[];
+        };
+        Returns: boolean;
+      };
+      start_workout_session: {
+        Args: {
+          p_plan_day_id: string;
+        };
+        Returns: string;
       };
     };
     Enums: Record<string, never>;

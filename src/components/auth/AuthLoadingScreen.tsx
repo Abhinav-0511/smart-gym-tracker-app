@@ -1,12 +1,11 @@
-import { Flame, LoaderCircle } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 
 const AuthLoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center p-4 bg-background">
     <div className="text-center" role="status" aria-live="polite">
-      <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 glow-primary">
-        <Flame size={32} className="text-primary-foreground" />
+      <div className="mx-auto mb-4 flex h-16 w-16 animate-pulse items-center justify-center overflow-hidden rounded-2xl border border-border bg-white">
+        <BrandLogo className="h-[115%] w-[115%] max-w-none" />
       </div>
-      <LoaderCircle size={22} className="mx-auto animate-spin text-primary" />
       <p className="text-sm text-muted-foreground mt-3">Loading your account…</p>
     </div>
   </div>

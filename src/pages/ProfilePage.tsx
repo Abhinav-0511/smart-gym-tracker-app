@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Award,
   CalendarDays,
+  Camera,
   ChevronRight,
   Edit3,
   LoaderCircle,
@@ -13,9 +14,13 @@ import {
 } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
+import BrandLogo from "@/components/BrandLogo";
+import AvatarUploadDialog from "@/components/profile/AvatarUploadDialog";
 import EditProfileDialog from "@/components/profile/EditProfileDialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
+import PageSkeleton from "@/components/ui/page-skeleton";
+import SectionHeader from "@/components/ui/section-header";
 import {
   achievementCategoryLabels,
 } from "@/data/achievements";
@@ -23,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentBodyWeight } from "@/hooks/useCurrentBodyWeight";
-import { formatProfileValue, getProfileInitials } from "@/lib/profile";
+import { formatProfileValue } from "@/lib/profile";
 import type { ProfileUpdate } from "@/services/profiles";
 import { getLocalDateString } from "@/types/dashboard";
 
@@ -49,6 +54,7 @@ const ProfilePage = () => {
   const { toast } = useToast();
   const [signingOut, setSigningOut] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const achievementsQuery = useAchievements(user?.id);
   const { currentWeightQuery, updateWeightMutation } = useCurrentBodyWeight(user?.id);
 
@@ -111,12 +117,7 @@ const ProfilePage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center" role="status">
-        <LoaderCircle className="animate-spin text-primary" />
-        <span className="sr-only">Loading profile</span>
-      </div>
-    );
+    return <PageSkeleton label="Loading profile" variant="profile" />;
   }
 
   if (!profile || error) {
@@ -137,22 +138,24 @@ const ProfilePage = () => {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-col items-center text-center">
-        <Avatar className="w-20 h-20 mb-3">
-          <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name} />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-bold text-primary-foreground">
-            {getProfileInitials(profile.full_name)}
-          </AvatarFallback>
-        </Avatar>
-        <h1 className="text-xl font-bold text-foreground">{profile.full_name}</h1>
+        <button
+          type="button"
+          className="group relative mb-3 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          aria-label="Change profile avatar"
+          onClick={() => setAvatarOpen(true)}
+        >
+          <ProfileAvatar
+            avatarPath={profile.avatar_url}
+            fullName={profile.full_name}
+            className="h-20 w-20"
+            fallbackClassName="bg-accent text-2xl text-accent-foreground"
+          />
+          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/65 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Camera size={20} aria-hidden="true" />
+          </span>
+        </button>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">{profile.full_name}</h1>
         <p className="text-sm text-muted-foreground">{user?.email ?? "Email unavailable"}</p>
-        <div className="flex gap-6 mt-4">
-          {["Workouts", "Streak", "PRs"].map((label) => (
-            <div className="text-center" key={label}>
-              <p className="text-lg font-bold text-foreground">—</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
-            </div>
-          ))}
-        </div>
       </div>
 
       <GlassCard>
@@ -195,10 +198,11 @@ const ProfilePage = () => {
       </GlassCard>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-foreground">Achievements</h3>
-          <Award size={18} className="text-primary" />
-        </div>
+        <SectionHeader
+          className="mb-3"
+          title="Achievements"
+          action={<Award size={18} className="text-primary" />}
+        />
         {achievementsQuery.isPending ? (
           <GlassCard className="py-6 text-center" role="status">
             <LoaderCircle className="mx-auto animate-spin text-primary" size={20} />
@@ -253,7 +257,7 @@ const ProfilePage = () => {
                         <p className="mt-1 text-xs font-medium text-foreground">
                           {achievement.title}
                         </p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {achievement.description}
                         </p>
                         <div
@@ -269,7 +273,7 @@ const ProfilePage = () => {
                             style={{ width: `${achievement.progress.percentage}%` }}
                           />
                         </div>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {achievement.progress.current}
                           {achievement.progress.unit ?? ""} /{" "}
                           {achievement.progress.target}
@@ -354,6 +358,13 @@ const ProfilePage = () => {
         {signingOut ? "Signing Out…" : "Sign Out"}
       </Button>
 
+      <footer className="flex flex-col items-center gap-2 py-4 text-center">
+        <BrandLogo kind="vernex" className="h-8 w-auto max-w-[150px] opacity-50" />
+        <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">
+          FitTrack · Your Premium Gym Companion
+        </p>
+      </footer>
+
       <EditProfileDialog
         open={editOpen}
         profile={profile}
@@ -361,6 +372,16 @@ const ProfilePage = () => {
         weightLoading={currentWeightQuery.isPending}
         onOpenChange={setEditOpen}
         onSave={handleSave}
+      />
+      <AvatarUploadDialog
+        open={avatarOpen}
+        userId={user!.id}
+        fullName={profile.full_name}
+        currentAvatarPath={profile.avatar_url}
+        onOpenChange={setAvatarOpen}
+        onSaveReference={async (path) => {
+          await updateProfile({ avatar_url: path });
+        }}
       />
     </div>
   );

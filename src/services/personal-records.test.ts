@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fetchCompletedSetHistory } from "@/services/personal-records";
+import {
+  detectPersonalRecords,
+  fetchCompletedSetHistory,
+} from "@/services/personal-records";
 
 const supabaseMock = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -31,5 +35,16 @@ describe("completed workout history source", () => {
     expect(supabaseMock.from).toHaveBeenCalledWith("workout_sessions");
     expect(chain.eq).toHaveBeenCalledWith("user_id", "user-1");
     expect(chain.eq).toHaveBeenCalledWith("status", "completed");
+  });
+
+  it("delegates automatic record creation to the trusted database function", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: 2, error: null });
+
+    await expect(detectPersonalRecords("user-1")).resolves.toBe(2);
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("reconcile_personal_records");
+    expect(supabaseMock.rpc).not.toHaveBeenCalledWith(
+      "reconcile_personal_records",
+      expect.objectContaining({ user_id: "user-1" }),
+    );
   });
 });

@@ -22,6 +22,7 @@ import {
 import GlassCard from "@/components/GlassCard";
 import ManualPRDialog from "@/components/prs/ManualPRDialog";
 import { Button } from "@/components/ui/button";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import {
   Select,
   SelectContent,
@@ -86,12 +87,7 @@ const PRsPage = () => {
   };
 
   if (recordsQuery.isPending) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center" role="status">
-        <LoaderCircle className="animate-spin text-primary" />
-        <span className="sr-only">Loading personal records</span>
-      </div>
-    );
+    return <PageSkeleton label="Loading personal records" variant="analytics" />;
   }
 
   if (recordsQuery.isError) {
@@ -112,13 +108,13 @@ const PRsPage = () => {
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Personal Records</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Personal Records</h1>
           <p className="text-sm text-muted-foreground">
             {data?.records.length ?? 0} records tracked
           </p>
         </div>
         <Button
-          variant="glass"
+          variant="outline"
           size="sm"
           onClick={() => {
             setEditingRecord(null);
@@ -136,14 +132,14 @@ const PRsPage = () => {
             <GlassCard
               key={record.exerciseId}
               hover
-              className="text-center"
+              className="text-left"
               onClick={() => setSelectedExerciseId(record.exerciseId)}
             >
-              <Trophy size={24} className="text-primary mx-auto mb-2" />
-              <h3 className="font-bold text-foreground">{record.exerciseName}</h3>
-              <p className="text-2xl font-bold text-gradient mt-1">{record.weightKg}kg</p>
+              <Trophy size={20} className="mb-3 text-primary" />
+              <h3 className="font-medium text-foreground">{record.exerciseName}</h3>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{record.weightKg}kg</p>
               {record.previousWeightKg !== null && record.weightKg > record.previousWeightKg && (
-                <span className="text-xs text-primary flex items-center justify-center gap-1 mt-1">
+                <span className="mt-1 flex items-center gap-1 text-xs text-primary">
                   <ArrowUpRight size={12} />
                   +{(record.weightKg - record.previousWeightKg).toFixed(1)}kg
                 </span>
@@ -221,14 +217,14 @@ const PRsPage = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="prGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(142, 100%, 60%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="weight" stroke="hsl(142, 100%, 45%)" fill="url(#prGrad)" strokeWidth={2} />
+                <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" fill="url(#prGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (

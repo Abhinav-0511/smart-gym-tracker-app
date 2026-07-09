@@ -1,14 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import type {
-  AutoPRCandidate,
   ExerciseHistoryPoint,
-  ExistingPRSnapshot,
   LifetimeBest,
   ManualPRInput,
   PersonalRecord,
   PersonalRecordsData,
 } from "@/types/personal-record";
-import { findNewAutoPRs } from "@/types/personal-record";
 
 function throwIfError(error: { message: string } | null): void {
   if (error) throw error;
@@ -107,37 +104,10 @@ async function fetchRecordRows(userId: string) {
 }
 
 export async function detectPersonalRecords(userId: string): Promise<number> {
-  const [history, recordRows] = await Promise.all([
-    fetchCompletedSetHistory(userId),
-    fetchRecordRows(userId),
-  ]);
-  const snapshots: ExistingPRSnapshot[] = recordRows.map((record) => ({
-    exerciseId: record.exercise_id,
-    weightKg: record.weight_kg,
-    achievedOn: record.achieved_on,
-    sourceSetId: record.workout_session_set_id,
-    createdAt: record.created_at,
-  }));
-  const candidates = findNewAutoPRs(history as AutoPRCandidate[], snapshots);
-  let inserted = 0;
-
-  for (const candidate of candidates) {
-    const { error } = await supabase.from("personal_records").insert({
-      user_id: userId,
-      exercise_id: candidate.exerciseId,
-      workout_session_set_id: candidate.sessionSetId,
-      weight_kg: candidate.weightKg,
-      achieved_on: candidate.workoutDate,
-      source: "auto",
-    });
-
-    if (error && (error as { code?: string }).code !== "23505") {
-      throw error;
-    }
-    if (!error) inserted += 1;
-  }
-
-  return inserted;
+  void userId;
+  const { data, error } = await supabase.rpc("reconcile_personal_records");
+  throwIfError(error);
+  return data ?? 0;
 }
 
 export async function fetchPersonalRecords(
@@ -236,6 +206,9 @@ export async function createManualPersonalRecord(
     workout_session_set_id: null,
   });
 
+  if ((error as { code?: string } | null)?.code === "23505") {
+    throw new Error("This manual personal record already exists.");
+  }
   throwIfError(error);
 }
 
@@ -255,6 +228,9 @@ export async function updateManualPersonalRecord(
     .select("id")
     .maybeSingle();
 
+  if ((error as { code?: string } | null)?.code === "23505") {
+    throw new Error("This manual personal record already exists.");
+  }
   throwIfError(error);
   if (!data) throw new Error("Automatic records cannot be edited.");
 }

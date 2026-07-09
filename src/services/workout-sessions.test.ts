@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { updateWorkoutSessionSet } from "@/services/workout-sessions";
+import {
+  completeWorkoutSession,
+  updateWorkoutSessionSet,
+} from "@/services/workout-sessions";
 
 const supabaseMock = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -35,5 +39,15 @@ describe("workout session locking", () => {
 
     expect(supabaseMock.from).toHaveBeenCalledTimes(1);
     expect(supabaseMock.from).toHaveBeenCalledWith("workout_sessions");
+  });
+
+  it("closes a workout through the transactional database boundary", async () => {
+    supabaseMock.rpc.mockResolvedValue({ data: true, error: null });
+
+    await expect(completeWorkoutSession("session-1")).resolves.toBeUndefined();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("close_workout_session", {
+      p_session_id: "session-1",
+      p_status: "completed",
+    });
   });
 });

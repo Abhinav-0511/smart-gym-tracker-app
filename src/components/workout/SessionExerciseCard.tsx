@@ -63,7 +63,7 @@ const SessionSetRow = ({
   };
 
   return (
-    <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center">
+    <div className={`grid grid-cols-[2rem_1fr_1fr_2.75rem] items-center gap-2 rounded-xl transition-colors duration-200 ${set.isCompleted ? "bg-primary/[.06]" : ""}`}>
       <span className="text-sm text-muted-foreground text-center">{set.setNumber}</span>
       <input
         aria-label={`Set ${set.setNumber} actual reps`}
@@ -73,7 +73,7 @@ const SessionSetRow = ({
         disabled={disabled || set.isCompleted}
         onChange={(event) => setReps(event.target.value)}
         onBlur={() => void saveReps()}
-        className="bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+        className="h-11 rounded-xl border border-transparent bg-secondary px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
       <input
         aria-label={`Set ${set.setNumber} actual weight`}
@@ -85,12 +85,12 @@ const SessionSetRow = ({
         placeholder={usesBodyweight ? "BW" : "0"}
         onChange={(event) => setWeight(event.target.value)}
         onBlur={() => void saveWeight()}
-        className="bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+        className="h-11 rounded-xl border border-transparent bg-secondary px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
       <Button
         variant={set.isCompleted ? "default" : "ghost"}
         size="icon"
-        className="h-8 w-8"
+        className={`h-11 w-11 transition-transform duration-200 ${set.isCompleted ? "scale-100" : "scale-95"}`}
         disabled={disabled || (!set.isCompleted && reps.trim() === "")}
         onClick={() =>
           void onUpdate(set.id, { isCompleted: !set.isCompleted })
@@ -132,7 +132,7 @@ const SessionExerciseCard = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            className="h-11 w-11 text-muted-foreground hover:text-destructive"
             disabled={disabled}
             onClick={() => void onRemove(exercise.id)}
             aria-label={`Remove ${exercise.name}`}
@@ -142,7 +142,7 @@ const SessionExerciseCard = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground"
+            className="h-11 w-11 text-muted-foreground"
             onClick={() => setExpanded(!expanded)}
             aria-label={`${expanded ? "Collapse" : "Expand"} ${exercise.name}`}
           >
@@ -153,7 +153,7 @@ const SessionExerciseCard = ({
 
       {expanded && (
         <div className="mt-3 space-y-2">
-          <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-xs text-muted-foreground font-medium px-1">
+          <div className="grid grid-cols-[2rem_1fr_1fr_2.75rem] gap-2 px-1 text-xs font-medium text-muted-foreground">
             <span>Set</span>
             <span>Reps</span>
             <span>Weight (kg)</span>

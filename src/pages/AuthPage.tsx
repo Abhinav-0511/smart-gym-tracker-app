@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
-import { CheckCircle2, Eye, EyeOff, Flame, LoaderCircle } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { CheckCircle2, Eye, EyeOff, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 
+import BrandLogo from "@/components/BrandLogo";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,13 @@ const AuthPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const timer = window.setTimeout(() => setShowSplash(false), reduceMotion ? 300 : 2600);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const switchMode = (loginMode: boolean) => {
     if (submitting) return;
@@ -89,17 +97,63 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-sm space-y-8 animate-fade-in">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 glow-primary">
-            <Flame size={32} className="text-primary-foreground" />
+    <div className="relative min-h-screen overflow-hidden bg-background md:grid md:grid-cols-[1.15fr_.85fr]">
+      {showSplash && (
+        <div
+          className="mobile-splash fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#0b2454] px-7 py-8 text-white md:hidden"
+          role="status"
+          aria-label="Opening FitTrack"
+        >
+          <div className="auth-orbit absolute -right-24 top-20 h-80 w-80 rounded-full border border-primary/20" />
+          <div className="auth-orbit auth-orbit-delayed absolute -right-8 top-40 h-80 w-80 rounded-full border border-primary/10" />
+          <BrandLogo kind="vernex" className="splash-item h-10 w-auto max-w-[165px] rounded bg-white/95 px-2.5" />
+          <div className="relative z-10 my-auto">
+            <div className="splash-item splash-delay-1 mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-xs font-semibold text-primary">
+              <Sparkles size={14} /> Train with intention
+            </div>
+            <h2 className="splash-item splash-delay-2 text-[2.7rem] font-extrabold leading-[1.05] tracking-tight">
+              Every rep.<br />Every milestone.<br />
+              <span className="text-primary">One premium space.</span>
+            </h2>
+            <p className="splash-item splash-delay-3 mt-6 max-w-sm text-sm leading-6 text-white/60">
+              Plan smarter sessions, track meaningful progress, and turn consistency into your strongest habit.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">FitTrack</h1>
-          <p className="text-muted-foreground text-sm mt-1">Your premium gym companion</p>
+          <p className="splash-item splash-delay-4 relative z-10 flex items-center gap-2 text-xs text-white/45">
+            <ShieldCheck size={14} /> Private, secure, and built for your progress.
+          </p>
+        </div>
+      )}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <section className="auth-hero relative hidden min-h-screen flex-col justify-between overflow-hidden bg-[#0b2454] p-12 text-white md:flex">
+        <div className="auth-orbit absolute -right-20 top-6 h-60 w-60 rounded-full border border-primary/20 md:-right-24 md:top-24 md:h-80 md:w-80" />
+        <div className="auth-orbit auth-orbit-delayed absolute -right-4 top-16 h-60 w-60 rounded-full border border-primary/10 md:-right-8 md:top-40 md:h-80 md:w-80" />
+        <BrandLogo kind="vernex" className="auth-reveal h-9 w-auto max-w-[150px] rounded bg-white/95 px-2 md:h-10 md:max-w-[180px] md:px-3" />
+        <div className="relative z-10 max-w-xl">
+          <div className="auth-reveal auth-delay-1 mb-4 hidden items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-xs font-semibold text-primary sm:inline-flex md:mb-8">
+            <Sparkles size={14} /> Train with intention
+          </div>
+          <h2 className="auth-reveal auth-delay-2 text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-4xl md:text-5xl">
+            Every rep. <span className="md:block">Every milestone.</span><br className="md:hidden" /> <span className="text-primary">One premium space.</span>
+          </h2>
+          <p className="auth-reveal auth-delay-3 mt-3 max-w-md text-sm leading-6 text-white/60 md:mt-6 md:text-base md:leading-7">
+            Plan smarter sessions, track meaningful progress, and turn consistency into your strongest habit.
+          </p>
+        </div>
+        <p className="auth-reveal auth-delay-4 hidden items-center gap-2 text-xs text-white/45 md:flex"><ShieldCheck size={14} /> Private, secure, and built for your progress.</p>
+      </section>
+      <div className="login-reveal relative flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
+      <div className="w-full max-w-md space-y-7 animate-fade-in">
+        <div className="text-center">
+          <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[24px] bg-white shadow-xl">
+            <BrandLogo className="h-[115%] w-[115%] max-w-none" />
+          </div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">FitTrack</h1>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[.24em] text-primary">by VERNEX</p>
+          <p className="mt-3 text-sm text-muted-foreground">Your Premium Gym Companion</p>
         </div>
 
-        <GlassCard className="p-6">
+        <GlassCard className="p-5 sm:p-7">
           <div className="flex bg-secondary rounded-xl p-1 mb-6">
             <button
               type="button"
@@ -152,7 +206,7 @@ const AuthPage = () => {
                       onChange={(event) => setFullName(event.target.value)}
                       placeholder="Alex Johnson"
                       disabled={submitting}
-                      className="w-full bg-secondary rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-muted-foreground disabled:opacity-60"
+                      className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                 )}
@@ -168,7 +222,7 @@ const AuthPage = () => {
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="alex@example.com"
                     disabled={submitting}
-                    className="w-full bg-secondary rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-muted-foreground disabled:opacity-60"
+                    className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
@@ -184,7 +238,7 @@ const AuthPage = () => {
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="••••••••"
                       disabled={submitting}
-                      className="w-full bg-secondary rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-muted-foreground pr-10 disabled:opacity-60"
+                      className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                     />
                     <button
                       type="button"
@@ -212,6 +266,8 @@ const AuthPage = () => {
             </form>
           )}
         </GlassCard>
+        <BrandLogo kind="vernex" className="mx-auto h-7 w-auto max-w-[130px] opacity-45 md:hidden" />
+      </div>
       </div>
     </div>
   );
