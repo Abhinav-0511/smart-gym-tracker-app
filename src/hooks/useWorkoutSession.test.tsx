@@ -9,10 +9,12 @@ import type { WorkoutSession } from "@/types/workout-session";
 
 const serviceMocks = vi.hoisted(() => ({
   addWorkoutSessionExercise: vi.fn(),
+  addWorkoutSessionSet: vi.fn(),
   cancelWorkoutSession: vi.fn(),
   completeWorkoutSession: vi.fn(),
   fetchActiveWorkoutSession: vi.fn(),
   removeWorkoutSessionExercise: vi.fn(),
+  removeWorkoutSessionSet: vi.fn(),
   startWorkoutSession: vi.fn(),
   updateWorkoutNotes: vi.fn(),
   updateWorkoutSessionSet: vi.fn(),
@@ -87,6 +89,19 @@ function createWrapper() {
   );
 }
 
+function createHarness() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return { queryClient, wrapper };
+}
+
 describe("useWorkoutSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -97,7 +112,9 @@ describe("useWorkoutSession", () => {
     serviceMocks.completeWorkoutSession.mockResolvedValue(undefined);
     serviceMocks.cancelWorkoutSession.mockResolvedValue(undefined);
     serviceMocks.addWorkoutSessionExercise.mockResolvedValue(undefined);
+    serviceMocks.addWorkoutSessionSet.mockResolvedValue(undefined);
     serviceMocks.removeWorkoutSessionExercise.mockResolvedValue(undefined);
+    serviceMocks.removeWorkoutSessionSet.mockResolvedValue(undefined);
   });
 
   it("restores and resumes an in-progress workout after remount", async () => {
@@ -128,16 +145,39 @@ describe("useWorkoutSession", () => {
     });
 
     await waitFor(() => expect(result.current.sessionQuery.isSuccess).toBe(true));
-    await act(() => result.current.startMutation.mutateAsync({ planDay }));
+    await act(() =>
+      result.current.startMutation.mutateAsync({
+        planDay,
+        workoutDate: "2026-07-03",
+      }),
+    );
 
     expect(serviceMocks.startWorkoutSession).toHaveBeenCalledWith({
       userId: "user-1",
       planDay,
+      workoutDate: "2026-07-03",
     });
     expect(planDay).toEqual(originalTemplate);
   });
 
   it("autosaves actual set values", async () => {
+    const persistedSession: WorkoutSession = {
+      ...session,
+      exercises: session.exercises.map((exercise) => ({
+        ...exercise,
+        sets: exercise.sets.map((set) => ({
+          ...set,
+          reps: 10,
+          weightKg: 82.5,
+          isCompleted: true,
+          completedAt: "2026-07-03T04:05:00.000Z",
+        })),
+      })),
+    };
+    serviceMocks.fetchActiveWorkoutSession
+      .mockResolvedValueOnce(session)
+      .mockResolvedValue(persistedSession);
+
     const { result } = renderHook(() => useWorkoutSession("user-1"), {
       wrapper: createWrapper(),
     });
@@ -156,18 +196,104 @@ describe("useWorkoutSession", () => {
       "session-set-1",
       { reps: 10, weightKg: 82.5, isCompleted: true },
     );
+    await waitFor(() =>
+      expect(result.current.sessionQuery.data?.exercises[0].sets[0]).toEqual(
+        persistedSession.exercises[0].sets[0],
+      ),
+    );
   });
 
-  it("completes and removes the active draft from the cache", async () => {
+  it("rolls an optimistic set edit back when autosave fails", async () => {
+    serviceMocks.updateWorkoutSessionSet.mockRejectedValueOnce(
+      new Error("Save failed"),
+    );
     const { result } = renderHook(() => useWorkoutSession("user-1"), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.sessionQuery.data).toEqual(session));
-    await act(() => result.current.completeMutation.mutateAsync("session-1"));
+    await expect(
+      act(() =>
+        result.current.setMutation.mutateAsync({
+          sessionId: "session-1",
+          setId: "session-set-1",
+          updates: { reps: 12, weightKg: 90 },
+        }),
+      ),
+    ).rejects.toThrow("Save failed");
 
-    expect(serviceMocks.completeWorkoutSession).toHaveBeenCalledWith("session-1");
+    await waitFor(() =>
+      expect(result.current.sessionQuery.data?.exercises[0].sets[0]).toEqual(
+        session.exercises[0].sets[0],
+      ),
+    );
+  });
+
+  it("completes after saved edits and removes the active draft from the cache", async () => {
+    const { queryClient, wrapper } = createHarness();
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useWorkoutSession("user-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.sessionQuery.data).toEqual(session));
+    await act(() =>
+      result.current.setMutation.mutateAsync({
+        sessionId: "session-1",
+        setId: "session-set-1",
+        updates: { reps: 10, weightKg: 82.5, isCompleted: true },
+      }),
+    );
+    await act(() => result.current.completeMutation.mutateAsync(session));
+
+    expect(serviceMocks.updateWorkoutSessionSet).toHaveBeenCalled();
+    expect(serviceMocks.completeWorkoutSession).toHaveBeenCalledWith(session);
     await waitFor(() => expect(result.current.sessionQuery.data).toBeNull());
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["progress"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["personal-records"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["achievements"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["notifications"] });
+  });
+
+  it("adds a set to a session exercise", async () => {
+    const { result } = renderHook(() => useWorkoutSession("user-1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.sessionQuery.data).toEqual(session));
+    await act(() =>
+      result.current.addSetMutation.mutateAsync({
+        sessionId: "session-1",
+        sessionExerciseId: "session-exercise-1",
+      }),
+    );
+
+    expect(serviceMocks.addWorkoutSessionSet).toHaveBeenCalledWith(
+      "session-1",
+      "session-exercise-1",
+    );
+  });
+
+  it("removes a set and refreshes derived data", async () => {
+    const { queryClient, wrapper } = createHarness();
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useWorkoutSession("user-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.sessionQuery.data).toEqual(session));
+    await act(() =>
+      result.current.removeSetMutation.mutateAsync({
+        sessionId: "session-1",
+        setId: "session-set-1",
+      }),
+    );
+
+    expect(serviceMocks.removeWorkoutSessionSet).toHaveBeenCalledWith(
+      "session-1",
+      "session-set-1",
+    );
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["personal-records"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["progress"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["achievements"] });
   });
 
   it("cancels and removes the active draft from the cache", async () => {

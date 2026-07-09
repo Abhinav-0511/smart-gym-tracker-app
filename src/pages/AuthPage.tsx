@@ -1,12 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle2, Eye, EyeOff, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 
 import BrandLogo from "@/components/BrandLogo";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { getAuthErrorMessage } from "@/services/auth";
+import { getAuthErrorMessage, isValidEmailAddress, normalizeEmailAddress, requestPasswordReset } from "@/services/auth";
 
 const AuthPage = () => {
   const { login, signup } = useAuth();
@@ -20,6 +20,9 @@ const AuthPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [showSplash, setShowSplash] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
+  const [forgotPasswordSubmitting, setForgotPasswordSubmitting] = useState(false);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -28,23 +31,42 @@ const AuthPage = () => {
   }, []);
 
   const switchMode = (loginMode: boolean) => {
-    if (submitting) return;
+    if (submitting || forgotPasswordSubmitting) return;
 
     setIsLogin(loginMode);
+    setIsForgotPassword(false);
+    setForgotPasswordSent(false);
     setError(null);
     setConfirmationEmail(null);
   };
+
+  const emailFieldState = useMemo(() => {
+    const normalizedEmail = normalizeEmailAddress(email);
+    if (!normalizedEmail) {
+      return { invalid: false, message: null };
+    }
+
+    return {
+      invalid: !isValidEmailAddress(normalizedEmail),
+      message: !isValidEmailAddress(normalizedEmail) ? "Please enter a valid email address." : null,
+    };
+  }, [email]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (submitting) return;
 
-    const normalizedEmail = email.trim();
+    const normalizedEmail = normalizeEmailAddress(email);
     const normalizedFullName = fullName.trim();
 
     if (!normalizedEmail || !password || (!isLogin && !normalizedFullName)) {
       setError("Please complete all required fields.");
+      return;
+    }
+
+    if (!isValidEmailAddress(normalizedEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -93,6 +115,37 @@ const AuthPage = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (forgotPasswordSubmitting) return;
+
+    const normalizedEmail = normalizeEmailAddress(email);
+
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!isValidEmailAddress(normalizedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    setForgotPasswordSubmitting(true);
+    setError(null);
+
+    try {
+      await requestPasswordReset(normalizedEmail);
+      setForgotPasswordSent(true);
+    } catch (submitError) {
+      const message = getAuthErrorMessage(submitError, "forgot-password");
+      setError(message);
+    } finally {
+      setForgotPasswordSubmitting(false);
     }
   };
 
@@ -190,6 +243,63 @@ const AuthPage = () => {
                 Back to Log In
               </Button>
             </div>
+          ) : isForgotPassword ? (
+            <form onSubmit={handleForgotPassword}>
+              <div className="mb-5 flex items-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-full p-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setForgotPasswordSent(false);
+                    setError(null);
+                  }}
+                  aria-label="Back to sign in"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Reset your password</h2>
+                  <p className="text-sm text-muted-foreground">We’ll send a secure link to your inbox.</p>
+                </div>
+              </div>
+
+              {forgotPasswordSent ? (
+                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-foreground" role="status">
+                  <p className="font-medium">If an account exists for this email, a password reset link has been sent.</p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="forgot-email" className="text-sm font-medium text-foreground block mb-1.5">
+                      Email
+                    </label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="alex@example.com"
+                      disabled={forgotPasswordSubmitting}
+                      aria-invalid={emailFieldState.invalid}
+                      className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+
+                  {error && (
+                    <p className="text-sm text-destructive mt-4" role="alert">
+                      {error}
+                    </p>
+                  )}
+
+                  <Button size="lg" type="submit" className="w-full mt-6" disabled={forgotPasswordSubmitting}>
+                    {forgotPasswordSubmitting && <LoaderCircle size={16} className="animate-spin" />}
+                    {forgotPasswordSubmitting ? "Sending…" : "Send reset link"}
+                  </Button>
+                </>
+              )}
+            </form>
           ) : (
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
@@ -222,6 +332,7 @@ const AuthPage = () => {
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="alex@example.com"
                     disabled={submitting}
+                    aria-invalid={emailFieldState.invalid}
                     className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -257,6 +368,20 @@ const AuthPage = () => {
                 <p className="text-sm text-destructive mt-4" role="alert">
                   {error}
                 </p>
+              )}
+
+              {isLogin && (
+                <button
+                  type="button"
+                  className="mt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setError(null);
+                    setConfirmationEmail(null);
+                  }}
+                >
+                  Forgot Password?
+                </button>
               )}
 
               <Button size="lg" type="submit" className="w-full mt-6" disabled={submitting}>

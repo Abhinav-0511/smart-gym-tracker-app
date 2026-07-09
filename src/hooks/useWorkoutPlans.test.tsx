@@ -14,6 +14,7 @@ const serviceMocks = vi.hoisted(() => ({
   createWorkoutPlanDay: vi.fn(),
   createExerciseCatalogItem: vi.fn(),
   deleteWorkoutPlan: vi.fn(),
+  deleteWorkoutPlanDay: vi.fn(),
   fetchExerciseCatalog: vi.fn(),
   fetchWorkoutPlans: vi.fn(),
   removePlanExercise: vi.fn(),
@@ -114,6 +115,7 @@ describe("useWorkoutPlans", () => {
     serviceMocks.addPlanSet.mockResolvedValue(undefined);
     serviceMocks.removePlanSet.mockResolvedValue(undefined);
     serviceMocks.deleteWorkoutPlan.mockResolvedValue(undefined);
+    serviceMocks.deleteWorkoutPlanDay.mockResolvedValue(undefined);
   });
 
   it("loads the user’s plans", async () => {
@@ -188,6 +190,25 @@ describe("useWorkoutPlans", () => {
   });
 
   it("reorders exercises", async () => {
+    const reorderedPlans: WorkoutPlan[] = [
+      {
+        ...plans[0],
+        days: [
+          {
+            ...plans[0].days[0],
+            exercises: [
+              { ...plans[0].days[0].exercises[1], position: 1 },
+              { ...plans[0].days[0].exercises[0], position: 2 },
+            ],
+          },
+        ],
+      },
+      plans[1],
+    ];
+    serviceMocks.fetchWorkoutPlans
+      .mockResolvedValueOnce(plans)
+      .mockResolvedValue(reorderedPlans);
+
     const { result } = renderHook(() => useWorkoutPlans("user-1"), {
       wrapper: createWrapper(),
     });
@@ -203,6 +224,40 @@ describe("useWorkoutPlans", () => {
     expect(serviceMocks.reorderPlanExercises).toHaveBeenCalledWith(
       "day-1",
       ["planned-exercise-2", "planned-exercise-1"],
+    );
+    await waitFor(() =>
+      expect(
+        result.current.plansQuery.data?.[0].days[0].exercises.map(
+          (exercise) => exercise.id,
+        ),
+      ).toEqual(["planned-exercise-2", "planned-exercise-1"]),
+    );
+  });
+
+  it("rolls a failed exercise reorder back", async () => {
+    serviceMocks.reorderPlanExercises.mockRejectedValueOnce(
+      new Error("Reorder failed"),
+    );
+    const { result } = renderHook(() => useWorkoutPlans("user-1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.plansQuery.data).toEqual(plans));
+    await expect(
+      act(() =>
+        result.current.reorderExercisesMutation.mutateAsync({
+          dayId: "day-1",
+          orderedExerciseIds: ["planned-exercise-2", "planned-exercise-1"],
+        }),
+      ),
+    ).rejects.toThrow("Reorder failed");
+
+    await waitFor(() =>
+      expect(
+        result.current.plansQuery.data?.[0].days[0].exercises.map(
+          (exercise) => exercise.id,
+        ),
+      ).toEqual(["planned-exercise-1", "planned-exercise-2"]),
     );
   });
 

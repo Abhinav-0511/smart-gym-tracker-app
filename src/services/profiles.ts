@@ -42,6 +42,15 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   return data;
 }
 
+function getBrowserTimezone(): string {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return timezone && timezone.trim() ? timezone : "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 export async function getOrCreateProfile(user: User): Promise<Profile> {
   const existingProfile = await fetchProfile(user.id);
 
@@ -53,6 +62,7 @@ export async function getOrCreateProfile(user: User): Promise<Profile> {
     {
       id: user.id,
       full_name: getProfileName(user),
+      timezone: getBrowserTimezone(),
     },
     {
       onConflict: "id",

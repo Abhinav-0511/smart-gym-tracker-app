@@ -49,6 +49,11 @@ describe("dashboard workout aggregation", () => {
       workoutDate: "2026-07-09",
       durationMinutes: 60,
     });
+    expect(result.todayCompletedWorkout).toMatchObject({
+      id: "7",
+      workoutDate: "2026-07-09",
+      durationMinutes: 60,
+    });
   });
 
   it("returns zero current streak when the latest workout is older than yesterday", () => {
@@ -61,6 +66,30 @@ describe("dashboard workout aggregation", () => {
 
     expect(result.currentStreak).toBe(0);
     expect(result.longestStreak).toBe(1);
+  });
+
+  it("uses completed_at in the user timezone for today's completed workout", () => {
+    const result = calculateDashboardWorkoutAggregate(
+      [
+        workout(
+          "timezone-shifted",
+          "2026-07-06",
+          "2026-07-06T18:00:00.000Z",
+          "2026-07-06T19:30:00.000Z",
+        ),
+      ],
+      1,
+      "Asia/Calcutta",
+      new Date("2026-07-07T06:00:00.000Z"),
+    );
+
+    expect(result.todayCompletedWorkout).toMatchObject({
+      id: "timezone-shifted",
+      workoutDate: "2026-07-06",
+    });
+    expect(result.weeklyDays.find((day) => day.dayOfWeek === 2)?.completed).toBe(
+      true,
+    );
   });
 
   it("creates timezone-aware greetings", () => {

@@ -12,6 +12,7 @@ import {
   createWorkoutPlan,
   createWorkoutPlanDay,
   deleteWorkoutPlan,
+  deleteWorkoutPlanDay,
   fetchWorkoutPlans,
   removePlanExercise,
   removePlanSet,
@@ -206,6 +207,11 @@ export function useWorkoutPlans(userId: string | undefined) {
     onSuccess: () => invalidatePlans(queryClient, resolvedUserId),
   });
 
+  const deleteDayMutation = useMutation({
+    mutationFn: deleteWorkoutPlanDay,
+    onSuccess: () => invalidatePlans(queryClient, resolvedUserId),
+  });
+
   return {
     plansQuery,
     catalogQuery,
@@ -222,5 +228,6 @@ export function useWorkoutPlans(userId: string | undefined) {
     addSetMutation,
     removeSetMutation,
     deletePlanMutation,
+    deleteDayMutation,
   };
 }

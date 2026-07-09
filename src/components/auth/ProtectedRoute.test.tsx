@@ -72,4 +72,24 @@ describe("ProtectedRoute", () => {
 
     expect(screen.getByText("Private application")).toBeInTheDocument();
   });
+
+  it("shows the auth page for a protected route when the session is missing", () => {
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div>Private application</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/auth" element={<div>Public authentication</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Public authentication")).toBeInTheDocument();
+  });
 });

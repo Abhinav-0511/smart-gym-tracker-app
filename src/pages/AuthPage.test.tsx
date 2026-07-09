@@ -8,6 +8,10 @@ const authMocks = vi.hoisted(() => ({
   signup: vi.fn(),
 }));
 
+const authServiceMocks = vi.hoisted(() => ({
+  requestPasswordReset: vi.fn(),
+}));
+
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     login: authMocks.login,
@@ -21,18 +25,28 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+vi.mock("@/services/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/services/auth")>("@/services/auth");
+
+  return {
+    ...actual,
+    requestPasswordReset: authServiceMocks.requestPasswordReset,
+  };
+});
+
 describe("AuthPage", () => {
   beforeEach(() => {
     authMocks.login.mockReset();
     authMocks.signup.mockReset();
+    authServiceMocks.requestPasswordReset.mockReset();
   });
 
-  it("submits login credentials once", async () => {
+  it("submits normalized login credentials once", async () => {
     authMocks.login.mockResolvedValue(undefined);
     render(<AuthPage />);
 
     fireEvent.change(screen.getByLabelText("Email"), {
-      target: { value: " alex@example.com " },
+      target: { value: " USER@Example.com " },
     });
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password" },
@@ -42,10 +56,26 @@ describe("AuthPage", () => {
     await waitFor(() => {
       expect(authMocks.login).toHaveBeenCalledTimes(1);
       expect(authMocks.login).toHaveBeenCalledWith({
-        email: "alex@example.com",
+        email: "user@example.com",
         password: "password",
       });
     });
+  });
+
+  it("blocks invalid email addresses before submitting", async () => {
+    render(<AuthPage />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "not-an-email" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password" },
+    });
+    fireEvent.submit(screen.getByLabelText("Password").closest("form")!);
+
+    expect(await screen.findByText("Please enter a valid email address.")).toBeInTheDocument();
+    expect(authMocks.login).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
   });
 
   it("shows a useful login error", async () => {
@@ -63,6 +93,22 @@ describe("AuthPage", () => {
     expect(
       await screen.findByText("The email or password you entered is incorrect."),
     ).toBeInTheDocument();
+  });
+
+  it("requests a password reset link for a valid email", async () => {
+    authServiceMocks.requestPasswordReset.mockResolvedValue(undefined);
+    render(<AuthPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /forgot password/i }));
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: " USER@Example.com " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send reset link/i }));
+
+    expect(
+      await screen.findByText(/password reset link has been sent/i),
+    ).toBeInTheDocument();
+    expect(authServiceMocks.requestPasswordReset).toHaveBeenCalledWith("user@example.com");
   });
 
   it("handles signup that requires email confirmation", async () => {

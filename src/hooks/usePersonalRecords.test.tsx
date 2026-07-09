@@ -9,6 +9,7 @@ const serviceMocks = vi.hoisted(() => ({
   createManualPersonalRecord: vi.fn(),
   deleteManualPersonalRecord: vi.fn(),
   detectPersonalRecords: vi.fn(),
+  fetchCompletedSetHistory: vi.fn(),
   fetchExerciseHistory: vi.fn(),
   fetchPersonalRecords: vi.fn(),
   updateManualPersonalRecord: vi.fn(),
@@ -39,6 +40,7 @@ describe("usePersonalRecords", () => {
     vi.clearAllMocks();
     serviceMocks.fetchPersonalRecords.mockResolvedValue(recordsData);
     serviceMocks.fetchExerciseHistory.mockResolvedValue([]);
+    serviceMocks.fetchCompletedSetHistory.mockResolvedValue([]);
     serviceMocks.detectPersonalRecords.mockResolvedValue(0);
     serviceMocks.createManualPersonalRecord.mockResolvedValue(undefined);
     serviceMocks.updateManualPersonalRecord.mockResolvedValue(undefined);
@@ -53,8 +55,12 @@ describe("usePersonalRecords", () => {
 
     await waitFor(() => expect(result.current.recordsQuery.isSuccess).toBe(true));
     await waitFor(() => expect(result.current.historyQuery.isSuccess).toBe(true));
+    await waitFor(() =>
+      expect(result.current.completedSetsQuery.isSuccess).toBe(true),
+    );
 
     expect(serviceMocks.fetchPersonalRecords).toHaveBeenCalledWith("user-1");
+    expect(serviceMocks.fetchCompletedSetHistory).toHaveBeenCalledWith("user-1");
     expect(serviceMocks.fetchExerciseHistory).toHaveBeenCalledWith(
       "user-1",
       "exercise-1",

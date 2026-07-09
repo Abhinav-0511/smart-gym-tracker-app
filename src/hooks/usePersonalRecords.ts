@@ -4,6 +4,7 @@ import {
   createManualPersonalRecord,
   deleteManualPersonalRecord,
   detectPersonalRecords,
+  fetchCompletedSetHistory,
   fetchExerciseHistory,
   fetchPersonalRecords,
   updateManualPersonalRecord,
@@ -15,6 +16,8 @@ export const personalRecordKeys = {
   list: (userId: string) => [...personalRecordKeys.all, userId] as const,
   history: (userId: string, exerciseId: string) =>
     [...personalRecordKeys.all, userId, "history", exerciseId] as const,
+  completedSets: (userId: string) =>
+    [...personalRecordKeys.all, userId, "completed-sets"] as const,
 };
 
 export function usePersonalRecords(
@@ -34,6 +37,12 @@ export function usePersonalRecords(
     queryKey: personalRecordKeys.history(resolvedUserId, exerciseId ?? ""),
     queryFn: () => fetchExerciseHistory(resolvedUserId, exerciseId ?? ""),
     enabled: Boolean(userId && exerciseId),
+  });
+
+  const completedSetsQuery = useQuery({
+    queryKey: personalRecordKeys.completedSets(resolvedUserId),
+    queryFn: () => fetchCompletedSetHistory(resolvedUserId),
+    enabled: Boolean(userId),
   });
 
   const invalidate = () =>
@@ -71,6 +80,7 @@ export function usePersonalRecords(
   return {
     recordsQuery,
     historyQuery,
+    completedSetsQuery,
     detectMutation,
     createMutation,
     updateMutation,

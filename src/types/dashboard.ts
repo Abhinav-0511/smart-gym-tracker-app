@@ -20,6 +20,8 @@ export interface LastWorkoutSummary {
   durationMinutes: number | null;
 }
 
+export type TodayCompletedWorkoutSummary = LastWorkoutSummary;
+
 export interface DashboardWorkoutAggregate {
   totalCompletedWorkouts: number;
   totalPRCount: number;
@@ -28,6 +30,7 @@ export interface DashboardWorkoutAggregate {
   weeklyCompletedDays: number;
   weeklyDays: WeeklyConsistencyDay[];
   lastWorkout: LastWorkoutSummary | null;
+  todayCompletedWorkout: TodayCompletedWorkoutSummary | null;
 }
 
 function parseDate(date: string): Date {
@@ -111,7 +114,12 @@ export function calculateDashboardWorkoutAggregate(
   const todayValue = parseDate(today);
   const mondayOffset = (todayValue.getUTCDay() + 6) % 7;
   const monday = addDays(today, -mondayOffset);
-  const completedDateSet = new Set(uniqueDates);
+  const completedDateSet = new Set([
+    ...uniqueDates,
+    ...rows.flatMap((row) =>
+      row.completedAt ? [getLocalDateString(new Date(row.completedAt), timezone)] : [],
+    ),
+  ]);
   const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const weeklyDays = shortDays.map((shortDay, index) => {
     const date = addDays(monday, index);
@@ -128,17 +136,29 @@ export function calculateDashboardWorkoutAggregate(
       right.workoutDate.localeCompare(left.workoutDate)
       || (right.completedAt ?? "").localeCompare(left.completedAt ?? ""),
   )[0];
-  const durationMinutes =
-    latestWorkout?.startedAt && latestWorkout.completedAt
+  const getDurationMinutes = (row: CompletedWorkoutRow | undefined) =>
+    row?.startedAt && row.completedAt
       ? Math.max(
           0,
           Math.round(
-            (new Date(latestWorkout.completedAt).getTime()
-              - new Date(latestWorkout.startedAt).getTime())
+            (new Date(row.completedAt).getTime()
+              - new Date(row.startedAt).getTime())
               / 60_000,
           ),
         )
       : null;
+  const todayCompletedWorkout = [...rows]
+    .filter((row) =>
+      row.workoutDate === today
+      || (
+        row.completedAt
+        && getLocalDateString(new Date(row.completedAt), timezone) === today
+      ),
+    )
+    .sort(
+      (left, right) =>
+        (right.completedAt ?? "").localeCompare(left.completedAt ?? ""),
+    )[0];
 
   return {
     totalCompletedWorkouts,
@@ -152,7 +172,15 @@ export function calculateDashboardWorkoutAggregate(
           id: latestWorkout.id,
           title: latestWorkout.title,
           workoutDate: latestWorkout.workoutDate,
-          durationMinutes,
+          durationMinutes: getDurationMinutes(latestWorkout),
+        }
+      : null,
+    todayCompletedWorkout: todayCompletedWorkout
+      ? {
+          id: todayCompletedWorkout.id,
+          title: todayCompletedWorkout.title,
+          workoutDate: todayCompletedWorkout.workoutDate,
+          durationMinutes: getDurationMinutes(todayCompletedWorkout),
         }
       : null,
   };

@@ -95,7 +95,7 @@ const SetRow = ({
         disabled={disabled}
         onChange={(event) => setReps(event.target.value)}
         onBlur={() => void saveReps()}
-        className="bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+        className="w-full min-w-0 bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
       />
       <input
         aria-label={`Set ${plannedSet.setNumber} weight`}
@@ -107,7 +107,7 @@ const SetRow = ({
         placeholder={usesBodyweight ? "BW" : "0"}
         onChange={(event) => setWeight(event.target.value)}
         onBlur={() => void saveWeight()}
-        className="bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+        className="w-full min-w-0 bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
       />
       <Button
         type="button"

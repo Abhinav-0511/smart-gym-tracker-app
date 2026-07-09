@@ -12,17 +12,73 @@ export interface SignupCredentials extends LoginCredentials {
 }
 
 const DUPLICATE_EMAIL_MESSAGE = "An account with this email already exists.";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function normalizeEmailAddress(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export function isValidEmailAddress(email: string): boolean {
+  return EMAIL_REGEX.test(normalizeEmailAddress(email));
+}
+
+function getErrorCategory(error: unknown): "network" | "server" | "authentication" | "validation" | "unknown" {
+  if (!(error instanceof Error)) {
+    return "unknown";
+  }
+
+  const message = error.message.toLowerCase();
+  const code = "code" in error && typeof error.code === "string" ? error.code.toLowerCase() : "";
+
+  if (message.includes("invalid email") || code === "email_address_invalid") {
+    return "validation";
+  }
+
+  if (
+    message.includes("failed to fetch")
+    || message.includes("network")
+    || message.includes("offline")
+    || message.includes("socket")
+    || message.includes("load failed")
+  ) {
+    return "network";
+  }
+
+  if (message.includes("500") || message.includes("internal server") || message.includes("server error")) {
+    return "server";
+  }
+
+  if (message.includes("invalid login credentials") || message.includes("email not confirmed")) {
+    return "authentication";
+  }
+
+  return "unknown";
+}
 
 export function getAuthErrorMessage(
   error: unknown,
-  operation: "login" | "signup",
+  operation: "login" | "signup" | "forgot-password" | "reset-password",
 ): string {
   const fallback =
     operation === "login"
       ? "Unable to log in right now. Please try again."
-      : "Unable to create your account right now. Please try again.";
+      : operation === "forgot-password"
+        ? "We couldn’t send a reset link right now. Please try again."
+        : operation === "reset-password"
+          ? "We couldn’t update your password right now. Please try again."
+          : "Unable to create your account right now. Please try again.";
 
   if (!(error instanceof Error)) return fallback;
+
+  const category = getErrorCategory(error);
+
+  if (category === "network") {
+    return "Unable to connect. Please check your internet connection and try again.";
+  }
+
+  if (category === "server") {
+    return "We’re having trouble reaching the service right now. Please try again in a moment.";
+  }
 
   const message = error.message.toLowerCase();
   const code =
@@ -48,7 +104,7 @@ export function getAuthErrorMessage(
   }
 
   if (code === "email_address_invalid" || message.includes("invalid email")) {
-    return "Enter a valid email address.";
+    return "Please enter a valid email address.";
   }
 
   if (code === "weak_password" || message.includes("password should be")) {
@@ -87,7 +143,7 @@ export async function loginWithPassword({
   password,
 }: LoginCredentials): Promise<Session> {
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.trim(),
+    email: normalizeEmailAddress(email),
     password,
   });
 
@@ -108,7 +164,7 @@ export async function signupWithPassword({
   password,
 }: SignupCredentials): Promise<Session | null> {
   const { data, error } = await supabase.auth.signUp({
-    email: email.trim(),
+    email: normalizeEmailAddress(email),
     password,
     options: {
       data: {
@@ -134,6 +190,26 @@ export async function signupWithPassword({
   }
 
   return data.session;
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const normalizedEmail = normalizeEmailAddress(email);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  if (error) {
+    throw new Error(getAuthErrorMessage(error, "forgot-password"));
+  }
+}
+
+export async function updatePassword(newPassword: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    throw new Error(getAuthErrorMessage(error, "reset-password"));
+  }
 }
 
 export async function logoutSession(): Promise<void> {

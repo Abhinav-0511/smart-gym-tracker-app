@@ -550,6 +550,13 @@ export type Database = {
         };
         Returns: string;
       };
+      add_workout_session_set: {
+        Args: {
+          p_session_exercise_id: string;
+          p_session_id: string;
+        };
+        Returns: string;
+      };
       close_workout_session: {
         Args: {
           p_session_id: string;
@@ -575,6 +582,12 @@ export type Database = {
         };
         Returns: boolean;
       };
+      finalize_workout_session: {
+        Args: {
+          p_session_id: string;
+        };
+        Returns: Database["public"]["Tables"]["workout_sessions"]["Row"];
+      };
       reconcile_achievements: {
         Args: Record<string, never>;
         Returns: Database["public"]["Tables"]["user_achievements"]["Row"][];
@@ -589,6 +602,13 @@ export type Database = {
         };
         Returns: boolean;
       };
+      remove_workout_session_set: {
+        Args: {
+          p_session_id: string;
+          p_set_id: string;
+        };
+        Returns: boolean;
+      };
       reorder_plan_exercises: {
         Args: {
           p_day_id: string;
@@ -599,8 +619,29 @@ export type Database = {
       start_workout_session: {
         Args: {
           p_plan_day_id: string;
+          p_workout_date?: string;
         };
         Returns: string;
+      };
+      update_workout_session_set: {
+        Args: {
+          p_completed_provided: boolean;
+          p_is_completed: boolean | null;
+          p_reps: number | null;
+          p_reps_provided: boolean;
+          p_session_id: string;
+          p_set_id: string;
+          p_weight_provided: boolean;
+          p_weight_kg: number | null;
+        };
+        Returns: boolean;
+      };
+      update_workout_session_notes: {
+        Args: {
+          p_notes: string;
+          p_session_id: string;
+        };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

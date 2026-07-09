@@ -6,6 +6,7 @@ import {
   LoaderCircle,
   Plus,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
@@ -51,6 +52,8 @@ const PlanPage = () => {
     updateSetMutation,
     addSetMutation,
     removeSetMutation,
+    deletePlanMutation,
+    deleteDayMutation,
   } = useWorkoutPlans(user?.id);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [createPlanOpen, setCreatePlanOpen] = useState(false);
@@ -92,6 +95,34 @@ const PlanPage = () => {
     }
   };
 
+  const handleDeletePlan = async () => {
+    if (!displayedPlan || !window.confirm(`Delete “${displayedPlan.name}”?`)) {
+      return;
+    }
+
+    try {
+      await deletePlanMutation.mutateAsync(displayedPlan.id);
+      setSelectedDayId(null);
+      toast({ title: "Workout plan deleted" });
+    } catch (error) {
+      showMutationError("Couldn’t delete plan", error);
+    }
+  };
+
+  const handleDeleteDay = async () => {
+    if (!selectedDay || !window.confirm(`Delete “${selectedDay.workoutType}” from this plan?`)) {
+      return;
+    }
+
+    try {
+      await deleteDayMutation.mutateAsync(selectedDay.id);
+      setSelectedDayId(null);
+      toast({ title: "Workout day deleted" });
+    } catch (error) {
+      showMutationError("Couldn’t delete workout day", error);
+    }
+  };
+
   const handleMoveExercise = async (fromIndex: number, toIndex: number) => {
     if (!selectedDay) return;
 
@@ -123,7 +154,9 @@ const PlanPage = () => {
     || removeExerciseMutation.isPending
     || updateSetMutation.isPending
     || addSetMutation.isPending
-    || removeSetMutation.isPending;
+    || removeSetMutation.isPending
+    || deletePlanMutation.isPending
+    || deleteDayMutation.isPending;
 
   if (plansQuery.isPending) {
     return (
@@ -216,6 +249,16 @@ const PlanPage = () => {
           <Button variant="glass" size="sm" onClick={() => setEditPlanOpen(true)}>
             <Edit3 size={14} />
             Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            disabled={deletePlanMutation.isPending}
+            onClick={() => void handleDeletePlan()}
+          >
+            <Trash2 size={14} />
+            Delete
           </Button>
         </div>
       </div>
@@ -324,10 +367,22 @@ const PlanPage = () => {
                 {selectedDay.exercises.length} exercises
               </p>
             </div>
-            <Button variant="glass" size="sm" onClick={() => setEditDayOpen(true)}>
-              <Edit3 size={14} />
-              Edit
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="glass" size="sm" onClick={() => setEditDayOpen(true)}>
+                <Edit3 size={14} />
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                disabled={deleteDayMutation.isPending}
+                onClick={() => void handleDeleteDay()}
+              >
+                <Trash2 size={14} />
+                Delete
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-3">
