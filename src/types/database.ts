@@ -729,6 +729,330 @@ export type Database = {
         };
         Relationships: [];
       };
+      finance_accounts: {
+        Row: {
+          color: string;
+          created_at: string;
+          currency: string;
+          icon: string;
+          id: string;
+          initial_balance: number;
+          is_archived: boolean;
+          name: string;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          color?: string;
+          created_at?: string;
+          currency?: string;
+          icon?: string;
+          id?: string;
+          initial_balance?: number;
+          is_archived?: boolean;
+          name: string;
+          type?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          currency?: string;
+          icon?: string;
+          id?: string;
+          initial_balance?: number;
+          is_archived?: boolean;
+          name?: string;
+          type?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      transaction_categories: {
+        Row: {
+          color: string;
+          created_at: string;
+          icon: string;
+          id: string;
+          is_default: boolean;
+          kind: string;
+          name: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          color?: string;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          is_default?: boolean;
+          kind: string;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          is_default?: boolean;
+          kind?: string;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      recurring_transactions: {
+        Row: {
+          account_id: string | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          end_on: string | null;
+          frequency: string;
+          id: string;
+          is_active: boolean;
+          next_run_on: string;
+          notes: string | null;
+          payment_method: string;
+          start_on: string;
+          title: string;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          account_id?: string | null;
+          amount: number;
+          category_id?: string | null;
+          created_at?: string;
+          end_on?: string | null;
+          frequency: string;
+          id?: string;
+          is_active?: boolean;
+          next_run_on?: string;
+          notes?: string | null;
+          payment_method?: string;
+          start_on?: string;
+          title: string;
+          type: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string | null;
+          amount?: number;
+          category_id?: string | null;
+          created_at?: string;
+          end_on?: string | null;
+          frequency?: string;
+          id?: string;
+          is_active?: boolean;
+          next_run_on?: string;
+          notes?: string | null;
+          payment_method?: string;
+          start_on?: string;
+          title?: string;
+          type?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recurring_transactions_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "finance_accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recurring_transactions_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "transaction_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      transactions: {
+        Row: {
+          account_id: string | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          occurred_at: string | null;
+          occurred_on: string;
+          payment_method: string;
+          receipt_url: string | null;
+          recurring_transaction_id: string | null;
+          tags: string[];
+          title: string;
+          transfer_account_id: string | null;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          account_id?: string | null;
+          amount: number;
+          category_id?: string | null;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          occurred_at?: string | null;
+          occurred_on?: string;
+          payment_method?: string;
+          receipt_url?: string | null;
+          recurring_transaction_id?: string | null;
+          tags?: string[];
+          title: string;
+          transfer_account_id?: string | null;
+          type: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string | null;
+          amount?: number;
+          category_id?: string | null;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          occurred_at?: string | null;
+          occurred_on?: string;
+          payment_method?: string;
+          receipt_url?: string | null;
+          recurring_transaction_id?: string | null;
+          tags?: string[];
+          title?: string;
+          transfer_account_id?: string | null;
+          type?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "finance_accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "transaction_categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transactions_recurring_transaction_id_fkey";
+            columns: ["recurring_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "recurring_transactions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      budgets: {
+        Row: {
+          amount: number;
+          category_id: string | null;
+          color: string;
+          created_at: string;
+          id: string;
+          name: string;
+          period: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          category_id?: string | null;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          period?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          category_id?: string | null;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          period?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "transaction_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      savings_goals: {
+        Row: {
+          color: string;
+          created_at: string;
+          current_amount: number;
+          icon: string;
+          id: string;
+          name: string;
+          status: string;
+          target_amount: number;
+          target_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          color?: string;
+          created_at?: string;
+          current_amount?: number;
+          icon?: string;
+          id?: string;
+          name: string;
+          status?: string;
+          target_amount: number;
+          target_date?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          current_amount?: number;
+          icon?: string;
+          id?: string;
+          name?: string;
+          status?: string;
+          target_amount?: number;
+          target_date?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       habit_completion_totals: {
