@@ -520,8 +520,228 @@ export type Database = {
           },
         ];
       };
+      habits: {
+        Row: {
+          category: string;
+          color: string;
+          created_at: string;
+          custom_days: number[] | null;
+          description: string | null;
+          frequency: string;
+          icon: string;
+          id: string;
+          reminder_enabled: boolean;
+          reminder_time: string | null;
+          status: string;
+          target_value: number | null;
+          title: string;
+          unit: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          category?: string;
+          color?: string;
+          created_at?: string;
+          custom_days?: number[] | null;
+          description?: string | null;
+          frequency?: string;
+          icon?: string;
+          id?: string;
+          reminder_enabled?: boolean;
+          reminder_time?: string | null;
+          status?: string;
+          target_value?: number | null;
+          title: string;
+          unit?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          category?: string;
+          color?: string;
+          created_at?: string;
+          custom_days?: number[] | null;
+          description?: string | null;
+          frequency?: string;
+          icon?: string;
+          id?: string;
+          reminder_enabled?: boolean;
+          reminder_time?: string | null;
+          status?: string;
+          target_value?: number | null;
+          title?: string;
+          unit?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      habit_logs: {
+        Row: {
+          completed: boolean;
+          created_at: string;
+          habit_id: string;
+          id: string;
+          log_date: string;
+          updated_at: string;
+          user_id: string;
+          value: number | null;
+        };
+        Insert: {
+          completed?: boolean;
+          created_at?: string;
+          habit_id: string;
+          id?: string;
+          log_date?: string;
+          updated_at?: string;
+          user_id: string;
+          value?: number | null;
+        };
+        Update: {
+          completed?: boolean;
+          created_at?: string;
+          habit_id?: string;
+          id?: string;
+          log_date?: string;
+          updated_at?: string;
+          user_id?: string;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey";
+            columns: ["habit_id"];
+            isOneToOne: false;
+            referencedRelation: "habits";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tasks: {
+        Row: {
+          attachments: Json;
+          completed_at: string | null;
+          created_at: string;
+          deadline: string | null;
+          description: string | null;
+          due_date: string | null;
+          due_time: string | null;
+          id: string;
+          location: string | null;
+          notes: string | null;
+          priority: string;
+          reminder_at: string | null;
+          reminder_enabled: boolean;
+          repeat: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          attachments?: Json;
+          completed_at?: string | null;
+          created_at?: string;
+          deadline?: string | null;
+          description?: string | null;
+          due_date?: string | null;
+          due_time?: string | null;
+          id?: string;
+          location?: string | null;
+          notes?: string | null;
+          priority?: string;
+          reminder_at?: string | null;
+          reminder_enabled?: boolean;
+          repeat?: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attachments?: Json;
+          completed_at?: string | null;
+          created_at?: string;
+          deadline?: string | null;
+          description?: string | null;
+          due_date?: string | null;
+          due_time?: string | null;
+          id?: string;
+          location?: string | null;
+          notes?: string | null;
+          priority?: string;
+          reminder_at?: string | null;
+          reminder_enabled?: boolean;
+          repeat?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      productivity_notifications: {
+        Row: {
+          action_url: string | null;
+          created_at: string;
+          dedupe_key: string | null;
+          icon: string;
+          id: string;
+          message: string;
+          metadata: Json;
+          priority: string;
+          read_at: string | null;
+          scheduled_for: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          action_url?: string | null;
+          created_at?: string;
+          dedupe_key?: string | null;
+          icon: string;
+          id?: string;
+          message: string;
+          metadata?: Json;
+          priority?: string;
+          read_at?: string | null;
+          scheduled_for?: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          action_url?: string | null;
+          created_at?: string;
+          dedupe_key?: string | null;
+          icon?: string;
+          id?: string;
+          message?: string;
+          metadata?: Json;
+          priority?: string;
+          read_at?: string | null;
+          scheduled_for?: string | null;
+          title?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      habit_completion_totals: {
+        Row: {
+          completed_count: number | null;
+          first_completed_on: string | null;
+          habit_id: string | null;
+          last_completed_on: string | null;
+          user_id: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       activate_workout_plan: {
         Args: {

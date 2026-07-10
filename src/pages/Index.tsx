@@ -3,10 +3,10 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import BrandLogo from "@/components/BrandLogo";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
+import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import DashboardPage from "./DashboardPage";
 import NotificationsPage from "./NotificationsPage";
@@ -103,9 +103,7 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
         <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl md:px-8">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white md:hidden">
-                <BrandLogo className="h-full w-full max-w-none" />
-              </div>
+              <WorkspaceSwitcher variant="compact" className="md:hidden" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">
                   {activePage === "home" ? "Your premium gym companion" : "FitTrack"}
