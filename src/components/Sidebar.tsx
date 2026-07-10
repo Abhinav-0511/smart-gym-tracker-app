@@ -1,7 +1,7 @@
-import { Home, Dumbbell, Calendar, Trophy, User, BarChart3 } from "lucide-react";
-import BrandLogo from "@/components/BrandLogo";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { formatProfileValue } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -10,34 +10,18 @@ interface SidebarNavProps {
   onNavigate: (page: string) => void;
 }
 
-const navItems = [
-  { id: "home", label: "Dashboard", icon: Home },
-  { id: "workout", label: "Workout", icon: Dumbbell },
-  { id: "plan", label: "Plan", icon: Calendar },
-  { id: "prs", label: "Personal Records", icon: Trophy },
-  { id: "progress", label: "Progress", icon: BarChart3 },
-  { id: "profile", label: "Profile", icon: User },
-];
-
 const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
   const { profile } = useAuth();
+  const { workspace } = useWorkspace();
   const fullName = profile?.full_name ?? "FitTrack Member";
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0b2454] text-white md:flex">
-    <div className="p-6">
-      <div className="flex items-center gap-2">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
-          <BrandLogo className="h-full w-full max-w-none" />
-        </div>
-        <div>
-          <span className="block text-xl font-extrabold tracking-tight text-white">FitTrack</span>
-          <span className="block text-[9px] font-semibold uppercase tracking-[.22em] text-primary">by VERNEX</span>
-        </div>
-      </div>
+    <div className="p-4">
+      <WorkspaceSwitcher />
     </div>
     <nav className="flex-1 px-3 space-y-1">
-      {navItems.map((item) => (
+      {workspace.navItems.map((item) => (
         <button
           key={item.id}
           onClick={() => onNavigate(item.id)}

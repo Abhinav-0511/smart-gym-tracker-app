@@ -10,6 +10,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import ProductivityIndex from "@/features/productivity/ProductivityIndex";
 import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -25,6 +27,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <WorkspaceProvider>
             <ProfileThemeSync />
             <PersonalRecordSync />
             <AchievementSync />
@@ -102,8 +105,49 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/productivity"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="home" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/productivity/habits"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="habits" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/productivity/tasks"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="tasks" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/productivity/calendar"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="calendar" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/productivity/reports"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="reports" />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
             </Routes>
+            </WorkspaceProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
