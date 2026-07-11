@@ -1,4 +1,5 @@
 import {
+  ArrowLeftRight,
   BarChart3,
   Calendar,
   CalendarCheck,
@@ -8,8 +9,11 @@ import {
   LayoutDashboard,
   LineChart,
   ListTodo,
+  PiggyBank,
+  Target,
   Trophy,
   User,
+  Wallet,
 } from "lucide-react";
 
 import type { WorkspaceDefinition, WorkspaceId } from "@/features/workspace/types";
@@ -49,6 +53,21 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
       { id: "tasks", label: "Tasks", icon: ListTodo, route: "/productivity/tasks", showInBottomNav: true },
       { id: "calendar", label: "Calendar", icon: CalendarCheck, route: "/productivity/calendar", showInBottomNav: true },
       { id: "reports", label: "Reports", icon: LineChart, route: "/productivity/reports", showInBottomNav: true },
+    ],
+  },
+  {
+    id: "finance",
+    label: "Finance",
+    emoji: "💰",
+    tagline: "Your personal money companion",
+    homeRoute: "/finance",
+    routePrefix: "/finance",
+    navItems: [
+      { id: "home", label: "Dashboard", icon: LayoutDashboard, route: "/finance", showInBottomNav: true },
+      { id: "transactions", label: "Transactions", icon: ArrowLeftRight, route: "/finance/transactions", showInBottomNav: true },
+      { id: "budgets", label: "Budgets", icon: Wallet, route: "/finance/budgets", showInBottomNav: true },
+      { id: "goals", label: "Savings", icon: Target, route: "/finance/goals", showInBottomNav: true },
+      { id: "reports", label: "Reports", icon: PiggyBank, route: "/finance/reports", showInBottomNav: true },
     ],
   },
 ] as const;

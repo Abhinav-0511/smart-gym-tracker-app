@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
  * future modules such as Finance or Journal). Adding a new workspace should be a
  * matter of registering it here and in the registry — not refactoring the shell.
  */
-export type WorkspaceId = "fitness" | "productivity";
+export type WorkspaceId = "fitness" | "productivity" | "finance";
 
 export interface WorkspaceNavItem {
   /** Stable page identifier used by the shell's `activePage` state. */

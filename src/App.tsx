@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import ProductivityIndex from "@/features/productivity/ProductivityIndex";
+import FinanceIndex from "@/features/finance/FinanceIndex";
 import AuthPage from "./pages/AuthPage.tsx";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -142,6 +143,46 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProductivityIndex initialPage="reports" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="home" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance/transactions"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="transactions" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance/budgets"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="budgets" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance/goals"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="goals" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance/reports"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="reports" />
                 </ProtectedRoute>
               }
             />
