@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import FinanceSearch from "@/features/finance/components/FinanceSearch";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +17,8 @@ import FinanceDashboardPage from "./pages/FinanceDashboardPage";
 import GoalsPage from "./pages/GoalsPage";
 import ReportsPage from "./pages/ReportsPage";
 import TransactionsPage from "./pages/TransactionsPage";
+
+const FinanceProfilePage = lazy(() => import("./pages/FinanceProfilePage"));
 
 interface FinanceIndexProps {
   initialPage?: string;
@@ -54,6 +57,8 @@ const FinanceIndex = ({ initialPage = "home" }: FinanceIndexProps) => {
         return <GoalsPage />;
       case "reports":
         return <ReportsPage />;
+      case "profile":
+        return <FinanceProfilePage />;
       case "home":
       default:
         return <FinanceDashboardPage onNavigate={handleNavigate} />;
@@ -92,7 +97,7 @@ const FinanceIndex = ({ initialPage = "home" }: FinanceIndexProps) => {
               <FinanceSearch onNavigate={handleNavigate} />
               <button
                 aria-label="Open profile"
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate(workspace.profileRoute)}
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <ProfileAvatar
@@ -104,7 +109,11 @@ const FinanceIndex = ({ initialPage = "home" }: FinanceIndexProps) => {
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-6xl p-4 md:p-8">{renderPage()}</div>
+        <div className="mx-auto max-w-6xl p-4 md:p-8">
+          <Suspense fallback={<PageSkeleton label="Loading" variant="profile" />}>
+            {renderPage()}
+          </Suspense>
+        </div>
       </main>
       <BottomNav active={activePage} onNavigate={handleNavigate} />
     </div>

@@ -30,5 +30,11 @@ export interface WorkspaceDefinition {
   homeRoute: string;
   /** URL prefix that identifies this workspace (e.g. "/productivity"). */
   routePrefix: string;
+  /**
+   * Module-aware profile route. The top-bar avatar (and the desktop sidebar's
+   * Profile item) navigates here, so the profile always matches the active
+   * module while sharing one authenticated account.
+   */
+  profileRoute: string;
   navItems: WorkspaceNavItem[];
 }
