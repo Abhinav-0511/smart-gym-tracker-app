@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import ProductivityNotificationCenter from "@/features/productivity/components/ProductivityNotificationCenter";
 import ProductivitySearch from "@/features/productivity/components/ProductivitySearch";
@@ -17,6 +18,8 @@ import HabitsPage from "./pages/HabitsPage";
 import ProductivityDashboardPage from "./pages/ProductivityDashboardPage";
 import ReportsPage from "./pages/ReportsPage";
 import TasksPage from "./pages/TasksPage";
+
+const ProductivityProfilePage = lazy(() => import("./pages/ProductivityProfilePage"));
 
 interface ProductivityIndexProps {
   initialPage?: string;
@@ -56,6 +59,8 @@ const ProductivityIndex = ({ initialPage = "home" }: ProductivityIndexProps) => 
         return <CalendarPage />;
       case "reports":
         return <ReportsPage />;
+      case "profile":
+        return <ProductivityProfilePage />;
       case "home":
       default:
         return <ProductivityDashboardPage onNavigate={handleNavigate} />;
@@ -99,7 +104,7 @@ const ProductivityIndex = ({ initialPage = "home" }: ProductivityIndexProps) => 
               />
               <button
                 aria-label="Open profile"
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate(workspace.profileRoute)}
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <ProfileAvatar
@@ -111,7 +116,11 @@ const ProductivityIndex = ({ initialPage = "home" }: ProductivityIndexProps) => 
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-6xl p-4 md:p-8">{renderPage()}</div>
+        <div className="mx-auto max-w-6xl p-4 md:p-8">
+          <Suspense fallback={<PageSkeleton label="Loading" variant="profile" />}>
+            {renderPage()}
+          </Suspense>
+        </div>
       </main>
       <BottomNav active={activePage} onNavigate={handleNavigate} />
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -6,15 +6,19 @@ import BottomNav from "@/components/BottomNav";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
+import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import DashboardPage from "./DashboardPage";
 import NotificationsPage from "./NotificationsPage";
 import PlanPage from "./PlanPage";
 import PRsPage from "./PRsPage";
-import ProfilePage from "./ProfilePage";
 import ProgressPage from "./ProgressPage";
 import WorkoutPage from "./WorkoutPage";
+
+// Profile pages are lazy-loaded — the profile route is a leaf destination the
+// shell rarely opens, so its bundle stays out of the initial workspace payload.
+const FitnessProfilePage = lazy(() => import("./FitnessProfilePage"));
 
 interface IndexProps {
   initialPage?: string;
@@ -26,6 +30,7 @@ const routeToPage = (pathname: string) => {
       return "workout";
     case "/plan":
       return "plan";
+    case "/fitness/profile":
     case "/profile":
       return "profile";
     case "/progress":
@@ -48,7 +53,7 @@ const pageToRoute = (page: string) => {
     case "plan":
       return "/plan";
     case "profile":
-      return "/profile";
+      return "/fitness/profile";
     case "progress":
       return "/progress";
     case "prs":
@@ -83,7 +88,7 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
       case "plan": return <PlanPage />;
       case "prs": return <PRsPage />;
       case "progress": return <ProgressPage />;
-      case "profile": return <ProfilePage />;
+      case "profile": return <FitnessProfilePage />;
       case "notifications": return <NotificationsPage onNavigate={handleNavigate} />;
       case "home":
       default: return <DashboardPage onNavigate={handleNavigate} />;
@@ -122,7 +127,11 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-6xl p-4 md:p-8">{renderPage()}</div>
+        <div className="mx-auto max-w-6xl p-4 md:p-8">
+          <Suspense fallback={<PageSkeleton label="Loading" variant="profile" />}>
+            {renderPage()}
+          </Suspense>
+        </div>
       </main>
       <BottomNav active={activePage} onNavigate={handleNavigate} />
     </div>

@@ -83,6 +83,14 @@ const App = () => (
               }
             />
             <Route
+              path="/fitness/profile"
+              element={
+                <ProtectedRoute>
+                  <Index initialPage="profile" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/progress"
               element={
                 <ProtectedRoute>
@@ -147,6 +155,14 @@ const App = () => (
               }
             />
             <Route
+              path="/productivity/profile"
+              element={
+                <ProtectedRoute>
+                  <ProductivityIndex initialPage="profile" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/finance"
               element={
                 <ProtectedRoute>
@@ -183,6 +199,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <FinanceIndex initialPage="reports" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finance/profile"
+              element={
+                <ProtectedRoute>
+                  <FinanceIndex initialPage="profile" />
                 </ProtectedRoute>
               }
             />

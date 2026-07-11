@@ -31,13 +31,16 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     tagline: "Your premium gym companion",
     homeRoute: "/dashboard",
     routePrefix: "/dashboard",
+    profileRoute: "/fitness/profile",
     navItems: [
       { id: "home", label: "Dashboard", icon: Home, route: "/dashboard", showInBottomNav: true },
       { id: "workout", label: "Workout", icon: Dumbbell, route: "/workout", showInBottomNav: true },
       { id: "plan", label: "Plan", icon: Calendar, route: "/plan", showInBottomNav: true },
       { id: "prs", label: "Personal Records", icon: Trophy, route: "/prs", showInBottomNav: true },
-      { id: "progress", label: "Progress", icon: BarChart3, route: "/progress" },
-      { id: "profile", label: "Profile", icon: User, route: "/profile", showInBottomNav: true },
+      { id: "progress", label: "Progress", icon: BarChart3, route: "/progress", showInBottomNav: true },
+      // Profile is reached via the top-bar avatar (mobile) and the sidebar
+      // (desktop) — it is intentionally kept out of the mobile bottom nav.
+      { id: "profile", label: "Profile", icon: User, route: "/fitness/profile" },
     ],
   },
   {
@@ -47,12 +50,15 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     tagline: "Your personal performance companion",
     homeRoute: "/productivity",
     routePrefix: "/productivity",
+    profileRoute: "/productivity/profile",
     navItems: [
       { id: "home", label: "Dashboard", icon: LayoutDashboard, route: "/productivity", showInBottomNav: true },
       { id: "habits", label: "Habits", icon: CheckSquare, route: "/productivity/habits", showInBottomNav: true },
       { id: "tasks", label: "Tasks", icon: ListTodo, route: "/productivity/tasks", showInBottomNav: true },
       { id: "calendar", label: "Calendar", icon: CalendarCheck, route: "/productivity/calendar", showInBottomNav: true },
       { id: "reports", label: "Reports", icon: LineChart, route: "/productivity/reports", showInBottomNav: true },
+      // Reached via the top-bar avatar (mobile) and the sidebar (desktop).
+      { id: "profile", label: "Profile", icon: User, route: "/productivity/profile" },
     ],
   },
   {
@@ -62,12 +68,15 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     tagline: "Your personal money companion",
     homeRoute: "/finance",
     routePrefix: "/finance",
+    profileRoute: "/finance/profile",
     navItems: [
       { id: "home", label: "Dashboard", icon: LayoutDashboard, route: "/finance", showInBottomNav: true },
       { id: "transactions", label: "Transactions", icon: ArrowLeftRight, route: "/finance/transactions", showInBottomNav: true },
       { id: "budgets", label: "Budgets", icon: Wallet, route: "/finance/budgets", showInBottomNav: true },
       { id: "goals", label: "Savings", icon: Target, route: "/finance/goals", showInBottomNav: true },
       { id: "reports", label: "Reports", icon: PiggyBank, route: "/finance/reports", showInBottomNav: true },
+      // Reached via the top-bar avatar (mobile) and the sidebar (desktop).
+      { id: "profile", label: "Profile", icon: User, route: "/finance/profile" },
     ],
   },
 ] as const;
