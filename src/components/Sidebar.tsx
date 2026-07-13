@@ -24,7 +24,9 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
       {workspace.navItems.map((item) => (
         <button
           key={item.id}
+          type="button"
           onClick={() => onNavigate(item.id)}
+          aria-current={active === item.id ? "page" : undefined}
           className={cn(
             "flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-200",
             active === item.id
