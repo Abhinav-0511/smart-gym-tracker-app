@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -154,6 +155,8 @@ const HabitFormDialog = ({ open, habit, saving, onOpenChange, onSubmit }: HabitF
               id="habit-title"
               value={title}
               maxLength={100}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder="e.g. Read 10 pages"
               onChange={(event) => setTitle(event.target.value)}
               disabled={saving}
@@ -285,14 +288,12 @@ const HabitFormDialog = ({ open, habit, saving, onOpenChange, onSubmit }: HabitF
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="habit-target">Daily target</Label>
-              <Input
+              <NumericInput
                 id="habit-target"
-                type="number"
-                min={0}
-                step="any"
                 value={targetValue}
                 placeholder="Optional"
-                onChange={(event) => setTargetValue(event.target.value)}
+                enterKeyHint="next"
+                onValueChange={setTargetValue}
                 disabled={saving}
               />
             </div>
@@ -302,6 +303,8 @@ const HabitFormDialog = ({ open, habit, saving, onOpenChange, onSubmit }: HabitF
                 id="habit-unit"
                 value={unit}
                 maxLength={30}
+                enterKeyHint="done"
+                autoCapitalize="none"
                 placeholder="e.g. glasses"
                 onChange={(event) => setUnit(event.target.value)}
                 disabled={saving}

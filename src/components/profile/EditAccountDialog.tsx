@@ -115,6 +115,9 @@ const EditAccountDialog = ({
               onChange={(event) => setFullName(event.target.value)}
               disabled={saving}
               maxLength={100}
+              autoComplete="name"
+              autoCapitalize="words"
+              enterKeyHint="next"
             />
           </div>
 
@@ -126,6 +129,10 @@ const EditAccountDialog = ({
               onChange={(event) => setTimezone(event.target.value)}
               placeholder="Asia/Calcutta"
               disabled={saving}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="done"
             />
           </div>
 

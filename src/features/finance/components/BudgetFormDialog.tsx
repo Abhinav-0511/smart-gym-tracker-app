@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -133,6 +134,8 @@ const BudgetFormDialog = ({
               id="budget-name"
               value={name}
               maxLength={60}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder="e.g. Food this month"
               onChange={(event) => setName(event.target.value)}
               disabled={saving}
@@ -142,12 +145,12 @@ const BudgetFormDialog = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="budget-amount">Amount</Label>
-              <Input
+              <NumericInput
                 id="budget-amount"
-                inputMode="decimal"
                 value={amount}
                 placeholder="0.00"
-                onChange={(event) => setAmount(event.target.value)}
+                enterKeyHint="done"
+                onValueChange={setAmount}
                 disabled={saving}
               />
             </div>

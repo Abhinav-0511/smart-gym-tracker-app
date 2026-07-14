@@ -9,6 +9,10 @@ import {
 
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
+import {
+  sanitizeDecimalString,
+  sanitizeIntegerString,
+} from "@/lib/input-sanitizers";
 import type {
   PlannedExercise,
   PlannedSet,
@@ -89,23 +93,26 @@ const SetRow = ({
       </span>
       <input
         aria-label={`Set ${plannedSet.setNumber} reps`}
-        type="number"
-        min={1}
+        type="text"
+        inputMode="numeric"
+        enterKeyHint="next"
+        autoComplete="off"
         value={reps}
         disabled={disabled}
-        onChange={(event) => setReps(event.target.value)}
+        onChange={(event) => setReps(sanitizeIntegerString(event.target.value))}
         onBlur={() => void saveReps()}
         className="w-full min-w-0 bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
       />
       <input
         aria-label={`Set ${plannedSet.setNumber} weight`}
-        type="number"
-        min={0}
-        step="0.25"
+        type="text"
+        inputMode="decimal"
+        enterKeyHint="done"
+        autoComplete="off"
         value={weight}
         disabled={disabled}
         placeholder={usesBodyweight ? "BW" : "0"}
-        onChange={(event) => setWeight(event.target.value)}
+        onChange={(event) => setWeight(sanitizeDecimalString(event.target.value))}
         onBlur={() => void saveWeight()}
         className="w-full min-w-0 bg-secondary rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
       />

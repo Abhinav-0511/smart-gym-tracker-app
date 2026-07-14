@@ -106,6 +106,16 @@ const TaskFormDialog = ({
     const name = attachmentName.trim();
     const url = attachmentUrl.trim();
     if (!name || !url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        throw new Error("bad protocol");
+      }
+    } catch {
+      setError("Enter a valid link starting with http:// or https://");
+      return;
+    }
+    setError(null);
     setAttachments((current) => [...current, { name, url }]);
     setAttachmentName("");
     setAttachmentUrl("");
@@ -167,6 +177,8 @@ const TaskFormDialog = ({
               id="task-title"
               value={title}
               maxLength={200}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder="e.g. Submit tax documents"
               onChange={(event) => setTitle(event.target.value)}
               disabled={saving}
@@ -260,6 +272,8 @@ const TaskFormDialog = ({
               id="task-location"
               value={location}
               maxLength={200}
+              enterKeyHint="next"
+              autoCapitalize="words"
               placeholder="Optional"
               onChange={(event) => setLocation(event.target.value)}
               disabled={saving}
@@ -306,12 +320,21 @@ const TaskFormDialog = ({
               <Input
                 value={attachmentName}
                 placeholder="Label"
+                enterKeyHint="next"
+                autoCapitalize="sentences"
                 onChange={(event) => setAttachmentName(event.target.value)}
                 disabled={saving}
                 className="sm:max-w-[10rem]"
                 aria-label="Attachment label"
               />
               <Input
+                type="url"
+                inputMode="url"
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
                 value={attachmentUrl}
                 placeholder="https://…"
                 onChange={(event) => setAttachmentUrl(event.target.value)}

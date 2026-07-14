@@ -20,7 +20,14 @@ const StatCard = ({ label, value, icon: Icon, hint, tone, className }: StatCardP
       <Icon size={16} />
       <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
     </div>
-    <p className={cn("mt-1 text-2xl font-extrabold text-foreground", tone)}>{value}</p>
+    <p
+      className={cn(
+        "mt-1 text-xl font-extrabold leading-tight text-foreground tabular-nums break-words [overflow-wrap:anywhere] sm:text-2xl",
+        tone,
+      )}
+    >
+      {value}
+    </p>
     {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
   </GlassCard>
 );

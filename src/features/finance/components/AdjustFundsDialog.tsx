@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, parseAmount } from "@/features/finance/lib/money";
 import type { SavingsGoal } from "@/features/finance/types/savings";
@@ -94,12 +94,12 @@ const AdjustFundsDialog = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="funds-amount">Amount</Label>
-            <Input
+            <NumericInput
               id="funds-amount"
-              inputMode="decimal"
               value={amount}
               placeholder="0.00"
-              onChange={(event) => setAmount(event.target.value)}
+              enterKeyHint="done"
+              onValueChange={setAmount}
               disabled={saving}
               autoFocus
             />

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -164,12 +165,12 @@ const RecurringFormDialog = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="rec-amount">Amount</Label>
-              <Input
+              <NumericInput
                 id="rec-amount"
-                inputMode="decimal"
                 value={amount}
                 placeholder="0.00"
-                onChange={(event) => setAmount(event.target.value)}
+                enterKeyHint="next"
+                onValueChange={setAmount}
                 disabled={saving}
                 autoFocus
               />
@@ -197,6 +198,8 @@ const RecurringFormDialog = ({
               id="rec-title"
               value={title}
               maxLength={120}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder="e.g. Rent"
               onChange={(event) => setTitle(event.target.value)}
               disabled={saving}

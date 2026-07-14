@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -122,20 +123,22 @@ const TransactionFilterSheet = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="filter-min">Min amount</Label>
-              <Input
+              <NumericInput
                 id="filter-min"
-                inputMode="decimal"
-                value={filters.minAmount ?? ""}
-                onChange={(event) => onChange({ ...filters, minAmount: parseNumber(event.target.value) })}
+                value={filters.minAmount === null ? "" : String(filters.minAmount)}
+                placeholder="0"
+                enterKeyHint="next"
+                onValueChange={(value) => onChange({ ...filters, minAmount: parseNumber(value) })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="filter-max">Max amount</Label>
-              <Input
+              <NumericInput
                 id="filter-max"
-                inputMode="decimal"
-                value={filters.maxAmount ?? ""}
-                onChange={(event) => onChange({ ...filters, maxAmount: parseNumber(event.target.value) })}
+                value={filters.maxAmount === null ? "" : String(filters.maxAmount)}
+                placeholder="0"
+                enterKeyHint="done"
+                onValueChange={(value) => onChange({ ...filters, maxAmount: parseNumber(value) })}
               />
             </div>
           </div>

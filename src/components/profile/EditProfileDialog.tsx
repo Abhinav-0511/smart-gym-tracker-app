@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -148,6 +149,9 @@ const EditProfileDialog = ({
               onChange={(event) => setFullName(event.target.value)}
               disabled={saving}
               maxLength={100}
+              autoComplete="name"
+              autoCapitalize="words"
+              enterKeyHint="next"
             />
           </div>
 
@@ -159,6 +163,9 @@ const EditProfileDialog = ({
               onChange={(event) => setFitnessGoal(event.target.value)}
               placeholder="Build muscle"
               disabled={saving}
+              maxLength={100}
+              autoCapitalize="sentences"
+              enterKeyHint="next"
             />
           </div>
 
@@ -183,14 +190,11 @@ const EditProfileDialog = ({
 
           <div className="space-y-2">
             <Label htmlFor="profile-weight">Current weight (kg)</Label>
-            <Input
+            <NumericInput
               id="profile-weight"
-              type="number"
-              min={20}
-              max={500}
-              step="0.1"
               value={weight}
-              onChange={(event) => setWeight(event.target.value)}
+              enterKeyHint="next"
+              onValueChange={setWeight}
               placeholder={weightLoading ? "Loading…" : "Not tracked"}
               disabled={saving || weightLoading}
             />
@@ -201,14 +205,11 @@ const EditProfileDialog = ({
 
           <div className="space-y-2">
             <Label htmlFor="profile-height">Height (cm)</Label>
-            <Input
+            <NumericInput
               id="profile-height"
-              type="number"
-              min={50}
-              max={300}
-              step="0.1"
               value={height}
-              onChange={(event) => setHeight(event.target.value)}
+              enterKeyHint="next"
+              onValueChange={setHeight}
               disabled={saving}
             />
           </div>
@@ -221,6 +222,10 @@ const EditProfileDialog = ({
               onChange={(event) => setTimezone(event.target.value)}
               placeholder="Asia/Calcutta"
               disabled={saving}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="done"
             />
           </div>
 

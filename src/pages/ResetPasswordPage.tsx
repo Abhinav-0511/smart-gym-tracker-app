@@ -131,6 +131,10 @@ const ResetPasswordPage = () => {
                     id="new-password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
                     placeholder="••••••••"
@@ -157,6 +161,10 @@ const ResetPasswordPage = () => {
                   id="confirm-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="done"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="••••••••"

@@ -277,18 +277,24 @@ const AuthPage = () => {
                     <input
                       id="forgot-email"
                       type="email"
+                      inputMode="email"
                       autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      enterKeyHint="go"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="alex@example.com"
                       disabled={forgotPasswordSubmitting}
                       aria-invalid={emailFieldState.invalid}
+                      aria-describedby={emailFieldState.invalid ? "forgot-email-error" : undefined}
                       className="w-full rounded-2xl border border-input bg-secondary/60 px-4 py-3.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground disabled:opacity-60 focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
 
                   {error && (
-                    <p className="text-sm text-destructive mt-4" role="alert">
+                    <p id="forgot-email-error" className="text-sm text-destructive mt-4" role="alert">
                       {error}
                     </p>
                   )}
@@ -312,6 +318,8 @@ const AuthPage = () => {
                       id="full-name"
                       type="text"
                       autoComplete="name"
+                      autoCapitalize="words"
+                      enterKeyHint="next"
                       value={fullName}
                       onChange={(event) => setFullName(event.target.value)}
                       placeholder="Alex Johnson"
@@ -327,7 +335,12 @@ const AuthPage = () => {
                   <input
                     id="email"
                     type="email"
+                    inputMode="email"
                     autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="alex@example.com"
@@ -345,6 +358,10 @@ const AuthPage = () => {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       autoComplete={isLogin ? "current-password" : "new-password"}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      enterKeyHint="done"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="••••••••"
