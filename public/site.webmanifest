@@ -1,0 +1,26 @@
+{
+  "name": "LifeTrack",
+  "short_name": "LifeTrack",
+  "description": "Track Your Life. Improve Every Day. Fitness, productivity and finance in one premium life-management app. Powered by Vernex Gen Technologies.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B2454",
+  "theme_color": "#0B2454",
+  "categories": ["health", "fitness", "productivity", "finance", "lifestyle"],
+  "icons": [
+    {
+      "src": "/brand/app-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/app-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

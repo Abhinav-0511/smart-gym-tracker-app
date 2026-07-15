@@ -10,6 +10,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import BrandAbout from "@/components/BrandAbout";
 import EditAccountDialog from "@/components/profile/EditAccountDialog";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ const AccountSection = ({ className }: AccountSectionProps) => {
 
   return (
     <section className={className} aria-labelledby="account-heading">
-      <div className="glass-card p-5 space-y-4">
+      <div className="mb-4 glass-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 id="account-heading" className="text-sm font-bold text-foreground">
             Account
@@ -195,6 +196,8 @@ const AccountSection = ({ className }: AccountSectionProps) => {
           {signingOut ? "Signing out…" : "Sign out"}
         </Button>
       </div>
+
+      <BrandAbout />
 
       <EditAccountDialog
         open={editOpen}

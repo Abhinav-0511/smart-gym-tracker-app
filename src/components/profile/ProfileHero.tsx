@@ -4,6 +4,7 @@ import { Camera } from "lucide-react";
 import AvatarUploadDialog from "@/components/profile/AvatarUploadDialog";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { useAuth } from "@/hooks/useAuth";
+import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 interface HeroStat {
@@ -38,7 +39,7 @@ const ProfileHero = ({ eyebrow, accentClassName, stats }: ProfileHeroProps) => {
   const { user, profile, updateProfile } = useAuth();
   const [avatarOpen, setAvatarOpen] = useState(false);
 
-  const fullName = profile?.full_name ?? "FitTrack Member";
+  const fullName = profile?.full_name ?? `${BRAND.name} Member`;
   const memberSince = formatMemberSince(user?.created_at);
 
   return (

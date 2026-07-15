@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { WorkspaceId } from "@/features/workspace/types";
+import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 interface WorkspaceSwitcherProps {
@@ -23,9 +24,9 @@ interface WorkspaceSwitcherProps {
 }
 
 /**
- * FITTRACK brand + workspace picker. Selecting a workspace navigates to its home
- * route without reloading the app. Rendered in the desktop sidebar and, in its
- * compact form, in the mobile header so switching works on every viewport.
+ * LifeTrack brand + workspace picker. Selecting a workspace navigates to its
+ * home route without reloading the app. Rendered in the desktop sidebar and, in
+ * its compact form, in the mobile header so switching works on every viewport.
  */
 const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcherProps) => {
   const { workspace, workspaces, activeWorkspaceId, setWorkspace } = useWorkspace();
@@ -60,15 +61,20 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
               className,
             )}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
-              <BrandLogo className="h-full w-full max-w-none" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+              <BrandLogo kind="app" className="h-full w-full max-w-none" />
             </div>
             <div className="min-w-0 flex-1">
               <span className="block text-xl font-extrabold leading-none tracking-tight text-white">
-                FitTrack
+                {BRAND.name}
               </span>
-              <span className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-white/60">
-                <span aria-hidden>{workspace.emoji}</span>
+              <span className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-white/60">
+                <img
+                  src={workspace.logo}
+                  alt=""
+                  aria-hidden
+                  className="h-3.5 w-3.5 rounded object-contain"
+                />
                 {workspace.label}
               </span>
             </div>
@@ -78,7 +84,7 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
-          FitTrack workspaces
+          {BRAND.name} workspaces
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {workspaces.map((item) => {
@@ -89,8 +95,8 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
               onSelect={() => handleSelect(item.id)}
               className="cursor-pointer gap-3 py-2.5"
             >
-              <span className="text-lg leading-none" aria-hidden>
-                {item.emoji}
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+                <img src={item.logo} alt="" aria-hidden className="h-full w-full object-contain" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-foreground">{item.label}</p>

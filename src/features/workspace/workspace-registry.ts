@@ -16,6 +16,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { BRAND_LOGOS } from "@/lib/brand";
 import type { WorkspaceDefinition, WorkspaceId } from "@/features/workspace/types";
 
 /**
@@ -28,7 +29,8 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     id: "fitness",
     label: "Fitness",
     emoji: "🏋",
-    tagline: "Your premium gym companion",
+    logo: BRAND_LOGOS.fitness,
+    tagline: "Train with intention, every session",
     homeRoute: "/dashboard",
     routePrefix: "/dashboard",
     profileRoute: "/fitness/profile",
@@ -47,7 +49,8 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     id: "productivity",
     label: "Productivity",
     emoji: "🧠",
-    tagline: "Your personal performance companion",
+    logo: BRAND_LOGOS.productivity,
+    tagline: "Turn intentions into done, daily",
     homeRoute: "/productivity",
     routePrefix: "/productivity",
     profileRoute: "/productivity/profile",
@@ -65,7 +68,8 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
     id: "finance",
     label: "Finance",
     emoji: "💰",
-    tagline: "Your personal money companion",
+    logo: BRAND_LOGOS.finance,
+    tagline: "Grow your money with clarity",
     homeRoute: "/finance",
     routePrefix: "/finance",
     profileRoute: "/finance/profile",

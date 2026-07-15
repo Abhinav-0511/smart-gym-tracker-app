@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -66,7 +67,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           </p>
           <Button onClick={this.handleReload} className="mt-8">
             <RefreshCw size={16} />
-            Reload FitTrack
+            Reload {BRAND.name}
           </Button>
         </section>
       </main>

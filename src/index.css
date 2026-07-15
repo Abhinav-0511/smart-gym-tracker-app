@@ -6,26 +6,35 @@
 
 @layer base {
   :root {
-    --background: 216 22% 7%;
-    --foreground: 40 20% 96%;
-    --card: 218 17% 11%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 39 58% 63%;
-    --primary-foreground: 218 77% 19%;
-    --secondary: 217 23% 15%;
-    --secondary-foreground: 0 0% 85%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --background: 216 33% 7%;
+    --foreground: 210 30% 96%;
+    --card: 217 30% 11%;
+    --card-foreground: 210 25% 96%;
+    --popover: 217 32% 9%;
+    --popover-foreground: 210 25% 96%;
+    /* LifeTrack brand primary — premium blue. Per-workspace accents override
+       this on the module shells (see [data-workspace] below). */
+    --primary: 210 92% 56%;
+    --primary-foreground: 210 40% 99%;
+    --secondary: 217 26% 15%;
+    --secondary-foreground: 210 20% 88%;
+    --muted: 217 22% 14%;
+    --muted-foreground: 214 15% 60%;
     --accent: 220 77% 19%;
-    --accent-foreground: 40 33% 96%;
+    --accent-foreground: 210 33% 97%;
     --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 218 16% 20%;
-    --input: 218 16% 20%;
-    --ring: 39 58% 63%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217 20% 20%;
+    --input: 217 20% 20%;
+    --ring: 210 92% 56%;
     --radius: 1rem;
+
+    /* Brand accents used by module theming and gradients. */
+    --brand-navy: 220 77% 14%;
+    --brand-blue: 210 92% 56%;
+    --brand-cyan: 190 90% 55%;
+    --brand-teal: 172 66% 46%;
+    --brand-gold: 39 58% 60%;
 
     --surface-raised: 218 17% 11%;
     --surface-subtle: 217 23% 15%;
@@ -42,36 +51,61 @@
   }
 
   .light {
-    --background: 220 25% 97%;
-    --foreground: 220 35% 13%;
+    --background: 214 40% 97%;
+    --foreground: 220 38% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 220 30% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
-    --primary: 39 58% 52%;
-    --primary-foreground: 220 77% 14%;
-    --secondary: 220 22% 94%;
-    --secondary-foreground: 0 0% 15%;
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 42%;
+    --popover-foreground: 220 30% 10%;
+    --primary: 212 90% 50%;
+    --primary-foreground: 210 40% 99%;
+    --secondary: 214 30% 93%;
+    --secondary-foreground: 220 25% 18%;
+    --muted: 214 28% 93%;
+    --muted-foreground: 220 12% 42%;
     --accent: 220 77% 19%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 19% 89%;
-    --input: 220 19% 87%;
-    --ring: 39 58% 52%;
+    --border: 216 24% 88%;
+    --input: 216 24% 86%;
+    --ring: 212 90% 50%;
     --surface-raised: 0 0% 100%;
-    --surface-subtle: 220 22% 94%;
+    --surface-subtle: 214 30% 93%;
     --elevation-card: 0 1px 3px hsl(220 35% 20% / 0.07);
+    --brand-blue: 212 90% 50%;
+    --brand-teal: 173 70% 40%;
+    --brand-gold: 39 58% 50%;
     --sidebar-background: 220 77% 16%;
-    --sidebar-foreground: 40 20% 94%;
-    --sidebar-primary: 39 58% 63%;
+    --sidebar-foreground: 210 20% 94%;
+    --sidebar-primary: 210 92% 60%;
     --sidebar-primary-foreground: 220 77% 12%;
     --sidebar-accent: 220 60% 22%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 50% 24%;
-    --sidebar-ring: 39 58% 63%;
+    --sidebar-ring: 210 92% 60%;
+  }
+
+  /*
+   * Per-workspace accent theming. Each module shell sets data-workspace on its
+   * root, which retints --primary/--ring for that subtree only — Fitness reads
+   * teal, Productivity blue, Finance gold — while auth, splash and error states
+   * keep the neutral brand blue. One shared account, three distinct identities.
+   */
+  [data-workspace="fitness"] {
+    --primary: var(--brand-teal);
+    --primary-foreground: 174 80% 98%;
+    --ring: var(--brand-teal);
+  }
+  [data-workspace="productivity"] {
+    --primary: var(--brand-blue);
+    --primary-foreground: 210 40% 99%;
+    --ring: var(--brand-blue);
+  }
+  [data-workspace="finance"] {
+    --primary: var(--brand-gold);
+    --primary-foreground: 220 60% 13%;
+    --ring: var(--brand-gold);
   }
 }
 
@@ -95,7 +129,29 @@
     box-shadow: var(--elevation-card);
   }
   .text-gradient {
-    @apply text-primary;
+    background-image: linear-gradient(
+      100deg,
+      hsl(var(--brand-blue)),
+      hsl(var(--brand-cyan, var(--brand-blue)))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Deep navy brand backdrop for splash / auth / hero surfaces. */
+  .bg-brand-navy {
+    background-image:
+      radial-gradient(120% 90% at 20% 0%, hsl(215 70% 22% / 0.9), transparent 60%),
+      radial-gradient(120% 120% at 100% 100%, hsl(200 80% 30% / 0.35), transparent 55%),
+      linear-gradient(160deg, hsl(220 78% 12%), hsl(222 80% 8%));
+  }
+  /* Subtle blue→cyan gradient for premium primary buttons/pills. */
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      120deg,
+      hsl(var(--brand-blue)),
+      hsl(var(--brand-cyan, var(--brand-blue)))
+    );
   }
   .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
@@ -175,4 +231,44 @@
 
 @media (max-width: 767px) {
   .login-reveal { animation: authReveal .6s 2.05s cubic-bezier(.22, 1, .36, 1) both; }
+}
+
+/* ── LifeTrack brand motion ──────────────────────────────────────────────
+   Elegant, short, 60fps transforms/opacity only — no layout thrash. */
+
+/* Loading: rotating gradient ring + soft pulsing glow around the app mark. */
+@keyframes brandSpin { to { transform: rotate(360deg); } }
+@keyframes brandGlow {
+  0%, 100% { opacity: .45; transform: scale(1); }
+  50% { opacity: .9; transform: scale(1.12); }
+}
+@keyframes logoReveal {
+  0% { opacity: 0; transform: scale(.82); filter: blur(10px); }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes brandFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.brand-ring {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    hsl(var(--primary) / 0) 90deg,
+    hsl(var(--primary) / .35) 230deg,
+    hsl(var(--primary)) 330deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation: brandSpin 1.15s linear infinite;
+}
+.brand-glow { animation: brandGlow 2.4s ease-in-out infinite; }
+.brand-reveal { animation: logoReveal .9s cubic-bezier(.22, 1, .36, 1) both; }
+.brand-float { animation: brandFloat 4.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-ring, .brand-glow, .brand-reveal, .brand-float { animation: none !important; }
 }

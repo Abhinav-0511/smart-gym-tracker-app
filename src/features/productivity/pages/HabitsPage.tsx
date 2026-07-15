@@ -18,8 +18,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/features/productivity/hooks/useHabits";
+import { useUndoConfirm } from "@/features/productivity/hooks/useUndoConfirm";
 import HabitCard from "@/features/productivity/components/HabitCard";
 import HabitFormDialog from "@/features/productivity/components/HabitFormDialog";
+import UndoConfirmDialog from "@/features/productivity/components/UndoConfirmDialog";
 import type { HabitWithHistory } from "@/features/productivity/services/habits";
 import { isHabitDueOn } from "@/features/productivity/types/habit";
 import { parseDateKey } from "@/features/productivity/lib/date-keys";
@@ -58,6 +60,7 @@ const HabitsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<HabitWithHistory | null>(null);
   const [pendingDelete, setPendingDelete] = useState<HabitWithHistory | null>(null);
+  const undo = useUndoConfirm(todayKey);
 
   const habits = useMemo(() => habitsQuery.data ?? [], [habitsQuery.data]);
 
@@ -111,7 +114,16 @@ const HabitsPage = () => {
   };
 
   const handleToggle = (habit: HabitWithHistory, complete: boolean) => {
-    toggleMutation.mutate({ habit, dateKey: todayKey, complete });
+    undo.requestToggle({
+      kind: "habit",
+      id: habit.id,
+      dateKey: todayKey,
+      // Marking incomplete (complete === false) means the habit is currently
+      // done — i.e. this is an undo, which is what we confirm/guard.
+      isDone: !complete,
+      title: habit.title,
+      run: () => toggleMutation.mutate({ habit, dateKey: todayKey, complete }),
+    });
   };
 
   const handleStatus = (habit: HabitWithHistory, status: HabitStatus) => {
@@ -230,7 +242,7 @@ const HabitsPage = () => {
           </h3>
           <p className="max-w-sm text-sm text-muted-foreground">
             {habits.length === 0
-              ? "Create your first habit to start building streaks."
+              ? "Every streak starts today. Create your first habit to begin building momentum."
               : "No habits match this filter or search."}
           </p>
           {habits.length === 0 && (
@@ -250,6 +262,7 @@ const HabitsPage = () => {
               onEdit={openEdit}
               onStatusChange={handleStatus}
               onDelete={setPendingDelete}
+              locked={undo.isLocked("habit", habit.id, todayKey)}
             />
           ))}
         </div>
@@ -262,6 +275,8 @@ const HabitsPage = () => {
         onOpenChange={setFormOpen}
         onSubmit={handleSubmit}
       />
+
+      <UndoConfirmDialog pending={undo.pending} onConfirm={undo.confirm} onCancel={undo.cancel} />
 
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <AlertDialogContent>

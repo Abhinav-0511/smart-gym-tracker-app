@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Check, Plus } from "lucide-react";
+import { Check, Lock, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,8 @@ interface DayDetailSheetProps {
   onToggleHabit: (habit: HabitWithHistory, dateKey: string, complete: boolean) => void;
   onEditTask: (task: Task) => void;
   onAddTask: (dayKey: string) => void;
+  /** Whether a habit's completion for this day has spent its one undo. */
+  isHabitLocked?: (habitId: string, dateKey: string) => boolean;
 }
 
 const DayDetailSheet = ({
@@ -35,6 +37,7 @@ const DayDetailSheet = ({
   onToggleHabit,
   onEditTask,
   onAddTask,
+  isHabitLocked,
 }: DayDetailSheetProps) => {
   const title = day ? format(parseDateKey(day.key), "EEEE, MMMM d") : "";
   const hasContent = day && (day.tasks.length > 0 || day.habitsDue.length > 0 || day.completedTaskCount > 0);
@@ -94,6 +97,7 @@ const DayDetailSheet = ({
                     const colors = getHabitColorClasses(habit.color);
                     const Icon = getHabitIcon(habit.icon);
                     const done = habit.recentCompletedKeys.includes(day.key);
+                    const locked = done && (isHabitLocked?.(habit.id, day.key) ?? false);
                     return (
                       <li key={habit.id} className="flex items-center gap-2.5 rounded-lg bg-secondary/40 p-2">
                         <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", colors.chip)}>
@@ -104,17 +108,20 @@ const DayDetailSheet = ({
                         </span>
                         <button
                           type="button"
-                          aria-label={done ? "Mark not done" : "Mark done"}
+                          aria-label={
+                            locked ? "Completed — locked for this day" : done ? "Undo completion" : "Mark done"
+                          }
                           aria-pressed={done}
+                          title={locked ? "Already undone once — locked as done for this day" : undefined}
                           onClick={() => onToggleHabit(habit, day.key, !done)}
                           className={cn(
                             "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition",
                             done
-                              ? cn(colors.solid, "border-transparent text-white")
+                              ? cn(colors.solid, "border-transparent text-white", locked && "cursor-default opacity-90")
                               : "border-border text-muted-foreground hover:border-primary",
                           )}
                         >
-                          <Check size={14} strokeWidth={done ? 3 : 2} />
+                          {locked ? <Lock size={12} strokeWidth={2.5} /> : <Check size={14} strokeWidth={done ? 3 : 2} />}
                         </button>
                       </li>
                     );

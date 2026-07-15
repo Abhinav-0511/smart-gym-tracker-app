@@ -1,21 +1,35 @@
 import { cn } from "@/lib/utils";
-import fitTrackLogo from "../../images/Vernex FitTrack Logo.png";
-import vernexLogo from "../../images/Vernex logogo.jpg.png";
+import { BRAND, BRAND_LOGOS, type BrandLogoKind } from "@/lib/brand";
 
 interface BrandLogoProps {
-  kind?: "fittrack" | "vernex";
+  /**
+   * Which mark to render:
+   * - `app` — square icon mark (default): sidebar, splash, loaders, error states
+   * - `full` — horizontal lockup: login, splash, about
+   * - `fitness` / `productivity` / `finance` — per-module marks
+   */
+  kind?: BrandLogoKind;
   className?: string;
+  /** Overrides the default, brand-derived alt text. */
+  alt?: string;
 }
 
-const BrandLogo = ({ kind = "fittrack", className }: BrandLogoProps) => (
+const ALT_TEXT: Record<BrandLogoKind, string> = {
+  app: BRAND.name,
+  full: `${BRAND.name} — ${BRAND.motto}`,
+  fitness: `${BRAND.name} Fitness`,
+  productivity: `${BRAND.name} Productivity`,
+  finance: `${BRAND.name} Finance`,
+};
+
+const BrandLogo = ({ kind = "app", className, alt }: BrandLogoProps) => (
   <img
-    src={kind === "fittrack" ? fitTrackLogo : vernexLogo}
-    alt={kind === "fittrack" ? "FitTrack" : "VERNEX"}
-    className={cn(
-      "block object-contain",
-      kind === "fittrack" && "scale-[1.18]",
-      className,
-    )}
+    src={BRAND_LOGOS[kind]}
+    alt={alt ?? ALT_TEXT[kind]}
+    loading="lazy"
+    decoding="async"
+    draggable={false}
+    className={cn("block object-contain", className)}
   />
 );
 

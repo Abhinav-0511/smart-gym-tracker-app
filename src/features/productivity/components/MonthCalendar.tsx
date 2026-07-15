@@ -65,6 +65,9 @@ const MonthCalendar = ({ days, selectedKey, onSelectDay, onRescheduleTask }: Mon
               className={cn(
                 "flex min-h-[64px] cursor-pointer flex-col gap-1 rounded-xl border p-1.5 text-left transition sm:min-h-[92px]",
                 day.inMonth ? "border-border/60 bg-card/40" : "border-transparent bg-transparent opacity-40",
+                // Today: tint the whole cell so it reads at a glance, in addition
+                // to the circled date number below.
+                day.isToday && "border-primary bg-primary/10 ring-1 ring-primary/40",
                 isSelected && "border-primary ring-1 ring-primary",
                 isDragOver && "border-primary bg-primary/10",
               )}
@@ -79,7 +82,14 @@ const MonthCalendar = ({ days, selectedKey, onSelectDay, onRescheduleTask }: Mon
                   {day.dayOfMonth}
                 </span>
                 {day.habitsDue.length > 0 && (
-                  <span className="text-[9px] font-semibold text-muted-foreground">
+                  <span
+                    className={cn(
+                      "text-[9px] font-semibold",
+                      day.isToday
+                        ? "rounded-full bg-primary/20 px-1.5 py-0.5 text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  >
                     {day.completedHabitCount}/{day.habitsDue.length}
                   </span>
                 )}

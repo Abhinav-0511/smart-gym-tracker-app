@@ -8,9 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/features/productivity/hooks/useHabits";
 import { useTasks } from "@/features/productivity/hooks/useTasks";
+import { useUndoConfirm } from "@/features/productivity/hooks/useUndoConfirm";
 import MonthCalendar from "@/features/productivity/components/MonthCalendar";
 import DayDetailSheet from "@/features/productivity/components/DayDetailSheet";
 import TaskFormDialog from "@/features/productivity/components/TaskFormDialog";
+import UndoConfirmDialog from "@/features/productivity/components/UndoConfirmDialog";
 import {
   buildCalendarGrid,
   formatMonthLabel,
@@ -28,6 +30,7 @@ const CalendarPage = () => {
   const habits = useHabits(user?.id, timezone, false);
   const tasks = useTasks(user?.id, timezone, false);
   const todayKey = tasks.todayKey;
+  const undo = useUndoConfirm(todayKey);
 
   const [monthKey, setMonthKey] = useState(() => monthStartKey(todayKey));
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -67,7 +70,16 @@ const CalendarPage = () => {
   };
 
   const handleToggleHabit = (habit: HabitWithHistory, dateKey: string, complete: boolean) => {
-    habits.toggleMutation.mutate({ habit, dateKey, complete });
+    undo.requestToggle({
+      kind: "habit",
+      id: habit.id,
+      dateKey,
+      // complete === false means the habit is currently done for this day, so
+      // the click is an undo — confirm it and enforce the one-undo limit.
+      isDone: !complete,
+      title: habit.title,
+      run: () => habits.toggleMutation.mutate({ habit, dateKey, complete }),
+    });
   };
 
   const openAddTask = (dayKey: string) => {
@@ -144,7 +156,10 @@ const CalendarPage = () => {
         onToggleHabit={handleToggleHabit}
         onEditTask={openEditTask}
         onAddTask={openAddTask}
+        isHabitLocked={(habitId, dateKey) => undo.isLocked("habit", habitId, dateKey)}
       />
+
+      <UndoConfirmDialog pending={undo.pending} onConfirm={undo.confirm} onCancel={undo.cancel} />
 
       <TaskFormDialog
         open={formOpen}
