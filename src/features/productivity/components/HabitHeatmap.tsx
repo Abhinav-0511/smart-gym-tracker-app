@@ -1,6 +1,11 @@
 import { useMemo } from "react";
 
-import { addDays, isoWeekdayOfKey, parseDateKey } from "@/features/productivity/lib/date-keys";
+import {
+  daysInMonthOfKey,
+  isoWeekdayOfKey,
+  monthStartKey,
+  parseDateKey,
+} from "@/features/productivity/lib/date-keys";
 import { getHabitColorClasses } from "@/features/productivity/lib/habit-colors";
 import {
   isHabitDueOnWeekday,
@@ -15,70 +20,103 @@ interface HabitHeatmapProps {
   customDays: Habit["customDays"];
   completedKeys: string[];
   todayKey: string;
-  /** Number of week columns to render. */
-  weeks?: number;
   className?: string;
 }
 
 type CellState = "completed" | "missed" | "off" | "future";
 
-/** GitHub-style completion grid: one column per week, one cell per day. */
+interface DayCell {
+  key: string;
+  day: number;
+  state: CellState;
+  isToday: boolean;
+}
+
+const WEEKDAY_INITIALS = ["M", "T", "W", "T", "F", "S", "S"];
+
+/**
+ * Current-month completion calendar: one cell per day of the month the user is
+ * in (28–31 cells), laid out Monday–Sunday with leading blanks so each day sits
+ * under its weekday — exactly like a wall calendar. Completed days are filled
+ * with the habit colour, due-but-missed days are muted, off days faint, and
+ * days still to come are left empty.
+ */
 const HabitHeatmap = ({
   color,
   frequency,
   customDays,
   completedKeys,
   todayKey,
-  weeks = 17,
   className,
 }: HabitHeatmapProps) => {
   const solid = getHabitColorClasses(color).solid;
 
-  const columns = useMemo(() => {
+  const { monthLabel, leadingBlanks, cells } = useMemo(() => {
     const completed = new Set(completedKeys);
-    // Snap the window start back to the most recent Monday.
-    let start = addDays(todayKey, -(weeks * 7 - 1));
-    while (isoWeekdayOfKey(start) !== 1) start = addDays(start, -1);
+    const firstKey = monthStartKey(todayKey);
+    const totalDays = daysInMonthOfKey(todayKey);
+    // Monday-first offset: how many empty slots precede the 1st.
+    const blanks = isoWeekdayOfKey(firstKey) - 1;
+    const yearMonth = firstKey.slice(0, 7); // "YYYY-MM"
 
-    return Array.from({ length: weeks }, (_, week) =>
-      Array.from({ length: 7 }, (_, day): { key: string; state: CellState } => {
-        const key = addDays(start, week * 7 + day);
-        const weekday = isoWeekdayOfKey(key);
-        let state: CellState;
-        if (key > todayKey) state = "future";
-        else if (completed.has(key)) state = "completed";
-        else if (isHabitDueOnWeekday({ frequency, customDays }, weekday)) state = "missed";
-        else state = "off";
-        return { key, state };
+    const dayCells = Array.from({ length: totalDays }, (_, index): DayCell => {
+      const day = index + 1;
+      const key = `${yearMonth}-${String(day).padStart(2, "0")}`;
+      const weekday = isoWeekdayOfKey(key);
+      let state: CellState;
+      if (key > todayKey) state = "future";
+      else if (completed.has(key)) state = "completed";
+      else if (isHabitDueOnWeekday({ frequency, customDays }, weekday)) state = "missed";
+      else state = "off";
+      return { key, day, state, isToday: key === todayKey };
+    });
+
+    return {
+      monthLabel: parseDateKey(firstKey).toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
       }),
-    );
-  }, [completedKeys, todayKey, weeks, frequency, customDays]);
+      leadingBlanks: blanks,
+      cells: dayCells,
+    };
+  }, [completedKeys, todayKey, frequency, customDays]);
 
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <div className="flex gap-1">
-        {columns.map((column, index) => (
-          <div key={index} className="flex flex-col gap-1">
-            {column.map((cell) => (
-              <div
-                key={cell.key}
-                title={
-                  cell.state === "future"
-                    ? undefined
-                    : `${parseDateKey(cell.key).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}${cell.state === "completed" ? " · done" : ""}`
-                }
-                className={cn(
-                  "h-2.5 w-2.5 rounded-[3px]",
-                  cell.state === "completed" && solid,
-                  cell.state === "missed" && "bg-muted",
-                  cell.state === "off" && "bg-muted/40",
-                  cell.state === "future" && "bg-transparent",
-                )}
-              />
-            ))}
+    <div className={cn("space-y-2", className)}>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-foreground">{monthLabel}</p>
+        <p className="text-[10px] text-muted-foreground">{cells.length} days</p>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {WEEKDAY_INITIALS.map((label, index) => (
+          <span
+            key={index}
+            aria-hidden
+            className="text-center text-[9px] font-semibold uppercase text-muted-foreground/70"
+          >
+            {label}
+          </span>
+        ))}
+        {Array.from({ length: leadingBlanks }, (_, index) => (
+          <span key={`blank-${index}`} aria-hidden />
+        ))}
+        {cells.map((cell) => (
+          <div
+            key={cell.key}
+            title={`${parseDateKey(cell.key).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            })}${cell.state === "completed" ? " · done" : cell.state === "missed" ? " · missed" : ""}`}
+            className={cn(
+              "flex aspect-square items-center justify-center rounded-[5px] text-[9px] font-semibold tabular-nums transition-colors",
+              cell.state === "completed" && cn(solid, "text-white"),
+              cell.state === "missed" && "bg-muted text-muted-foreground",
+              cell.state === "off" && "bg-muted/40 text-muted-foreground/60",
+              cell.state === "future" && "text-muted-foreground/40",
+              cell.isToday && "ring-2 ring-primary ring-offset-1 ring-offset-card",
+            )}
+          >
+            {cell.day}
           </div>
         ))}
       </div>

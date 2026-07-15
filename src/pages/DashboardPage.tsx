@@ -242,7 +242,7 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
             <p className="mt-1 text-sm text-muted-foreground">
               {activePlan
                 ? "Add today to your active plan if you want to train."
-                : "Add training days and exercises before starting a workout."}
+                : "Start building your stronger self — add training days and exercises to begin."}
             </p>
             <Button
               variant="ghost"

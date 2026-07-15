@@ -26,6 +26,17 @@ export function isoWeekdayOfKey(key: string): IsoWeekday {
   return (day === 0 ? 7 : day) as IsoWeekday;
 }
 
+/** First-of-month key (`YYYY-MM-01`) for the month the given key falls in. */
+export function monthStartKey(key: string): string {
+  return `${key.slice(0, 7)}-01`;
+}
+
+/** Number of calendar days in the month the given key falls in (UTC, DST-safe). */
+export function daysInMonthOfKey(key: string): number {
+  const date = parseDateKey(key);
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 /** Inclusive list of date keys from `startKey` to `endKey`. */
 export function dateKeyRange(startKey: string, endKey: string): string[] {
   const keys: string[] = [];

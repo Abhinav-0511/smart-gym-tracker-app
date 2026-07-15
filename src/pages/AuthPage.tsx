@@ -6,6 +6,7 @@ import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { BRAND } from "@/lib/brand";
 import { getAuthErrorMessage, isValidEmailAddress, normalizeEmailAddress, requestPasswordReset } from "@/services/auth";
 
 const AuthPage = () => {
@@ -98,7 +99,7 @@ const AuthPage = () => {
         } else {
           toast({
             title: "Account created",
-            description: "Your FitTrack account is ready.",
+            description: `Your ${BRAND.name} account is ready.`,
           });
         }
       }
@@ -153,57 +154,63 @@ const AuthPage = () => {
     <div className="relative min-h-screen overflow-hidden bg-background md:grid md:grid-cols-[1.15fr_.85fr]">
       {showSplash && (
         <div
-          className="mobile-splash fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#0b2454] px-7 py-8 text-white md:hidden"
+          className="mobile-splash bg-brand-navy fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-8 text-center text-white md:hidden"
           role="status"
-          aria-label="Opening FitTrack"
+          aria-label={`Opening ${BRAND.name}`}
         >
-          <div className="auth-orbit absolute -right-24 top-20 h-80 w-80 rounded-full border border-primary/20" />
-          <div className="auth-orbit auth-orbit-delayed absolute -right-8 top-40 h-80 w-80 rounded-full border border-primary/10" />
-          <BrandLogo kind="vernex" className="splash-item h-10 w-auto max-w-[165px] rounded bg-white/95 px-2.5" />
-          <div className="relative z-10 my-auto">
-            <div className="splash-item splash-delay-1 mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-xs font-semibold text-primary">
-              <Sparkles size={14} /> Train with intention
+          <div className="pointer-events-none absolute left-1/2 top-[38%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-3xl brand-glow" />
+          <div className="relative flex flex-col items-center">
+            <div className="brand-reveal relative mb-8 h-28 w-28">
+              <span className="brand-glow absolute -inset-3 rounded-[36px] bg-primary/30 blur-2xl" />
+              <span className="brand-float relative flex h-full w-full items-center justify-center overflow-hidden rounded-[30px] bg-white shadow-2xl ring-1 ring-white/40">
+                <BrandLogo kind="app" className="h-[84%] w-[84%] max-w-none" />
+              </span>
             </div>
-            <h2 className="splash-item splash-delay-2 text-[2.7rem] font-extrabold leading-[1.05] tracking-tight">
-              Every rep.<br />Every milestone.<br />
-              <span className="text-primary">One premium space.</span>
-            </h2>
-            <p className="splash-item splash-delay-3 mt-6 max-w-sm text-sm leading-6 text-white/60">
-              Plan smarter sessions, track meaningful progress, and turn consistency into your strongest habit.
+            <h1 className="splash-item splash-delay-1 text-[2.75rem] font-extrabold leading-none tracking-tight">
+              {BRAND.name}
+            </h1>
+            <p className="splash-item splash-delay-2 mt-4 max-w-xs text-[0.95rem] leading-6 text-white/70">
+              {BRAND.motto}
             </p>
           </div>
-          <p className="splash-item splash-delay-4 relative z-10 flex items-center gap-2 text-xs text-white/45">
-            <ShieldCheck size={14} /> Private, secure, and built for your progress.
+          <p className="splash-item splash-delay-4 absolute inset-x-0 bottom-9 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[.16em] text-white/45">
+            <ShieldCheck size={13} /> {BRAND.poweredBy}
           </p>
         </div>
       )}
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-      <section className="auth-hero relative hidden min-h-screen flex-col justify-between overflow-hidden bg-[#0b2454] p-12 text-white md:flex">
+      <section className="auth-hero bg-brand-navy relative hidden min-h-screen flex-col justify-between overflow-hidden p-12 text-white md:flex">
         <div className="auth-orbit absolute -right-20 top-6 h-60 w-60 rounded-full border border-primary/20 md:-right-24 md:top-24 md:h-80 md:w-80" />
         <div className="auth-orbit auth-orbit-delayed absolute -right-4 top-16 h-60 w-60 rounded-full border border-primary/10 md:-right-8 md:top-40 md:h-80 md:w-80" />
-        <BrandLogo kind="vernex" className="auth-reveal h-9 w-auto max-w-[150px] rounded bg-white/95 px-2 md:h-10 md:max-w-[180px] md:px-3" />
+        <div className="auth-reveal flex h-14 w-fit items-center justify-center rounded-2xl bg-white px-5 shadow-xl">
+          <BrandLogo kind="full" className="h-8 w-auto max-w-[190px]" />
+        </div>
         <div className="relative z-10 max-w-xl">
           <div className="auth-reveal auth-delay-1 mb-4 hidden items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-xs font-semibold text-primary sm:inline-flex md:mb-8">
-            <Sparkles size={14} /> Train with intention
+            <Sparkles size={14} /> Three pillars. One premium space.
           </div>
           <h2 className="auth-reveal auth-delay-2 text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-4xl md:text-5xl">
-            Every rep. <span className="md:block">Every milestone.</span><br className="md:hidden" /> <span className="text-primary">One premium space.</span>
+            Your <span className="text-gradient">fitness</span>, <span className="text-gradient">focus</span> <span className="md:block">and <span className="text-gradient">finances</span></span><br className="md:hidden" /> — beautifully in sync.
           </h2>
-          <p className="auth-reveal auth-delay-3 mt-3 max-w-md text-sm leading-6 text-white/60 md:mt-6 md:text-base md:leading-7">
-            Plan smarter sessions, track meaningful progress, and turn consistency into your strongest habit.
+          <p className="auth-reveal auth-delay-3 mt-3 max-w-md text-sm leading-6 text-white/65 md:mt-6 md:text-base md:leading-7">
+            {BRAND.motto} One account for every pillar of your life — plan, build habits, and grow your money in a single premium space.
           </p>
         </div>
-        <p className="auth-reveal auth-delay-4 hidden items-center gap-2 text-xs text-white/45 md:flex"><ShieldCheck size={14} /> Private, secure, and built for your progress.</p>
+        <p className="auth-reveal auth-delay-4 hidden items-center gap-2 text-xs text-white/45 md:flex"><ShieldCheck size={14} /> {BRAND.poweredBy}</p>
       </section>
       <div className="login-reveal relative flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
       <div className="w-full max-w-md space-y-7 animate-fade-in">
         <div className="text-center">
-          <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[24px] bg-white shadow-xl">
-            <BrandLogo className="h-[115%] w-[115%] max-w-none" />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] bg-white shadow-xl ring-1 ring-border/50">
+            <BrandLogo kind="app" className="h-[112%] w-[112%] max-w-none" />
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">FitTrack</h1>
-          <p className="mt-1 text-[11px] font-bold uppercase tracking-[.24em] text-primary">by VERNEX</p>
-          <p className="mt-3 text-sm text-muted-foreground">Your Premium Gym Companion</p>
+          <div className="mx-auto flex h-11 w-fit items-center justify-center rounded-2xl bg-white px-4 shadow-sm ring-1 ring-border/50">
+            <BrandLogo kind="full" className="h-6 w-auto max-w-[160px]" />
+          </div>
+          <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">
+            {isLogin ? "Welcome back" : `Welcome to ${BRAND.name}`}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">{BRAND.motto}</p>
         </div>
 
         <GlassCard className="p-5 sm:p-7">
@@ -408,7 +415,9 @@ const AuthPage = () => {
             </form>
           )}
         </GlassCard>
-        <BrandLogo kind="vernex" className="mx-auto h-7 w-auto max-w-[130px] opacity-45 md:hidden" />
+        <p className="text-center text-[11px] font-medium uppercase tracking-[.16em] text-muted-foreground/70">
+          {BRAND.poweredBy}
+        </p>
       </div>
       </div>
     </div>

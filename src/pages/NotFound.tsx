@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 
 const NotFound = () => {
   const location = useLocation();
@@ -20,7 +21,7 @@ const NotFound = () => {
           The address <span className="font-medium text-foreground">{location.pathname}</span> may have moved or no longer exists.
         </p>
         <Button asChild className="mt-8">
-          <Link to="/"><ArrowLeft size={16} />Return to FitTrack</Link>
+          <Link to="/"><ArrowLeft size={16} />Return to {BRAND.name}</Link>
         </Button>
       </section>
     </main>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { computeHabitStats } from "@/features/productivity/lib/habit-stats";
-import { addDays } from "@/features/productivity/lib/date-keys";
+import { computeHabitStats, monthlyCompletionRate } from "@/features/productivity/lib/habit-stats";
+import { addDays, daysInMonthOfKey } from "@/features/productivity/lib/date-keys";
 import type { Habit } from "@/features/productivity/types/habit";
 
 const TODAY = "2026-07-10"; // a Friday (ISO weekday 5)
@@ -111,5 +111,35 @@ describe("computeHabitStats", () => {
 
     // 15 completed out of 29 elapsed due days (today excluded as in-progress).
     expect(stats.completionRate).toBe(Math.round((15 / 29) * 100));
+  });
+});
+
+describe("monthlyCompletionRate", () => {
+  it("scopes the rate to the 1st-of-month through today", () => {
+    // July 1–9 completed (daily), today (Jul 10) not yet done.
+    const completed = Array.from({ length: 9 }, (_, index) => `2026-07-0${index + 1}`);
+    // 9 completed of 9 elapsed due days (Jul 1–9); today excluded as in-progress.
+    expect(monthlyCompletionRate(daily, completed, TODAY)).toBe(100);
+  });
+
+  it("counts missed due days this month against the rate", () => {
+    // Only Jul 1–5 completed; Jul 6–9 missed (all daily due). Today in-progress.
+    const completed = Array.from({ length: 5 }, (_, index) => `2026-07-0${index + 1}`);
+    // 5 of 9 elapsed due days.
+    expect(monthlyCompletionRate(daily, completed, TODAY)).toBe(Math.round((5 / 9) * 100));
+  });
+
+  it("ignores completions from previous months", () => {
+    const completed = ["2026-06-28", "2026-06-30"]; // June only
+    expect(monthlyCompletionRate(daily, completed, TODAY)).toBe(0);
+  });
+});
+
+describe("daysInMonthOfKey", () => {
+  it("returns the day count for the month a key falls in", () => {
+    expect(daysInMonthOfKey("2026-07-15")).toBe(31);
+    expect(daysInMonthOfKey("2026-02-10")).toBe(28);
+    expect(daysInMonthOfKey("2024-02-10")).toBe(29); // leap year
+    expect(daysInMonthOfKey("2026-04-01")).toBe(30);
   });
 });

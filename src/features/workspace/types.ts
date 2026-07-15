@@ -24,6 +24,8 @@ export interface WorkspaceDefinition {
   label: string;
   /** Emoji shown alongside the label in the switcher. */
   emoji: string;
+  /** Imported module logo asset (Fitness/Productivity/Finance mark). */
+  logo: string;
   /** One-line descriptor shown under the header title. */
   tagline: string;
   /** Route the switcher lands on when this workspace is selected. */

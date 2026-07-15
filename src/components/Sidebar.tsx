@@ -2,6 +2,7 @@ import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { BRAND } from "@/lib/brand";
 import { formatProfileValue } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +14,7 @@ interface SidebarNavProps {
 const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
   const { profile } = useAuth();
   const { workspace } = useWorkspace();
-  const fullName = profile?.full_name ?? "FitTrack Member";
+  const fullName = profile?.full_name ?? `${BRAND.name} Member`;
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0b2454] text-white md:flex">
@@ -39,7 +40,7 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
         </button>
       ))}
     </nav>
-    <div className="p-4">
+    <div className="space-y-3 p-4">
       <div className="rounded-2xl border border-white/10 bg-white/[.06] p-4">
         <div className="flex items-center gap-3">
           <ProfileAvatar
@@ -55,6 +56,9 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
           </div>
         </div>
       </div>
+      <p className="text-center text-[10px] font-medium uppercase tracking-[.14em] text-white/35">
+        {BRAND.poweredBy}
+      </p>
     </div>
     </aside>
   );

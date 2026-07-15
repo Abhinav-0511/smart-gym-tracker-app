@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Flame,
   ListTodo,
+  Lock,
   Plus,
   Quote as QuoteIcon,
   Sparkles,
@@ -19,13 +20,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getGreeting } from "@/types/dashboard";
 import { useProductivityDashboard } from "@/features/productivity/hooks/useProductivityDashboard";
+import { useUndoConfirm } from "@/features/productivity/hooks/useUndoConfirm";
 import CompletionRing from "@/features/productivity/components/CompletionRing";
 import HabitFormDialog from "@/features/productivity/components/HabitFormDialog";
 import TaskFormDialog from "@/features/productivity/components/TaskFormDialog";
+import UndoConfirmDialog from "@/features/productivity/components/UndoConfirmDialog";
 import { getHabitColorClasses } from "@/features/productivity/lib/habit-colors";
 import { getHabitIcon } from "@/features/productivity/lib/habit-icons";
 import { getDailyQuote } from "@/features/productivity/lib/quotes";
 import { parseDateKey } from "@/features/productivity/lib/date-keys";
+import type { HabitWithHistory } from "@/features/productivity/services/habits";
 import type { CreateHabitInput } from "@/features/productivity/types/habit";
 import type { CreateTaskInput, Task } from "@/features/productivity/types/task";
 import { cn } from "@/lib/utils";
@@ -42,6 +46,31 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
 
   const [habitFormOpen, setHabitFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
+
+  const undo = useUndoConfirm(dashboard.todayKey);
+
+  const handleTaskClick = (task: Task) => {
+    undo.requestToggle({
+      kind: "task",
+      id: task.id,
+      dateKey: dashboard.todayKey,
+      isDone: task.status === "completed",
+      title: task.title,
+      run: () => dashboard.toggleTask(task),
+    });
+  };
+
+  const handleHabitClick = (habit: HabitWithHistory) => {
+    const done = habit.stats.completedToday;
+    undo.requestToggle({
+      kind: "habit",
+      id: habit.id,
+      dateKey: dashboard.todayKey,
+      isDone: done,
+      title: habit.title,
+      run: () => dashboard.toggleHabit(habit, !done),
+    });
+  };
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const greeting = getGreeting(new Date(), timezone);
@@ -170,6 +199,7 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
                 const colors = getHabitColorClasses(habit.color);
                 const Icon = getHabitIcon(habit.icon);
                 const done = habit.stats.completedToday;
+                const locked = done && undo.isLocked("habit", habit.id, dashboard.todayKey);
                 return (
                   <li key={habit.id} className="flex items-center gap-3">
                     <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", colors.chip)}>
@@ -183,17 +213,18 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
                     </div>
                     <button
                       type="button"
-                      aria-label={done ? "Mark not done" : "Mark done"}
+                      aria-label={locked ? "Completed — locked for today" : done ? "Undo completion" : "Mark done"}
                       aria-pressed={done}
-                      onClick={() => dashboard.toggleHabit(habit, !done)}
+                      title={locked ? "Already undone once today — locked as done" : undefined}
+                      onClick={() => handleHabitClick(habit)}
                       className={cn(
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition",
                         done
-                          ? cn(colors.solid, "border-transparent text-white")
+                          ? cn(colors.solid, "border-transparent text-white", locked && "cursor-default opacity-90")
                           : "border-border text-muted-foreground hover:border-primary hover:text-primary",
                       )}
                     >
-                      <Check size={16} strokeWidth={done ? 3 : 2} />
+                      {locked ? <Lock size={13} strokeWidth={2.5} /> : <Check size={16} strokeWidth={done ? 3 : 2} />}
                     </button>
                   </li>
                 );
@@ -216,24 +247,47 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
               View all
             </button>
           </div>
-          {dashboard.tasksToday.length === 0 ? (
+          {dashboard.tasksToday.length === 0 && dashboard.completedTasksToday.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Nothing due today. Enjoy!</p>
           ) : (
             <ul className="space-y-2">
-              {dashboard.tasksToday.map((task) => (
-                <li key={task.id} className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    aria-label="Mark task complete"
-                    onClick={() => dashboard.toggleTask(task)}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-border text-transparent transition hover:border-primary"
-                  >
-                    <Check size={14} strokeWidth={3} />
-                  </button>
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{task.title}</p>
-                  <span className="shrink-0 text-xs capitalize text-muted-foreground">{task.priority}</span>
-                </li>
-              ))}
+              {[...dashboard.tasksToday, ...dashboard.completedTasksToday].map((task) => {
+                const done = task.status === "completed";
+                const locked = done && undo.isLocked("task", task.id, dashboard.todayKey);
+                return (
+                  <li key={task.id} className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      aria-label={
+                        locked ? "Completed — locked for today" : done ? "Undo completion" : "Mark task complete"
+                      }
+                      aria-pressed={done}
+                      title={locked ? "Already undone once today — locked as done" : undefined}
+                      onClick={() => handleTaskClick(task)}
+                      className={cn(
+                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition",
+                        done
+                          ? cn(
+                              "border-transparent bg-primary text-primary-foreground",
+                              locked && "cursor-default opacity-90",
+                            )
+                          : "border-border text-transparent hover:border-primary",
+                      )}
+                    >
+                      {locked ? <Lock size={11} strokeWidth={2.5} /> : <Check size={14} strokeWidth={3} />}
+                    </button>
+                    <p
+                      className={cn(
+                        "min-w-0 flex-1 truncate text-sm font-medium text-foreground",
+                        done && "line-through opacity-60",
+                      )}
+                    >
+                      {task.title}
+                    </p>
+                    <span className="shrink-0 text-xs capitalize text-muted-foreground">{task.priority}</span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </GlassCard>
@@ -307,6 +361,8 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
         onOpenChange={setTaskFormOpen}
         onSubmit={handleCreateTask}
       />
+
+      <UndoConfirmDialog pending={undo.pending} onConfirm={undo.confirm} onCancel={undo.cancel} />
     </div>
   );
 };

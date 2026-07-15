@@ -2,7 +2,7 @@
 // set of completed date keys and the habit's frequency. Nothing here is stored;
 // it is recomputed from habit_logs, consistent with the app's "derive" approach.
 
-import { addDays, isoWeekdayOfKey } from "@/features/productivity/lib/date-keys";
+import { addDays, isoWeekdayOfKey, monthStartKey } from "@/features/productivity/lib/date-keys";
 import {
   isHabitDueOnWeekday,
   type Habit,
@@ -86,6 +86,36 @@ function completionRate(
   let due = 0;
   let done = 0;
   let cursor = windowStart;
+
+  while (cursor <= todayKey) {
+    if (isDue(habit, cursor)) {
+      const isCompleted = completed.has(cursor);
+      if (cursor !== todayKey || isCompleted) {
+        due += 1;
+        if (isCompleted) done += 1;
+      }
+    }
+    cursor = addDays(cursor, 1);
+  }
+
+  return due === 0 ? 0 : Math.round((done / due) * 100);
+}
+
+/**
+ * Completion rate for the current calendar month: share of due days from the
+ * 1st through today that were completed. Mirrors the trailing-window rate but
+ * scoped to the month the heatmap displays, so the card's percentage matches
+ * the calendar the user sees. Today counts only once completed.
+ */
+export function monthlyCompletionRate(
+  habit: FrequencyLike,
+  completedKeys: Iterable<string>,
+  todayKey: string,
+): number {
+  const completed = new Set(completedKeys);
+  let due = 0;
+  let done = 0;
+  let cursor = monthStartKey(todayKey);
 
   while (cursor <= todayKey) {
     if (isDue(habit, cursor)) {

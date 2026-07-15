@@ -3,6 +3,7 @@ import {
   ArchiveRestore,
   Check,
   Flame,
+  Lock,
   MoreVertical,
   Pause,
   Pencil,
@@ -22,7 +23,8 @@ import { getHabitColorClasses } from "@/features/productivity/lib/habit-colors";
 import { getHabitIcon } from "@/features/productivity/lib/habit-icons";
 import type { HabitWithHistory } from "@/features/productivity/services/habits";
 import { isHabitDueOn, type HabitStatus } from "@/features/productivity/types/habit";
-import { parseDateKey } from "@/features/productivity/lib/date-keys";
+import { daysInMonthOfKey, parseDateKey } from "@/features/productivity/lib/date-keys";
+import { monthlyCompletionRate } from "@/features/productivity/lib/habit-stats";
 import HabitHeatmap from "@/features/productivity/components/HabitHeatmap";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +50,8 @@ interface HabitCardProps {
   onEdit: (habit: HabitWithHistory) => void;
   onStatusChange: (habit: HabitWithHistory, status: HabitStatus) => void;
   onDelete: (habit: HabitWithHistory) => void;
+  /** When true, today's completion has spent its one undo and is locked as done. */
+  locked?: boolean;
 }
 
 const HabitCard = ({
@@ -57,6 +61,7 @@ const HabitCard = ({
   onEdit,
   onStatusChange,
   onDelete,
+  locked = false,
 }: HabitCardProps) => {
   const colors = getHabitColorClasses(habit.color);
   const Icon = getHabitIcon(habit.icon);
@@ -64,6 +69,10 @@ const HabitCard = ({
   const done = habit.stats.completedToday;
   const isArchived = habit.status === "archived";
   const isPaused = habit.status === "paused";
+  // Completion for the calendar month shown in the heatmap below, so the
+  // percentage and the "Nd" label match the days of the current month.
+  const monthRate = monthlyCompletionRate(habit, habit.recentCompletedKeys, todayKey);
+  const daysInMonth = daysInMonthOfKey(todayKey);
 
   return (
     <GlassCard className="flex flex-col gap-4">
@@ -94,17 +103,28 @@ const HabitCard = ({
           {!isArchived && (
             <button
               type="button"
-              aria-label={done ? "Mark habit not done" : "Mark habit done"}
+              aria-label={
+                locked && done
+                  ? "Completed — locked for today"
+                  : done
+                    ? "Undo completion"
+                    : "Mark habit done"
+              }
               aria-pressed={done}
+              title={locked && done ? "Already undone once today — locked as done" : undefined}
               onClick={() => onToggle(habit, !done)}
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 done
-                  ? cn(colors.solid, "border-transparent text-white")
+                  ? cn(colors.solid, "border-transparent text-white", locked && "cursor-default opacity-90")
                   : "border-border text-muted-foreground hover:border-primary hover:text-primary",
               )}
             >
-              <Check size={18} strokeWidth={done ? 3 : 2} />
+              {locked && done ? (
+                <Lock size={15} strokeWidth={2.5} />
+              ) : (
+                <Check size={18} strokeWidth={done ? 3 : 2} />
+              )}
             </button>
           )}
           <DropdownMenu>
@@ -159,7 +179,7 @@ const HabitCard = ({
           <span className="font-normal text-muted-foreground">day streak</span>
         </span>
         <span className="text-muted-foreground">
-          <span className="font-semibold text-foreground">{habit.stats.completionRate}%</span> · 30d
+          <span className="font-semibold text-foreground">{monthRate}%</span> · {daysInMonth}d
         </span>
         <span className="ml-auto text-xs text-muted-foreground">
           Best {habit.stats.longestStreak}

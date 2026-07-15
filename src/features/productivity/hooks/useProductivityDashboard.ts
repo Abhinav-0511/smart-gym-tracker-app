@@ -49,12 +49,16 @@ export function useProductivityDashboard(userId: string | undefined, timezone: s
       (task) => task.dueDate === todayKey || getTaskDerivedStatus(task, now) === "overdue",
     );
     const overdue = pending.filter((task) => getTaskDerivedStatus(task, now) === "overdue");
-    const completedToday = taskList.filter(
-      (task) =>
-        task.status === "completed"
-        && task.completedAt
-        && getLocalDateString(new Date(task.completedAt), timezone) === todayKey,
-    );
+    const completedToday = taskList
+      .filter(
+        (task) =>
+          task.status === "completed"
+          && task.completedAt
+          && getLocalDateString(new Date(task.completedAt), timezone) === todayKey,
+      )
+      // Most recently completed first, so freshly-ticked tasks sit at the top
+      // of the completed group.
+      .sort((a, b) => (a.completedAt! < b.completedAt! ? 1 : -1));
     const taskDenominator = tasksToday.length + completedToday.length;
     const taskPct = taskDenominator
       ? Math.round((completedToday.length / taskDenominator) * 100)
@@ -95,6 +99,10 @@ export function useProductivityDashboard(userId: string | undefined, timezone: s
       bestStreak,
       activeStreaks,
       tasksToday,
+      // Tasks completed today stay visible in "Today's Tasks" (as done) until
+      // the day rolls over — they drop off automatically tomorrow because
+      // completedAt no longer matches todayKey.
+      completedTasksToday: completedToday,
       overdueCount: overdue.length,
       upcomingDeadlines,
       taskStats: {

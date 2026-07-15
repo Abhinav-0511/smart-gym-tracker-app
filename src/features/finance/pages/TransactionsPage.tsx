@@ -285,7 +285,7 @@ const TransactionsPage = () => {
               </h3>
               <p className="max-w-sm text-sm text-muted-foreground">
                 {data.transactions.length === 0
-                  ? "Add your first transaction to get started."
+                  ? "Every great future starts with one step. Add your first transaction to begin."
                   : "Try adjusting your search or filters."}
               </p>
               {data.transactions.length === 0 && (

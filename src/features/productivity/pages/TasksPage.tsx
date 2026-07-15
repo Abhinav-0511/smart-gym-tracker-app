@@ -322,7 +322,7 @@ const TasksPage = () => {
           </h3>
           <p className="max-w-sm text-sm text-muted-foreground">
             {tasks.length === 0
-              ? "Create your first task to start planning."
+              ? "Productivity begins with one task. Add yours to start planning your day."
               : "No tasks match this view or filters."}
           </p>
           {tasks.length === 0 && (
