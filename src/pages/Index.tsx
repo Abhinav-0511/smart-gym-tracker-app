@@ -105,7 +105,7 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
     <div className="min-h-screen bg-background">
       <SidebarNav active={activePage} onNavigate={handleNavigate} />
       <main className="pb-[calc(7rem_+_env(safe-area-inset-bottom))] md:ml-72 md:pb-10">
-        <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 px-4 py-3 backdrop-blur-xl md:px-8">
+        <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-xl md:px-8">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <div className="flex items-center gap-3">
               <WorkspaceSwitcher variant="compact" className="md:hidden" />

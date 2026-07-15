@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { getFinanceColorClasses } from "@/features/finance/lib/finance-colors";
 import { FINANCE_ICON_NAMES, getFinanceIcon } from "@/features/finance/lib/finance-icons";
@@ -104,6 +105,8 @@ const SavingsGoalFormDialog = ({
               id="goal-name"
               value={name}
               maxLength={80}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder="e.g. Emergency fund"
               onChange={(event) => setName(event.target.value)}
               disabled={saving}
@@ -114,23 +117,23 @@ const SavingsGoalFormDialog = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="goal-target">Target amount</Label>
-              <Input
+              <NumericInput
                 id="goal-target"
-                inputMode="decimal"
                 value={targetAmount}
                 placeholder="0.00"
-                onChange={(event) => setTargetAmount(event.target.value)}
+                enterKeyHint="next"
+                onValueChange={setTargetAmount}
                 disabled={saving}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="goal-current">Saved so far</Label>
-              <Input
+              <NumericInput
                 id="goal-current"
-                inputMode="decimal"
                 value={currentAmount}
                 placeholder="0.00"
-                onChange={(event) => setCurrentAmount(event.target.value)}
+                enterKeyHint="done"
+                onValueChange={setCurrentAmount}
                 disabled={saving}
               />
             </div>

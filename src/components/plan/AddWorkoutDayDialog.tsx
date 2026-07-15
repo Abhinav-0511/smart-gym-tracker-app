@@ -123,6 +123,8 @@ const AddWorkoutDayDialog = ({
               placeholder="Push, Pull, Legs…"
               maxLength={50}
               disabled={saving}
+              autoCapitalize="words"
+              enterKeyHint="done"
             />
           </div>
           {error && (

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -100,13 +101,12 @@ const ManualPRDialog = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="pr-weight">Weight (kg)</Label>
-            <Input
+            <NumericInput
               id="pr-weight"
-              type="number"
-              min={0}
-              step="0.25"
               value={weight}
-              onChange={(event) => setWeight(event.target.value)}
+              placeholder="0"
+              enterKeyHint="done"
+              onValueChange={setWeight}
               disabled={saving}
             />
           </div>

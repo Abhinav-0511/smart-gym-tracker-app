@@ -77,6 +77,9 @@ const PlanTextDialog = ({
               onChange={(event) => setNextValue(event.target.value)}
               maxLength={100}
               disabled={saving}
+              autoCapitalize="sentences"
+              enterKeyHint="done"
+              autoFocus
             />
           </div>
           {error && <p className="text-sm text-destructive" role="alert">{error}</p>}

@@ -215,6 +215,12 @@ const TasksPage = () => {
         <div className="relative flex-1 sm:max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search tasks"

@@ -1,7 +1,9 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AchievementSync from "@/components/achievements/AchievementSync";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
@@ -11,17 +13,35 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
-import ProductivityIndex from "@/features/productivity/ProductivityIndex";
-import FinanceIndex from "@/features/finance/FinanceIndex";
 import AuthPage from "./pages/AuthPage.tsx";
-import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
 
+// Each workspace shell is a large, self-contained subtree. Splitting them at the
+// route boundary keeps the initial (Fitness) payload small so the app boots fast
+// on mobile; the Productivity and Finance bundles load only when first visited.
+const Index = lazy(() => import("./pages/Index.tsx"));
+const ProductivityIndex = lazy(
+  () => import("@/features/productivity/ProductivityIndex"),
+);
+const FinanceIndex = lazy(() => import("@/features/finance/FinanceIndex"));
+
 const queryClient = new QueryClient();
 
+const RouteFallback = () => (
+  <div
+    className="flex min-h-screen items-center justify-center bg-background"
+    role="status"
+    aria-label="Loading"
+  >
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+    <span className="sr-only">Loading</span>
+  </div>
+);
+
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+  <ErrorBoundary>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -32,6 +52,7 @@ const App = () => (
             <ProfileThemeSync />
             <PersonalRecordSync />
             <AchievementSync />
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
             <Route
               path="/"
@@ -212,12 +233,14 @@ const App = () => (
             />
             <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
             </WorkspaceProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  </ThemeProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 export default App;

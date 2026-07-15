@@ -3,6 +3,10 @@ import { Check, ChevronDown, ChevronUp, Minus, Plus, X } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
+import {
+  sanitizeDecimalString,
+  sanitizeIntegerString,
+} from "@/lib/input-sanitizers";
 import type {
   WorkoutSessionExercise,
   WorkoutSessionSet,
@@ -71,23 +75,26 @@ const SessionSetRow = ({
       <span className="text-sm text-muted-foreground text-center">{set.setNumber}</span>
       <input
         aria-label={`Set ${set.setNumber} actual reps`}
-        type="number"
-        min={0}
+        type="text"
+        inputMode="numeric"
+        enterKeyHint="next"
+        autoComplete="off"
         value={reps}
         disabled={disabled || set.isCompleted}
-        onChange={(event) => setReps(event.target.value)}
+        onChange={(event) => setReps(sanitizeIntegerString(event.target.value))}
         onBlur={() => void saveReps()}
         className="h-11 w-full min-w-0 rounded-xl border border-transparent bg-secondary px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
       <input
         aria-label={`Set ${set.setNumber} actual weight`}
-        type="number"
-        min={0}
-        step="0.25"
+        type="text"
+        inputMode="decimal"
+        enterKeyHint="done"
+        autoComplete="off"
         value={weight}
         disabled={disabled || set.isCompleted}
         placeholder={usesBodyweight ? "BW" : "0"}
-        onChange={(event) => setWeight(event.target.value)}
+        onChange={(event) => setWeight(sanitizeDecimalString(event.target.value))}
         onBlur={() => void saveWeight()}
         className="h-11 w-full min-w-0 rounded-xl border border-transparent bg-secondary px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -116,6 +117,8 @@ const AccountFormDialog = ({
               id="account-name"
               value={name}
               maxLength={60}
+              enterKeyHint="next"
+              autoCapitalize="words"
               placeholder="e.g. HDFC Savings"
               onChange={(event) => setName(event.target.value)}
               disabled={saving}
@@ -146,7 +149,14 @@ const AccountFormDialog = ({
                 value={currency}
                 maxLength={3}
                 placeholder="INR"
-                onChange={(event) => setCurrency(event.target.value.toUpperCase())}
+                autoCapitalize="characters"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
+                onChange={(event) =>
+                  setCurrency(event.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase())
+                }
                 disabled={saving}
               />
             </div>
@@ -154,12 +164,13 @@ const AccountFormDialog = ({
 
           <div className="space-y-2">
             <Label htmlFor="account-balance">Opening balance</Label>
-            <Input
+            <NumericInput
               id="account-balance"
-              inputMode="decimal"
               value={initialBalance}
+              allowNegative
               placeholder="0.00"
-              onChange={(event) => setInitialBalance(event.target.value)}
+              enterKeyHint="done"
+              onValueChange={setInitialBalance}
               disabled={saving}
             />
           </div>

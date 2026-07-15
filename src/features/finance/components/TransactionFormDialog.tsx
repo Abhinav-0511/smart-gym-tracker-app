@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -189,12 +190,12 @@ const TransactionFormDialog = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="tx-amount">Amount</Label>
-              <Input
+              <NumericInput
                 id="tx-amount"
-                inputMode="decimal"
                 value={amount}
                 placeholder="0.00"
-                onChange={(event) => setAmount(event.target.value)}
+                enterKeyHint="next"
+                onValueChange={setAmount}
                 disabled={saving}
                 autoFocus
               />
@@ -217,6 +218,8 @@ const TransactionFormDialog = ({
               id="tx-title"
               value={title}
               maxLength={120}
+              enterKeyHint="next"
+              autoCapitalize="sentences"
               placeholder={type === "income" ? "e.g. July salary" : "e.g. Groceries"}
               onChange={(event) => setTitle(event.target.value)}
               disabled={saving}
@@ -316,6 +319,10 @@ const TransactionFormDialog = ({
                 id="tx-tags"
                 value={tags}
                 placeholder="comma, separated"
+                enterKeyHint="done"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 onChange={(event) => setTags(event.target.value)}
                 disabled={saving}
               />

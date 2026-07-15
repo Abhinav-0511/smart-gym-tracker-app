@@ -16,7 +16,9 @@ const BottomNav = ({ active, onNavigate }: BottomNavProps) => {
         {items.map((item) => (
           <button
             key={item.id}
+            type="button"
             onClick={() => onNavigate(item.id)}
+            aria-current={active === item.id ? "page" : undefined}
             className={cn(
               "flex min-w-[58px] flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-all duration-300",
               active === item.id
