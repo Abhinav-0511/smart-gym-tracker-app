@@ -27,7 +27,7 @@ const BottomNav = ({ active, onNavigate }: BottomNavProps) => {
             )}
           >
             <item.icon size={22} strokeWidth={active === item.id ? 2.5 : 1.5} />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className="text-[10px] font-medium">{item.shortLabel ?? item.label}</span>
           </button>
         ))}
       </div>

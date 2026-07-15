@@ -1,14 +1,6 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
 
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { formatCompactCurrency, formatCurrency } from "@/features/finance/lib/money";
 
 export interface IncomeExpensePoint {
@@ -32,7 +24,7 @@ interface IncomeExpenseChartProps {
 
 /** Grouped income vs expense bars, used for the monthly comparison. */
 const IncomeExpenseChart = ({ data, currency }: IncomeExpenseChartProps) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <ResponsiveChart>
     <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
       <XAxis
@@ -59,7 +51,7 @@ const IncomeExpenseChart = ({ data, currency }: IncomeExpenseChartProps) => (
       <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={28} />
       <Bar dataKey="expense" name="Expense" fill="#f43f5e" radius={[6, 6, 0, 0]} maxBarSize={28} />
     </BarChart>
-  </ResponsiveContainer>
+  </ResponsiveChart>
 );
 
 export default IncomeExpenseChart;

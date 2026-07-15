@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { generateUuid } from "@/lib/uuid";
 
 export const AVATAR_BUCKET = "avatars";
 export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -76,7 +77,7 @@ export async function uploadAvatarObject(
   userId: string,
   avatar: Blob,
 ): Promise<string> {
-  const path = `${userId}/${crypto.randomUUID()}.webp`;
+  const path = `${userId}/${generateUuid()}.webp`;
   const { error } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, avatar, {

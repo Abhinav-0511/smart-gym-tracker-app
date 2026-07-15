@@ -1,6 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import BottomNav from "@/components/BottomNav";
@@ -8,6 +6,7 @@ import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
+import HelpButton from "@/features/help/components/HelpButton";
 import ProductivityNotificationCenter from "@/features/productivity/components/ProductivityNotificationCenter";
 import ProductivitySearch from "@/features/productivity/components/ProductivitySearch";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,7 +35,6 @@ const ProductivityIndex = ({ initialPage = "home" }: ProductivityIndexProps) => 
   const { profile, user } = useAuth();
   const timezone = profile?.timezone ?? "UTC";
   const { workspace } = useWorkspace();
-  const { resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,13 +91,7 @@ const ProductivityIndex = ({ initialPage = "home" }: ProductivityIndexProps) => 
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                aria-label="Toggle theme"
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
+              <HelpButton pageKey={`productivity.${activePage === "home" ? "dashboard" : activePage}`} />
               <ProductivitySearch onNavigate={handleNavigate} />
               <ProductivityNotificationCenter
                 userId={user?.id}

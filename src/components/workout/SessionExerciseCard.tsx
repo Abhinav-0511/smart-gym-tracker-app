@@ -18,6 +18,8 @@ interface SessionSetRowProps {
   usesBodyweight: boolean;
   disabled: boolean;
   canRemove: boolean;
+  /** When true, reopening a completed set asks for confirmation first. */
+  confirmReopen: boolean;
   onUpdate: (setId: string, updates: WorkoutSetUpdate) => Promise<void>;
   onRemove: (setId: string) => Promise<void>;
 }
@@ -27,6 +29,7 @@ const SessionSetRow = ({
   usesBodyweight,
   disabled,
   canRemove,
+  confirmReopen,
   onUpdate,
   onRemove,
 }: SessionSetRowProps) => {
@@ -53,6 +56,18 @@ const SessionSetRow = ({
         setReps(set.reps === null ? "" : String(set.reps));
       }
     }
+  };
+
+  const handleToggleComplete = () => {
+    // Reopening a completed set in a saved workout rewrites history/PRs, so
+    // confirm the intent each time rather than letting it toggle silently.
+    if (set.isCompleted && confirmReopen) {
+      const confirmed = window.confirm(
+        "Reopen this set? This is a saved workout, so the change will update your history, progress, and PRs.",
+      );
+      if (!confirmed) return;
+    }
+    void onUpdate(set.id, { isCompleted: !set.isCompleted });
   };
 
   const saveWeight = async () => {
@@ -103,9 +118,7 @@ const SessionSetRow = ({
         size="icon"
         className={`h-11 w-full transition-transform duration-200 ${set.isCompleted ? "scale-100" : "scale-95"}`}
         disabled={disabled || (!set.isCompleted && reps.trim() === "")}
-        onClick={() =>
-          void onUpdate(set.id, { isCompleted: !set.isCompleted })
-        }
+        onClick={handleToggleComplete}
         aria-label={`${set.isCompleted ? "Reopen" : "Complete"} set ${set.setNumber}`}
       >
         <Check size={14} />
@@ -127,6 +140,8 @@ const SessionSetRow = ({
 interface SessionExerciseCardProps {
   exercise: WorkoutSessionExercise;
   disabled: boolean;
+  /** When true, reopening completed sets asks for confirmation (saved workouts). */
+  confirmReopen: boolean;
   onUpdateSet: (setId: string, updates: WorkoutSetUpdate) => Promise<void>;
   onAddSet: (exerciseId: string) => Promise<void>;
   onRemoveSet: (setId: string) => Promise<void>;
@@ -136,6 +151,7 @@ interface SessionExerciseCardProps {
 const SessionExerciseCard = ({
   exercise,
   disabled,
+  confirmReopen,
   onUpdateSet,
   onAddSet,
   onRemoveSet,
@@ -192,6 +208,7 @@ const SessionExerciseCard = ({
               usesBodyweight={exercise.usesBodyweight}
               disabled={disabled}
               canRemove={exercise.sets.length > 1}
+              confirmReopen={confirmReopen}
               onUpdate={onUpdateSet}
               onRemove={onRemoveSet}
             />

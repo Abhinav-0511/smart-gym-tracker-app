@@ -3,12 +3,12 @@ import {
   AreaChart,
   CartesianGrid,
   Legend,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import type { TrendPoint } from "@/features/productivity/lib/reports";
 
 const tooltipStyle = {
@@ -24,7 +24,7 @@ interface CompletionTrendChartProps {
 }
 
 const CompletionTrendChart = ({ data }: CompletionTrendChartProps) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <ResponsiveChart>
     <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
       <defs>
         <linearGradient id="habitTrendGrad" x1="0" y1="0" x2="0" y2="1">
@@ -71,7 +71,7 @@ const CompletionTrendChart = ({ data }: CompletionTrendChartProps) => (
         strokeWidth={2}
       />
     </AreaChart>
-  </ResponsiveContainer>
+  </ResponsiveChart>
 );
 
 export default CompletionTrendChart;

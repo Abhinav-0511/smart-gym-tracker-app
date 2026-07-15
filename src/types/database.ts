@@ -175,6 +175,9 @@ export type Database = {
           full_name: string;
           height_cm: number | null;
           id: string;
+          is_admin: boolean;
+          milestones: Json;
+          onboarding_completed_at: string | null;
           theme: string;
           timezone: string;
           updated_at: string;
@@ -187,6 +190,9 @@ export type Database = {
           full_name: string;
           height_cm?: number | null;
           id: string;
+          is_admin?: boolean;
+          milestones?: Json;
+          onboarding_completed_at?: string | null;
           theme?: string;
           timezone?: string;
           updated_at?: string;
@@ -199,6 +205,9 @@ export type Database = {
           full_name?: string;
           height_cm?: number | null;
           id?: string;
+          is_admin?: boolean;
+          milestones?: Json;
+          onboarding_completed_at?: string | null;
           theme?: string;
           timezone?: string;
           updated_at?: string;
@@ -1053,6 +1062,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      support_tickets: {
+        Row: {
+          admin_reply: string | null;
+          category: string;
+          created_at: string;
+          description: string;
+          email: string;
+          id: string;
+          screenshot_url: string | null;
+          status: string;
+          subject: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          admin_reply?: string | null;
+          category?: string;
+          created_at?: string;
+          description: string;
+          email: string;
+          id?: string;
+          screenshot_url?: string | null;
+          status?: string;
+          subject: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          admin_reply?: string | null;
+          category?: string;
+          created_at?: string;
+          description?: string;
+          email?: string;
+          id?: string;
+          screenshot_url?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      feedback: {
+        Row: {
+          comment: string | null;
+          created_at: string;
+          email: string;
+          feedback_type: string;
+          id: string;
+          module: string;
+          rating: number;
+          user_id: string;
+        };
+        Insert: {
+          comment?: string | null;
+          created_at?: string;
+          email: string;
+          feedback_type?: string;
+          id?: string;
+          module?: string;
+          rating: number;
+          user_id: string;
+        };
+        Update: {
+          comment?: string | null;
+          created_at?: string;
+          email?: string;
+          feedback_type?: string;
+          id?: string;
+          module?: string;
+          rating?: number;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       habit_completion_totals: {
@@ -1067,6 +1151,18 @@ export type Database = {
       };
     };
     Functions: {
+      admin_dashboard_stats: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      admin_list_users: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       activate_workout_plan: {
         Args: {
           p_plan_id: string;

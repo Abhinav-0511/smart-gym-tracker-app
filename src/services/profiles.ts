@@ -14,6 +14,8 @@ export type ProfileUpdate = Partial<
     | "height_cm"
     | "timezone"
     | "theme"
+    | "onboarding_completed_at"
+    | "milestones"
   >
 >;
 

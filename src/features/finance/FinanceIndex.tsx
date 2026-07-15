@@ -1,6 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import BottomNav from "@/components/BottomNav";
@@ -9,6 +7,7 @@ import SidebarNav from "@/components/Sidebar";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import FinanceSearch from "@/features/finance/components/FinanceSearch";
+import HelpButton from "@/features/help/components/HelpButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { BRAND } from "@/lib/brand";
@@ -34,7 +33,6 @@ const FinanceIndex = ({ initialPage = "home" }: FinanceIndexProps) => {
   const [activePage, setActivePage] = useState(initialPage);
   const { profile } = useAuth();
   const { workspace } = useWorkspace();
-  const { resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -91,13 +89,7 @@ const FinanceIndex = ({ initialPage = "home" }: FinanceIndexProps) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                aria-label="Toggle theme"
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
+              <HelpButton pageKey={`finance.${activePage === "home" ? "dashboard" : activePage}`} />
               <FinanceSearch onNavigate={handleNavigate} />
               <button
                 aria-label="Open profile"

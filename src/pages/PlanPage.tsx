@@ -222,13 +222,6 @@ const PlanPage = () => {
   }
 
   const trainingDays = displayedPlan.days.filter((day) => !day.isRestDay).length;
-  const planTypes = Array.from(
-    new Set(
-      displayedPlan.days
-        .filter((day) => !day.isRestDay)
-        .map((day) => day.workoutType),
-    ),
-  ).join(" / ");
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -238,7 +231,7 @@ const PlanPage = () => {
             {displayedPlan.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {planTypes || "Workout Plan"} · {trainingDays} training days
+            {trainingDays} training days
           </p>
         </div>
         <div className="flex shrink-0 gap-2">

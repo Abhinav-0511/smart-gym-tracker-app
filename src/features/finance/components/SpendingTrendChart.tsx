@@ -1,13 +1,6 @@
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { formatCompactCurrency, formatCurrency } from "@/features/finance/lib/money";
 
 export interface SpendingPoint {
@@ -38,7 +31,7 @@ const SpendingTrendChart = ({
   color = "#f43f5e",
   seriesName = "Spending",
 }: SpendingTrendChartProps) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <ResponsiveChart>
     <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
       <defs>
         <linearGradient id="financeSpendGrad" x1="0" y1="0" x2="0" y2="1">
@@ -75,7 +68,7 @@ const SpendingTrendChart = ({
         strokeWidth={2}
       />
     </AreaChart>
-  </ResponsiveContainer>
+  </ResponsiveChart>
 );
 
 export default SpendingTrendChart;

@@ -1,5 +1,6 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
 
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { formatCurrency } from "@/features/finance/lib/money";
 
 export interface CategorySlice {
@@ -22,7 +23,7 @@ interface CategoryPieChartProps {
 }
 
 const CategoryPieChart = ({ data, currency }: CategoryPieChartProps) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <ResponsiveChart>
     <PieChart>
       <Pie
         data={data}
@@ -42,7 +43,7 @@ const CategoryPieChart = ({ data, currency }: CategoryPieChartProps) => (
         formatter={(value, name) => [formatCurrency(Number(value), currency), name]}
       />
     </PieChart>
-  </ResponsiveContainer>
+  </ResponsiveChart>
 );
 
 export default CategoryPieChart;

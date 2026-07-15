@@ -38,7 +38,7 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
       { id: "home", label: "Dashboard", icon: Home, route: "/dashboard", showInBottomNav: true },
       { id: "workout", label: "Workout", icon: Dumbbell, route: "/workout", showInBottomNav: true },
       { id: "plan", label: "Plan", icon: Calendar, route: "/plan", showInBottomNav: true },
-      { id: "prs", label: "Personal Records", icon: Trophy, route: "/prs", showInBottomNav: true },
+      { id: "prs", label: "Personal Records", shortLabel: "PR", icon: Trophy, route: "/prs", showInBottomNav: true },
       { id: "progress", label: "Progress", icon: BarChart3, route: "/progress", showInBottomNav: true },
       // Profile is reached via the top-bar avatar (mobile) and the sidebar
       // (desktop) — it is intentionally kept out of the mobile bottom nav.

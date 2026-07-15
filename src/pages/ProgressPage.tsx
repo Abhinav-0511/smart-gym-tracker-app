@@ -15,16 +15,18 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
 import GlassCard from "@/components/GlassCard";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import PageSkeleton from "@/components/ui/page-skeleton";
+import { MILESTONE } from "@/features/onboarding/milestones";
+import { useMarkMilestoneOnMount } from "@/features/onboarding/useMarkMilestoneOnMount";
 import {
   Select,
   SelectContent,
@@ -58,6 +60,7 @@ function formatTrend(value: number | null, suffix = "%"): string {
 
 const ProgressPage = () => {
   const { user, profile } = useAuth();
+  useMarkMilestoneOnMount(MILESTONE.viewedFitnessProgress);
   const progressQuery = useProgress(user?.id, profile?.timezone ?? "UTC");
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const data = progressQuery.data;
@@ -161,7 +164,7 @@ const ProgressPage = () => {
         </div>
         <div className="h-44">
           {data.bodyWeight.length ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveChart>
               <AreaChart data={data.bodyWeight}>
                 <defs>
                   <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
@@ -174,7 +177,7 @@ const ProgressPage = () => {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" fill="url(#weightGrad)" strokeWidth={2} />
               </AreaChart>
-            </ResponsiveContainer>
+            </ResponsiveChart>
           ) : (
             <EmptyChart message="Add your current weight from Profile to start this chart." />
           )}
@@ -208,7 +211,7 @@ const ProgressPage = () => {
         </div>
         <div className="h-48">
           {selectedExercise?.points.length ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveChart>
               <LineChart data={selectedExercise.points}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -216,7 +219,7 @@ const ProgressPage = () => {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Line type="monotone" dataKey="value" name="Weight" stroke="hsl(var(--primary))" strokeWidth={2} />
               </LineChart>
-            </ResponsiveContainer>
+            </ResponsiveChart>
           ) : (
             <EmptyChart message="Complete weighted workout sets to start this chart." />
           )}
@@ -232,26 +235,26 @@ const ProgressPage = () => {
           </TabsList>
           <TabsContent value="weekly">
             <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveChart>
                 <BarChart data={data.weeklyFrequency}>
                   <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="value" name="Workouts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ResponsiveChart>
             </div>
           </TabsContent>
           <TabsContent value="monthly">
             <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveChart>
                 <BarChart data={data.monthlyFrequency}>
                   <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="value" name="Workouts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.85} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ResponsiveChart>
             </div>
           </TabsContent>
         </Tabs>
@@ -260,28 +263,28 @@ const ProgressPage = () => {
       <GlassCard>
         <h3 className="font-semibold text-foreground mb-4">Training Volume</h3>
         <div className="h-44">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart>
             <AreaChart data={data.weeklyVolume}>
               <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Area type="monotone" dataKey="value" name="Volume" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.12} strokeWidth={2} />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       </GlassCard>
 
       <GlassCard>
         <h3 className="font-semibold text-foreground mb-4">Average Workout Duration</h3>
         <div className="h-40">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart>
             <LineChart data={data.weeklyDuration}>
               <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Line type="monotone" dataKey="value" name="Minutes" stroke="hsl(var(--primary))" strokeWidth={2} />
             </LineChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       </GlassCard>
     </div>

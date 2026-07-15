@@ -9,7 +9,7 @@ interface PublicOnlyRouteProps {
 }
 
 const PublicOnlyRoute = ({ children }: PublicOnlyRouteProps) => {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -18,7 +18,12 @@ const PublicOnlyRoute = ({ children }: PublicOnlyRouteProps) => {
 
   if (session) {
     const redirectParam = new URLSearchParams(location.search).get("redirect");
-    const nextPath = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";
+    if (redirectParam && redirectParam.startsWith("/")) {
+      return <Navigate to={redirectParam} replace />;
+    }
+    // Admins land in the portal; everyone else in their dashboard. This is DB
+    // truth (profiles.is_admin) — the same flag AdminRoute and RLS enforce.
+    const nextPath = profile?.is_admin ? "/admin" : "/dashboard";
     return <Navigate to={nextPath} replace />;
   }
 

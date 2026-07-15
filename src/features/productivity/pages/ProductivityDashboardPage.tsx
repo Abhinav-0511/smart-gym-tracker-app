@@ -16,6 +16,7 @@ import {
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import GettingStartedCard from "@/features/onboarding/checklist/GettingStartedCard";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getGreeting } from "@/types/dashboard";
@@ -114,6 +115,8 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
 
   return (
     <div className="space-y-6">
+      <GettingStartedCard moduleId="productivity" />
+
       {/* Greeting + quick add */}
       <GlassCard className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">

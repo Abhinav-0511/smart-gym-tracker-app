@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   ChevronRight,
+  Compass,
   Globe,
   KeyRound,
   Clock,
@@ -14,6 +15,7 @@ import BrandAbout from "@/components/BrandAbout";
 import EditAccountDialog from "@/components/profile/EditAccountDialog";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
+import { resetQuickTips } from "@/features/onboarding/useQuickTips";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { requestPasswordReset } from "@/services/auth";
@@ -35,6 +37,7 @@ const AccountSection = ({ className }: AccountSectionProps) => {
   const [editOpen, setEditOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+  const [replayingTour, setReplayingTour] = useState(false);
 
   if (!profile) return null;
 
@@ -74,6 +77,25 @@ const AccountSection = ({ className }: AccountSectionProps) => {
       });
     } finally {
       setSendingReset(false);
+    }
+  };
+
+  const handleReplayTour = async () => {
+    if (replayingTour) return;
+    setReplayingTour(true);
+    try {
+      // Clearing the stamp re-arms the first-run carousel (OnboardingGate); the
+      // reset re-arms the in-app quick tips so the full tour plays again.
+      resetQuickTips();
+      await updateProfile({ onboarding_completed_at: null });
+    } catch (replayError) {
+      toast({
+        variant: "destructive",
+        title: "Couldn’t start the tour",
+        description: replayError instanceof Error ? replayError.message : "Please try again.",
+      });
+    } finally {
+      setReplayingTour(false);
     }
   };
 
@@ -182,6 +204,20 @@ const AccountSection = ({ className }: AccountSectionProps) => {
             </span>
             <span className="text-xs text-muted-foreground">
               {sendingReset ? "Sending…" : "Change"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-xl px-2 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary/60 disabled:opacity-60"
+            onClick={() => void handleReplayTour()}
+            disabled={replayingTour}
+          >
+            <span className="flex items-center gap-3">
+              <Compass size={16} className="text-muted-foreground" /> Replay app tour
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {replayingTour ? "Starting…" : "Replay"}
             </span>
           </button>
         </div>

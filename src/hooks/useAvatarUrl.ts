@@ -19,6 +19,10 @@ export function useAvatarUrl(path: string | null | undefined) {
     staleTime: SIGNED_URL_REFRESH_MS,
     refetchInterval: SIGNED_URL_REFRESH_MS,
     refetchOnWindowFocus: true,
+    // A failed sign (object missing, or RLS forbids reading another user's
+    // avatar) is permanent — retrying only multiplies the console noise and
+    // wasted requests. Fall back to initials on the first failure.
+    retry: false,
   });
 
   return {

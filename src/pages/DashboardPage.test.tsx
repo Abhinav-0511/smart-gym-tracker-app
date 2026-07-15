@@ -21,6 +21,12 @@ vi.mock("@/hooks/useDashboard", () => ({
   useDashboard: () => dashboardMock.value,
 }));
 
+// The Getting Started card is covered by its own logic; stub it here so these
+// tests stay focused on the dashboard and need no QueryClient provider.
+vi.mock("@/features/onboarding/checklist/GettingStartedCard", () => ({
+  default: () => null,
+}));
+
 const refetch = vi.fn();
 const aggregate = {
   totalCompletedWorkouts: 42,
