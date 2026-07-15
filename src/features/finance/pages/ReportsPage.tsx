@@ -13,6 +13,8 @@ import {
 import GlassCard from "@/components/GlassCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { MILESTONE } from "@/features/onboarding/milestones";
+import { useMarkMilestoneOnMount } from "@/features/onboarding/useMarkMilestoneOnMount";
 import CategoryPieChart, { type CategorySlice } from "@/features/finance/components/CategoryPieChart";
 import IncomeExpenseChart from "@/features/finance/components/IncomeExpenseChart";
 import MonthNav from "@/features/finance/components/MonthNav";
@@ -30,6 +32,7 @@ const ReportsPage = () => {
   const { user, profile } = useAuth();
   const timezone = profile?.timezone ?? "UTC";
   const currency = DEFAULT_CURRENCY;
+  useMarkMilestoneOnMount(MILESTONE.viewedFinanceReports);
 
   const data = useFinanceData(user?.id, timezone);
   const [month, setMonth] = useState(data.monthKey);

@@ -345,6 +345,7 @@ const WorkoutPage = () => {
               key={exercise.id}
               exercise={exercise}
               disabled={controlsDisabled}
+              confirmReopen={isSavedWorkout}
               onUpdateSet={handleSetUpdate}
               onAddSet={handleAddSet}
               onRemoveSet={handleRemoveSet}

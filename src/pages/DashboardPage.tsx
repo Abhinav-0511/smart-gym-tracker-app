@@ -17,6 +17,7 @@ import {
 import GlassCard from "@/components/GlassCard";
 import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
+import GettingStartedCard from "@/features/onboarding/checklist/GettingStartedCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useDashboard";
 import { getGreeting, getLocalDateString } from "@/types/dashboard";
@@ -97,6 +98,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
         <p className="text-muted-foreground text-sm">{greeting},</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">{profile.full_name} 👋</h1>
       </div>
+
+      <GettingStartedCard moduleId="fitness" />
 
       <GlassCard className="border-primary/25 bg-primary/[.06]">
         <div className="flex items-center gap-3">

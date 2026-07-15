@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
+import GettingStartedCard from "@/features/onboarding/checklist/GettingStartedCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -143,6 +144,8 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
 
   return (
     <div className="space-y-6">
+      <GettingStartedCard moduleId="finance" />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <MonthNav monthKey={month} onChange={setMonth} maxMonthKey={data.monthKey} />
         <Button onClick={() => setFormOpen(true)} className="shrink-0">

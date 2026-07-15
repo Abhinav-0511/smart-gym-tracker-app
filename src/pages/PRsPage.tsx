@@ -10,17 +10,11 @@ import {
   TrendingUp,
   Trophy,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, Tooltip, XAxis, YAxis } from "recharts";
 
 import GlassCard from "@/components/GlassCard";
 import ManualPRDialog from "@/components/prs/ManualPRDialog";
+import { ResponsiveChart } from "@/components/ui/responsive-chart";
 import { Button } from "@/components/ui/button";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import {
@@ -219,7 +213,7 @@ const PRsPage = () => {
               <LoaderCircle className="animate-spin text-primary" />
             </div>
           ) : chartData.length ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveChart>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="prGrad" x1="0" y1="0" x2="0" y2="1">
@@ -232,7 +226,7 @@ const PRsPage = () => {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" fill="url(#prGrad)" strokeWidth={2} />
               </AreaChart>
-            </ResponsiveContainer>
+            </ResponsiveChart>
           ) : (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               No completed-set history for this exercise.

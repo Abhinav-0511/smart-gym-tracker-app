@@ -87,6 +87,9 @@ const AuthPage = () => {
           title: "Welcome back",
           description: "You’re now signed in.",
         });
+        // Post-login routing (including sending admins to /admin) is handled
+        // declaratively by PublicOnlyRoute, sourced solely from the loaded
+        // profile's is_admin flag — the database is the only source of truth.
       } else {
         const result = await signup({
           fullName: normalizedFullName,

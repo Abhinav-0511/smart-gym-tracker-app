@@ -4,8 +4,11 @@ import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AchievementSync from "@/components/achievements/AchievementSync";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AdminRoute from "@/components/auth/AdminRoute";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute";
+import OnboardingGate from "@/features/onboarding/OnboardingGate";
+import QuickTipsGate from "@/features/onboarding/QuickTipsGate";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
 import PersonalRecordSync from "@/components/prs/PersonalRecordSync";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -26,6 +29,7 @@ const ProductivityIndex = lazy(
   () => import("@/features/productivity/ProductivityIndex"),
 );
 const FinanceIndex = lazy(() => import("@/features/finance/FinanceIndex"));
+const AdminIndex = lazy(() => import("@/features/admin/AdminIndex"));
 
 const queryClient = new QueryClient();
 
@@ -54,6 +58,8 @@ const App = () => (
             <ProfileThemeSync />
             <PersonalRecordSync />
             <AchievementSync />
+            <OnboardingGate />
+            <QuickTipsGate />
             <Suspense fallback={<RouteFallback />}>
             <Routes>
             <Route
@@ -231,6 +237,38 @@ const App = () => (
                 <ProtectedRoute>
                   <FinanceIndex initialPage="profile" />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminIndex page="dashboard" />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminIndex page="users" />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets"
+              element={
+                <AdminRoute>
+                  <AdminIndex page="tickets" />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/feedback"
+              element={
+                <AdminRoute>
+                  <AdminIndex page="feedback" />
+                </AdminRoute>
               }
             />
             <Route path="*" element={<NotFound />} />

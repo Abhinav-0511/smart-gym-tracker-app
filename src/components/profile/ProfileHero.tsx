@@ -105,6 +105,9 @@ const ProfileHero = ({ eyebrow, accentClassName, stats }: ProfileHeroProps) => {
           onSaveReference={async (path) => {
             await updateProfile({ avatar_url: path });
           }}
+          onRemoveReference={async () => {
+            await updateProfile({ avatar_url: null });
+          }}
         />
       )}
     </div>

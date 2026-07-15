@@ -4,6 +4,8 @@ import { CalendarRange, Flame, Target, TrendingUp } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { MILESTONE } from "@/features/onboarding/milestones";
+import { useMarkMilestoneOnMount } from "@/features/onboarding/useMarkMilestoneOnMount";
 import { useHabits } from "@/features/productivity/hooks/useHabits";
 import { useTasks } from "@/features/productivity/hooks/useTasks";
 import CompletionTrendChart from "@/features/productivity/components/CompletionTrendChart";
@@ -17,6 +19,7 @@ import { cn } from "@/lib/utils";
 const ReportsPage = () => {
   const { user, profile } = useAuth();
   const timezone = profile?.timezone ?? "UTC";
+  useMarkMilestoneOnMount(MILESTONE.viewedProductivityReports);
 
   const habits = useHabits(user?.id, timezone, true);
   const tasks = useTasks(user?.id, timezone, true);

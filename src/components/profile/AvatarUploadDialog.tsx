@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, LoaderCircle, Upload } from "lucide-react";
+import { ImagePlus, LoaderCircle, Trash2, Upload } from "lucide-react";
 
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,12 @@ import { useToast } from "@/hooks/use-toast";
 import {
   createAvatarSignedUrl,
   processAvatarImage,
+  removeAvatarObject,
   replaceAvatarObject,
   validateAvatarFile,
 } from "@/services/avatar-storage";
 
-type UploadStage = "idle" | "processing" | "uploading" | "saving";
+type UploadStage = "idle" | "processing" | "uploading" | "saving" | "removing";
 
 interface AvatarUploadDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ interface AvatarUploadDialogProps {
   currentAvatarPath: string | null;
   onOpenChange: (open: boolean) => void;
   onSaveReference: (path: string) => Promise<void>;
+  onRemoveReference: () => Promise<void>;
 }
 
 const stageProgress: Record<UploadStage, number> = {
@@ -37,6 +39,7 @@ const stageProgress: Record<UploadStage, number> = {
   processing: 30,
   uploading: 70,
   saving: 90,
+  removing: 70,
 };
 
 const AvatarUploadDialog = ({
@@ -46,6 +49,7 @@ const AvatarUploadDialog = ({
   currentAvatarPath,
   onOpenChange,
   onSaveReference,
+  onRemoveReference,
 }: AvatarUploadDialogProps) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -151,6 +155,36 @@ const AvatarUploadDialog = ({
     }
   };
 
+  const handleRemove = async () => {
+    if (!currentAvatarPath || busy) return;
+    setError(null);
+
+    try {
+      setStage("removing");
+      await onRemoveReference();
+
+      // Best-effort storage cleanup; an orphaned file is harmless if it fails.
+      await removeAvatarObject(currentAvatarPath).catch(() => undefined);
+      queryClient.removeQueries({
+        queryKey: avatarKeys.detail(currentAvatarPath),
+        exact: true,
+      });
+
+      toast({
+        title: "Photo removed",
+        description: "Your profile photo has been removed.",
+      });
+      onOpenChange(false);
+    } catch (removeError) {
+      setError(
+        removeError instanceof Error
+          ? removeError.message
+          : "The photo could not be removed. Please try again.",
+      );
+      setStage("idle");
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -197,6 +231,19 @@ const AvatarUploadDialog = ({
             <ImagePlus size={16} />
             {processedAvatar ? "Choose Another Image" : "Choose Image"}
           </Button>
+
+          {currentAvatarPath && !processedAvatar && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              disabled={busy}
+              onClick={() => void handleRemove()}
+            >
+              <Trash2 size={16} />
+              Remove Photo
+            </Button>
+          )}
         </div>
 
         {busy && (
@@ -219,7 +266,9 @@ const AvatarUploadDialog = ({
                 ? "Preparing image…"
                 : stage === "uploading"
                   ? "Uploading avatar…"
-                  : "Saving profile…"}
+                  : stage === "removing"
+                    ? "Removing photo…"
+                    : "Saving profile…"}
             </p>
           </div>
         )}

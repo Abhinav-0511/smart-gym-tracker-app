@@ -11,6 +11,11 @@ export interface WorkspaceNavItem {
   /** Stable page identifier used by the shell's `activePage` state. */
   id: string;
   label: string;
+  /**
+   * Optional condensed label for the space-constrained mobile bottom nav.
+   * Falls back to `label` when omitted (e.g. "Personal Records" → "PR").
+   */
+  shortLabel?: string;
   icon: LucideIcon;
   /** Absolute route this nav item navigates to. */
   route: string;
