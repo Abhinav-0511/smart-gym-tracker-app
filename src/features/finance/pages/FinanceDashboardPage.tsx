@@ -159,6 +159,27 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
         ))}
       </div>
 
+      <GlassCard>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">Net worth</h3>
+          <span className="text-lg font-extrabold text-foreground">{formatCurrency(netBalance, currency)}</span>
+        </div>
+        {data.accounts.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {data.accounts.map((account) => (
+              <div key={account.id} className="rounded-xl bg-secondary/40 px-3 py-2">
+                <p className="text-xs font-semibold text-muted-foreground">{account.name}</p>
+                <p className="text-sm font-bold text-foreground">{formatCurrency(account.balance, account.currency)}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Add accounts from the Budgets page to track balances.
+          </p>
+        )}
+      </GlassCard>
+
       <div className="grid gap-4 lg:grid-cols-5">
         <GlassCard className="lg:col-span-3">
           <div className="mb-2 flex items-center justify-between">
@@ -300,27 +321,6 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
           </GlassCard>
         </div>
       </div>
-
-      <GlassCard>
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">Net worth</h3>
-          <span className="text-lg font-extrabold text-foreground">{formatCurrency(netBalance, currency)}</span>
-        </div>
-        {data.accounts.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {data.accounts.map((account) => (
-              <div key={account.id} className="rounded-xl bg-secondary/40 px-3 py-2">
-                <p className="text-xs font-semibold text-muted-foreground">{account.name}</p>
-                <p className="text-sm font-bold text-foreground">{formatCurrency(account.balance, account.currency)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Add accounts from the Budgets page to track balances.
-          </p>
-        )}
-      </GlassCard>
 
       <TransactionFormDialog
         open={formOpen}
