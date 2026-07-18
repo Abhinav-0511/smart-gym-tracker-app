@@ -8,6 +8,7 @@ import {
   localDelete,
   localInsert,
   localRowsByUser,
+  localRowsByUserIncludingDeleted,
   localUpdate,
   pullMirror,
 } from "@/offline/repository";
@@ -69,7 +70,13 @@ export async function ensureDefaultCategories(
   userId: string,
 ): Promise<TransactionCategory[]> {
   const existing = await fetchCategories(userId);
-  const present = new Set(existing.map((cat) => `${cat.kind}:${cat.slug}`));
+
+  // Build the "already present" set from ALL cached rows including tombstones:
+  // a soft-deleted default still occupies its (kind,slug) on the server's unique
+  // index, so re-seeding it would fail the push. Treating it as present means a
+  // default the user deleted stays deleted (they can re-create it manually).
+  const allRows = await localRowsByUserIncludingDeleted("transaction_categories", userId);
+  const present = new Set(allRows.map((row) => `${row.kind as string}:${row.slug as string}`));
   const missing = DEFAULT_CATEGORIES.filter(
     (seed) => !present.has(`${seed.kind}:${seed.slug}`),
   );
@@ -136,7 +143,9 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(categoryId: string): Promise<void> {
-  // Transactions referencing this category have category_id set to NULL by the
-  // FK's ON DELETE SET NULL, preserving their history as "Uncategorized".
+  // Soft delete (tombstone) rather than a hard delete, so the removal syncs to
+  // other devices without being resurrected by a pull. The category vanishes
+  // from every list; transactions that still reference it render as
+  // "Uncategorized" because the lookup map is built from live categories only.
   await localDelete("transaction_categories", categoryId);
 }

@@ -24,10 +24,17 @@ vi.mock("@/offline/connectivity", () => ({
   },
 }));
 
-import { db } from "@/offline/db";
-import { localDelete, localInsert, localUpdate } from "@/offline/repository";
+import { db, type LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import { syncController } from "@/offline/sync/controller";
-import type { SyncQueueItem } from "@/offline/types";
+import { startOfflineSync } from "@/offline/sync";
+import { META_KEYS, type SyncQueueItem } from "@/offline/types";
 
 const USER = "user-1";
 
@@ -41,6 +48,7 @@ beforeEach(async () => {
   pushItemMock.mockResolvedValue(undefined);
   await db.sync_queue.clear();
   await db.budgets.clear();
+  await db.metadata.clear();
 });
 
 afterEach(() => {
@@ -85,16 +93,23 @@ describe("offline repository writes", () => {
     expect(queue[0]?.payload).toMatchObject({ id: row.id, amount: 250, name: "Food" });
   });
 
-  it("removes the row and queues a delete with a null payload", async () => {
+  it("soft-deletes: keeps a tombstone, hides it from reads, queues an update", async () => {
     conn.reachable = false;
     const row = await localInsert("budgets", newBudget("Food", 100), USER);
 
     await localDelete("budgets", row.id);
 
-    expect(await db.budgets.get(row.id)).toBeUndefined();
-    const del = (await db.sync_queue.toArray()).find((i) => i.operation === "delete");
-    expect(del?.entityId).toBe(row.id);
-    expect(del?.payload).toBeNull();
+    // Row is kept as a tombstone (deleted_at set) so the deletion can propagate…
+    const stored = await db.budgets.get(row.id);
+    expect(stored?.deleted_at).toBeTruthy();
+    // …but it no longer appears in reads.
+    const live = await localRowsByUser("budgets", USER);
+    expect(live.find((r) => r.id === row.id)).toBeUndefined();
+    // …and it syncs as an ordinary update carrying deleted_at (not a hard delete).
+    const queued = (await db.sync_queue.toArray()).find(
+      (i) => i.entityId === row.id && i.operation === "update",
+    );
+    expect((queued?.payload as LocalRow | undefined)?.deleted_at).toBeTruthy();
   });
 });
 
@@ -171,5 +186,83 @@ describe("sync controller drain", () => {
 
     expect(pushItemMock).not.toHaveBeenCalled();
     expect(await db.sync_queue.count()).toBe(1);
+  });
+
+  it("stamps last_sync_at after a clean drain", async () => {
+    conn.reachable = false;
+    await localInsert("budgets", newBudget("Food", 100), USER);
+    conn.reachable = true;
+
+    await syncController.push();
+
+    const meta = await db.metadata.get(META_KEYS.lastSyncAt);
+    expect(typeof meta?.value).toBe("string");
+  });
+});
+
+describe("phase 4a hardening", () => {
+  it("pull never clobbers a local row that still has an unsynced change", async () => {
+    conn.reachable = false;
+    const edited = await localInsert("budgets", newBudget("Orig", 10), USER);
+    await localUpdate("budgets", edited.id, { name: "LocalEdit" });
+
+    // Pushes fail, so the local change stays queued (pending) throughout the pull.
+    conn.reachable = true;
+    pushItemMock.mockRejectedValue(new Error("still offline-ish"));
+
+    const serverRows: LocalRow[] = [
+      { ...(edited as LocalRow), name: "ServerStale" }, // conflicting, has pending change
+      { ...newBudget("Other", 5), id: "server-other", created_at: "x", updated_at: "x" },
+    ];
+    await pullMirror("budgets", async () => serverRows);
+
+    // Local pending edit wins; the unrelated server row is applied.
+    expect((await db.budgets.get(edited.id))?.name).toBe("LocalEdit");
+    expect((await db.budgets.get("server-other"))?.name).toBe("Other");
+  });
+
+  it("pull applies server rows once no local change is pending", async () => {
+    conn.reachable = true;
+    const serverRows: LocalRow[] = [
+      { ...newBudget("FromServer", 7), id: "srv-1", created_at: "x", updated_at: "x" },
+    ];
+    await pullMirror("budgets", async () => serverRows);
+
+    expect((await db.budgets.get("srv-1"))?.name).toBe("FromServer");
+  });
+
+  it("propagates a tombstone from the server: a remotely-deleted row disappears", async () => {
+    // Locally we still have the row as live (e.g. cached before device B deleted it).
+    await db.budgets.put({
+      ...newBudget("Rent", 1200),
+      id: "shared-1",
+      created_at: "x",
+      updated_at: "x",
+    });
+    expect((await localRowsByUser("budgets", USER)).some((r) => r.id === "shared-1")).toBe(true);
+
+    // Server now reports it with deleted_at set (deleted on another device).
+    conn.reachable = true;
+    const serverRows: LocalRow[] = [
+      { ...newBudget("Rent", 1200), id: "shared-1", created_at: "x", updated_at: "y", deleted_at: "y" },
+    ];
+    await pullMirror("budgets", async () => serverRows);
+
+    // The tombstone is stored and the row is filtered out of reads.
+    expect((await db.budgets.get("shared-1"))?.deleted_at).toBe("y");
+    expect((await localRowsByUser("budgets", USER)).some((r) => r.id === "shared-1")).toBe(false);
+  });
+
+  it("recovers an interrupted sync by resetting 'syncing' items to 'pending'", async () => {
+    conn.reachable = false;
+    const row = await localInsert("budgets", newBudget("Food", 100), USER);
+    const item = (await db.sync_queue.toArray())[0];
+    // Simulate a crash mid-push: item left stuck as "syncing".
+    await db.sync_queue.update(item.seq as number, { status: "syncing" });
+
+    await startOfflineSync();
+
+    const recovered = await db.sync_queue.where("entityId").equals(row.id).first();
+    expect(recovered?.status).toBe("pending");
   });
 });

@@ -37,11 +37,50 @@ export async function pullMirror(
   if (!connectivity.isReachable()) return;
   await syncController.push();
   const rows = await fetchServerRows();
-  await db.table<LocalRow, string>(table).bulkPut(rows);
+
+  // Last-Write-Wins, "pending wins" variant: never let a pulled server row
+  // clobber a local row that still has an un-pushed change queued. We use the
+  // presence of a pending queue entry as the local-wins signal rather than
+  // comparing timestamps, because the server's set_updated_at trigger owns
+  // updated_at and client clocks can't be trusted against it. Any entity whose
+  // change is already flushed has no queue entry, so the fresh server copy wins.
+  const pendingIds = await pendingEntityIds(table);
+  const safe =
+    pendingIds.size === 0 ? rows : rows.filter((row) => !pendingIds.has(row.id));
+  await db.table<LocalRow, string>(table).bulkPut(safe);
 }
 
-/** All cached rows for a user in a table (server-shaped, unsorted). */
-export function localRowsByUser(table: SyncedTable, userId: string): Promise<LocalRow[]> {
+/** Ids in `table` that still have an unsynced mutation queued. */
+async function pendingEntityIds(table: SyncedTable): Promise<Set<string>> {
+  const items = await db.sync_queue.where("table").equals(table).toArray();
+  const ids = new Set<string>();
+  for (const item of items) {
+    if (item.status !== "done") ids.add(item.entityId);
+  }
+  return ids;
+}
+
+/**
+ * Live cached rows for a user (server-shaped, unsorted) — soft-deleted rows
+ * (tombstones with `deleted_at` set) are excluded, as every read path expects.
+ */
+export async function localRowsByUser(
+  table: SyncedTable,
+  userId: string,
+): Promise<LocalRow[]> {
+  const rows = await db.table<LocalRow, string>(table).where("user_id").equals(userId).toArray();
+  return rows.filter((row) => !row.deleted_at);
+}
+
+/**
+ * All cached rows for a user *including* tombstones. Needed where uniqueness
+ * spans deleted rows too — e.g. default-category seeding must not re-insert a
+ * category the user soft-deleted, or the server's unique index would reject it.
+ */
+export function localRowsByUserIncludingDeleted(
+  table: SyncedTable,
+  userId: string,
+): Promise<LocalRow[]> {
   return db.table<LocalRow, string>(table).where("user_id").equals(userId).toArray();
 }
 
@@ -101,22 +140,16 @@ export async function localUpdate(
   return updated;
 }
 
-/** Delete a row locally and queue the deletion. */
+/**
+ * Soft-delete a row: stamp `deleted_at` and keep it locally as a tombstone so
+ * the deletion propagates to other devices on the next pull (a hard delete would
+ * let a concurrent pull resurrect the row). Reads filter tombstones out, so it
+ * disappears from the UI immediately. Queued as an ordinary update.
+ */
 export async function localDelete(
   table: WritableTable,
   id: string,
   userId?: string,
 ): Promise<void> {
-  await db.transaction("rw", db.table(table), db.sync_queue, async () => {
-    const existing = await db.table<LocalRow, string>(table).get(id);
-    await db.table<LocalRow, string>(table).delete(id);
-    await enqueue({
-      table,
-      entityId: id,
-      operation: "delete",
-      payload: null,
-      userId: userId ?? (existing?.user_id as string | undefined) ?? "",
-    });
-  });
-  syncController.requestPush();
+  await localUpdate(table, id, { deleted_at: nowIso() }, userId);
 }

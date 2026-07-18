@@ -2,6 +2,7 @@ import { db } from "@/offline/db";
 import { connectivity } from "@/offline/connectivity";
 import { nowIso } from "@/offline/ids";
 import { pushItem } from "@/offline/sync/push";
+import { META_KEYS } from "@/offline/types";
 
 /**
  * Drains the durable sync queue to Supabase.
@@ -84,6 +85,16 @@ class SyncController {
           // timer (below) will resume the drain after the backoff elapses.
           break;
         }
+      }
+      // A fully-drained queue while reachable means everything is up to date;
+      // record it so the UI can reassure the user with a "last synced" time.
+      const remaining = await db.sync_queue
+        .where("status")
+        .anyOf("pending", "failed")
+        .count();
+      if (remaining === 0 && connectivity.isReachable()) {
+        const now = nowIso();
+        await db.metadata.put({ key: META_KEYS.lastSyncAt, value: now, updatedAt: now });
       }
     } finally {
       this.pushing = false;
