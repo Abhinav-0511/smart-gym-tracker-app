@@ -34,6 +34,7 @@ import {
 } from "@/offline/repository";
 import { syncController } from "@/offline/sync/controller";
 import { startOfflineSync } from "@/offline/sync";
+import { deterministicId } from "@/offline/ids";
 import { META_KEYS, type SyncQueueItem } from "@/offline/types";
 
 const USER = "user-1";
@@ -48,6 +49,7 @@ beforeEach(async () => {
   pushItemMock.mockResolvedValue(undefined);
   await db.sync_queue.clear();
   await db.budgets.clear();
+  await db.habit_logs.clear();
   await db.metadata.clear();
 });
 
@@ -264,5 +266,30 @@ describe("phase 4a hardening", () => {
 
     const recovered = await db.sync_queue.where("entityId").equals(row.id).first();
     expect(recovered?.status).toBe("pending");
+  });
+});
+
+describe("habit-log deterministic identity", () => {
+  it("is stable per seed and unique across seeds", () => {
+    expect(deterministicId("habit-1:2026-07-19")).toBe(deterministicId("habit-1:2026-07-19"));
+    expect(deterministicId("habit-1:2026-07-19")).not.toBe(deterministicId("habit-1:2026-07-20"));
+    expect(deterministicId("x")).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+  });
+
+  it("complete → undo → complete converges to a single toggled row", async () => {
+    conn.reachable = false;
+    const id = deterministicId("habit-1:2026-07-19");
+    const base = { id, habit_id: "habit-1", user_id: USER, log_date: "2026-07-19", value: null };
+
+    await localInsert("habit_logs", { ...base, completed: true }, USER); // complete
+    await localInsert("habit_logs", { ...base, completed: false }, USER); // undo
+    await localInsert("habit_logs", { ...base, completed: true }, USER); // re-complete
+
+    const rows = await db.habit_logs.where("habit_id").equals("habit-1").toArray();
+    expect(rows).toHaveLength(1); // deterministic id ⇒ no duplicate day rows
+    expect(rows[0].id).toBe(id);
+    expect(rows[0].completed).toBe(true);
   });
 });

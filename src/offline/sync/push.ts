@@ -13,7 +13,10 @@ interface MutationResult {
   error: { message: string } | null;
 }
 interface GenericMutableTable {
-  upsert(values: Record<string, unknown>): PromiseLike<MutationResult>;
+  upsert(
+    values: Record<string, unknown>,
+    options?: { onConflict?: string },
+  ): PromiseLike<MutationResult>;
   update(values: Record<string, unknown>): {
     eq(column: string, value: string): PromiseLike<MutationResult>;
   };
@@ -23,6 +26,17 @@ interface GenericMutableTable {
 function table(name: SyncQueueItem["table"]): GenericMutableTable {
   return supabase.from(name) as unknown as GenericMutableTable;
 }
+
+/**
+ * Tables whose natural key differs from the primary key. An insert for these
+ * upserts on the natural unique key so an offline row converges with whatever
+ * the server already holds for that key instead of duplicating it. `habit_logs`
+ * is unique per (habit_id, log_date); combined with a deterministic client id
+ * (see `deterministicId`) this makes habit completion idempotent across devices.
+ */
+const UPSERT_CONFLICT_TARGET: Partial<Record<SyncQueueItem["table"], string>> = {
+  habit_logs: "habit_id,log_date",
+};
 
 /**
  * Push a single queued mutation to Supabase.
@@ -51,7 +65,11 @@ export async function pushItem(item: SyncQueueItem): Promise<void> {
   }
 
   if (item.operation === "insert") {
-    const { error } = await remote.upsert(item.payload);
+    const onConflict = UPSERT_CONFLICT_TARGET[item.table];
+    const { error } = await remote.upsert(
+      item.payload,
+      onConflict ? { onConflict } : undefined,
+    );
     if (error) throw new Error(error.message);
     return;
   }
