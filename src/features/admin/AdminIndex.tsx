@@ -1,4 +1,4 @@
-import { LayoutDashboard, LifeBuoy, LogOut, Star, Users } from "lucide-react";
+import { LayoutDashboard, LifeBuoy, LogOut, Megaphone, Star, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,12 +9,13 @@ import HelpButton from "@/features/help/components/HelpButton";
 import { useAuth } from "@/hooks/useAuth";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
+import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminFeedbackPage from "./pages/AdminFeedbackPage";
 import AdminTicketsPage from "./pages/AdminTicketsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 
-export type AdminPage = "dashboard" | "users" | "tickets" | "feedback";
+export type AdminPage = "dashboard" | "users" | "tickets" | "feedback" | "announcements";
 
 interface AdminNavItem {
   id: AdminPage;
@@ -28,6 +29,7 @@ const NAV_ITEMS: AdminNavItem[] = [
   { id: "users", label: "User Management", icon: Users, route: "/admin/users" },
   { id: "tickets", label: "Support Tickets", icon: LifeBuoy, route: "/admin/tickets" },
   { id: "feedback", label: "Feedback", icon: Star, route: "/admin/feedback" },
+  { id: "announcements", label: "Announcements", icon: Megaphone, route: "/admin/announcements" },
 ];
 
 interface AdminIndexProps {
@@ -51,6 +53,8 @@ const AdminIndex = ({ page }: AdminIndexProps) => {
         return <AdminTicketsPage />;
       case "feedback":
         return <AdminFeedbackPage />;
+      case "announcements":
+        return <AdminAnnouncementsPage />;
       case "dashboard":
       default:
         return <AdminDashboardPage />;

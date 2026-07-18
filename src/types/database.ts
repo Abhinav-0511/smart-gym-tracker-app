@@ -1104,6 +1104,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      announcements: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      announcement_views: {
+        Row: {
+          announcement_id: string;
+          seen_at: string;
+          user_id: string;
+        };
+        Insert: {
+          announcement_id: string;
+          seen_at?: string;
+          user_id: string;
+        };
+        Update: {
+          announcement_id?: string;
+          seen_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       feedback: {
         Row: {
           comment: string | null;
@@ -1162,6 +1210,16 @@ export type Database = {
       is_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      get_unseen_announcement: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["announcements"]["Row"] | null;
+      };
+      mark_announcement_seen: {
+        Args: {
+          p_announcement_id: string;
+        };
+        Returns: undefined;
       };
       activate_workout_plan: {
         Args: {
