@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicOnlyRoute from "@/components/auth/PublicOnlyRoute";
 import OnboardingGate from "@/features/onboarding/OnboardingGate";
 import QuickTipsGate from "@/features/onboarding/QuickTipsGate";
+import AnnouncementGate from "@/features/announcements/AnnouncementGate";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
 import PersonalRecordSync from "@/components/prs/PersonalRecordSync";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -81,6 +82,7 @@ const App = () => (
             <PersonalRecordSync />
             <AchievementSync />
             <OnboardingGate />
+            <AnnouncementGate />
             <QuickTipsGate />
             <Suspense fallback={<RouteFallback />}>
             <Routes>
@@ -290,6 +292,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminIndex page="feedback" />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/announcements"
+              element={
+                <AdminRoute>
+                  <AdminIndex page="announcements" />
                 </AdminRoute>
               }
             />

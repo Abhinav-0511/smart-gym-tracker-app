@@ -5,6 +5,9 @@ import type {
   FeedbackType,
 } from "@/features/help/services/feedback";
 import type { SupportTicket } from "@/features/help/services/support";
+import type { Tables } from "@/types/database";
+
+export type Announcement = Tables<"announcements">;
 
 /**
  * Admin data access. Reads that need auth.users data (dashboard counters, the
@@ -123,4 +126,53 @@ export async function listFeedback(
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Announcements. Admins author messages that are broadcast to every user and
+// shown once. RLS restricts every write below to admins at the database level.
+// ---------------------------------------------------------------------------
+
+export async function listAnnouncements(): Promise<Announcement[]> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createAnnouncement(input: {
+  title: string;
+  body: string;
+}): Promise<Announcement> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .insert({ title: input.title.trim(), body: input.body.trim() })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function setAnnouncementActive(
+  id: string,
+  isActive: boolean,
+): Promise<Announcement> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .update({ is_active: isActive })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+  const { error } = await supabase.from("announcements").delete().eq("id", id);
+  if (error) throw error;
 }

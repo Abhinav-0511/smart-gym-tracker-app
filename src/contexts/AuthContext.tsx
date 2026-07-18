@@ -23,7 +23,10 @@ import {
   type SignupCredentials,
 } from "@/services/auth";
 import {
+  cacheProfile,
+  clearCachedProfile,
   getOrCreateProfile,
+  readCachedProfile,
   updateProfile as persistProfile,
   type Profile,
   type ProfileUpdate,
@@ -62,14 +65,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       const nextProfile = await getOrCreateProfile(nextSession.user);
+      cacheProfile(nextProfile);
 
       if (requestId.current === currentRequestId) {
         setProfile(nextProfile);
       }
     } catch (profileError) {
+      // Offline / flaky network: the session is still valid (restored from
+      // storage), so fall back to the last-known profile and let the app render.
+      // The error screen is reserved for the case where we have nothing to show.
+      const cachedProfile = readCachedProfile(nextSession.user.id);
+
       if (requestId.current === currentRequestId) {
-        setProfile(null);
-        setError(getErrorMessage(profileError));
+        if (cachedProfile) {
+          setProfile(cachedProfile);
+          setError(null);
+        } else {
+          setProfile(null);
+          setError(getErrorMessage(profileError));
+        }
       }
     } finally {
       if (requestId.current === currentRequestId) {
@@ -140,9 +154,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = useCallback(async () => {
     setError(null);
+    const signedOutUserId = session?.user.id;
     await logoutSession();
+    if (signedOutUserId) {
+      clearCachedProfile(signedOutUserId);
+    }
     await applySession(null);
-  }, [applySession]);
+  }, [applySession, session]);
 
   const refreshProfile = useCallback(async () => {
     if (!session) {
@@ -154,10 +172,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
 
     try {
-      setProfile(await getOrCreateProfile(session.user));
+      const nextProfile = await getOrCreateProfile(session.user);
+      cacheProfile(nextProfile);
+      setProfile(nextProfile);
     } catch (profileError) {
-      setProfile(null);
-      setError(getErrorMessage(profileError));
+      const cachedProfile = readCachedProfile(session.user.id);
+      if (cachedProfile) {
+        setProfile(cachedProfile);
+        setError(null);
+      } else {
+        setProfile(null);
+        setError(getErrorMessage(profileError));
+      }
     } finally {
       setLoading(false);
     }
@@ -174,6 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const savedProfile = await persistProfile(session.user.id, updates);
+        cacheProfile(savedProfile);
         setProfile(savedProfile);
         return savedProfile;
       } catch (updateError) {
