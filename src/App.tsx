@@ -12,6 +12,7 @@ import QuickTipsGate from "@/features/onboarding/QuickTipsGate";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
 import PersonalRecordSync from "@/components/prs/PersonalRecordSync";
 import ScrollToTop from "@/components/ScrollToTop";
+import OfflineIndicator from "@/components/offline/OfflineIndicator";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,6 +52,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <BrowserRouter>
           <AuthProvider>
             <WorkspaceProvider>
