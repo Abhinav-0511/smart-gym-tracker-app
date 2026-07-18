@@ -2,6 +2,15 @@ import { supabase } from "@/lib/supabase";
 import type { Tables, TablesUpdate } from "@/types/database";
 import { DEFAULT_CATEGORIES, slugifyCategory } from "@/features/finance/lib/default-categories";
 import { throwIfError } from "@/features/finance/services/errors";
+import type { LocalRow } from "@/offline/db";
+import { connectivity } from "@/offline/connectivity";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type { FinanceColor } from "@/features/finance/types/common";
 import type {
   CategoryKind,
@@ -26,17 +35,29 @@ function mapCategory(row: Tables<"transaction_categories">): TransactionCategory
   };
 }
 
-export async function fetchCategories(userId: string): Promise<TransactionCategory[]> {
+async function fetchServerCategoryRows(userId: string): Promise<LocalRow[]> {
   const { data, error } = await supabase
     .from("transaction_categories")
     .select("*")
-    .eq("user_id", userId)
-    .order("kind", { ascending: true })
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-
+    .eq("user_id", userId);
   throwIfError(error);
-  return (data ?? []).map(mapCategory);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
+export async function fetchCategories(userId: string): Promise<TransactionCategory[]> {
+  await pullMirror("transaction_categories", () => fetchServerCategoryRows(userId));
+
+  const rows = await localRowsByUser("transaction_categories", userId);
+  rows.sort((a, b) => {
+    const ak = (a.kind as string) ?? "";
+    const bk = (b.kind as string) ?? "";
+    if (ak !== bk) return ak < bk ? -1 : 1;
+    const asort = (a.sort_order as number) ?? 0;
+    const bsort = (b.sort_order as number) ?? 0;
+    if (asort !== bsort) return asort - bsort;
+    return ((a.name as string) ?? "").localeCompare((b.name as string) ?? "");
+  });
+  return rows.map((row) => mapCategory(row as unknown as Tables<"transaction_categories">));
 }
 
 /**
@@ -54,6 +75,11 @@ export async function ensureDefaultCategories(
   );
 
   if (missing.length === 0) return existing;
+
+  // Seeding relies on the server's unique (user_id,kind,slug) index for
+  // idempotency, so it only runs online. Offline, we return whatever is cached;
+  // defaults get seeded on the next online load.
+  if (!connectivity.isReachable()) return existing;
 
   const rows = missing.map((seed, index) => ({
     user_id: userId,
@@ -78,9 +104,9 @@ export async function createCategory(
   userId: string,
   input: CreateCategoryInput,
 ): Promise<TransactionCategory> {
-  const { data, error } = await supabase
-    .from("transaction_categories")
-    .insert({
+  const row = await localInsert(
+    "transaction_categories",
+    {
       user_id: userId,
       name: input.name.trim(),
       slug: input.slug?.trim() || slugifyCategory(input.name),
@@ -89,12 +115,10 @@ export async function createCategory(
       color: input.color,
       is_default: false,
       sort_order: input.sortOrder ?? 100,
-    })
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapCategory(data as Tables<"transaction_categories">);
+    },
+    userId,
+  );
+  return mapCategory(row as unknown as Tables<"transaction_categories">);
 }
 
 export async function updateCategory(
@@ -107,23 +131,12 @@ export async function updateCategory(
   if (input.color !== undefined) patch.color = input.color;
   if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder;
 
-  const { data, error } = await supabase
-    .from("transaction_categories")
-    .update(patch)
-    .eq("id", categoryId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapCategory(data as Tables<"transaction_categories">);
+  const row = await localUpdate("transaction_categories", categoryId, patch);
+  return mapCategory(row as unknown as Tables<"transaction_categories">);
 }
 
 export async function deleteCategory(categoryId: string): Promise<void> {
   // Transactions referencing this category have category_id set to NULL by the
   // FK's ON DELETE SET NULL, preserving their history as "Uncategorized".
-  const { error } = await supabase
-    .from("transaction_categories")
-    .delete()
-    .eq("id", categoryId);
-  throwIfError(error);
+  await localDelete("transaction_categories", categoryId);
 }

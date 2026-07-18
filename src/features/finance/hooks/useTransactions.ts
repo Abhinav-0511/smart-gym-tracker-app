@@ -33,12 +33,16 @@ export function useTransactions(userId: string | undefined, timezone: string) {
     queryKey: listKey,
     queryFn: () => fetchTransactions(resolvedUserId, { fromDate }),
     enabled: Boolean(userId),
+    // The service reads from IndexedDB, so the query must run even when the
+    // browser reports offline (default "online" would pause it and hang).
+    networkMode: "offlineFirst",
   });
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: financeKeys.all });
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (input: CreateTransactionInput) =>
       createTransaction(resolvedUserId, input),
     onMutate: async (input) => {
@@ -76,12 +80,14 @@ export function useTransactions(userId: string | undefined, timezone: string) {
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ id, input }: { id: string; input: UpdateTransactionInput }) =>
       updateTransaction(id, input),
     onSuccess: invalidate,
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (id: string) => deleteTransaction(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: listKey });

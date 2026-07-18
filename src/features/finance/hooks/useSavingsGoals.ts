@@ -22,30 +22,35 @@ export function useSavingsGoals(userId: string | undefined) {
     queryKey: financeKeys.savings(resolvedUserId),
     queryFn: () => fetchSavingsGoals(resolvedUserId),
     enabled: Boolean(userId),
+    networkMode: "offlineFirst",
   });
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: financeKeys.savings(resolvedUserId) });
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (input: CreateSavingsGoalInput) =>
       createSavingsGoal(resolvedUserId, input),
     onSuccess: invalidate,
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ id, input }: { id: string; input: UpdateSavingsGoalInput }) =>
       updateSavingsGoal(id, input),
     onSuccess: invalidate,
   });
 
   const adjustMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ goal, delta }: { goal: SavingsGoal; delta: number }) =>
       adjustSavingsGoal(goal, delta),
     onSuccess: invalidate,
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (id: string) => deleteSavingsGoal(id),
     onSuccess: invalidate,
   });

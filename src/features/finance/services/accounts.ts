@@ -1,6 +1,14 @@
 import { supabase } from "@/lib/supabase";
 import type { Tables, TablesUpdate } from "@/types/database";
 import { throwIfError } from "@/features/finance/services/errors";
+import type { LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type {
   AccountType,
   CreateAccountInput,
@@ -25,24 +33,32 @@ function mapAccount(row: Tables<"finance_accounts">): FinanceAccount {
   };
 }
 
-export async function fetchAccounts(userId: string): Promise<FinanceAccount[]> {
+async function fetchServerAccountRows(userId: string): Promise<LocalRow[]> {
   const { data, error } = await supabase
     .from("finance_accounts")
     .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true });
-
+    .eq("user_id", userId);
   throwIfError(error);
-  return (data ?? []).map(mapAccount);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
+export async function fetchAccounts(userId: string): Promise<FinanceAccount[]> {
+  await pullMirror("finance_accounts", () => fetchServerAccountRows(userId));
+
+  const rows = await localRowsByUser("finance_accounts", userId);
+  rows.sort((a, b) =>
+    ((a.created_at as string) ?? "").localeCompare((b.created_at as string) ?? ""),
+  );
+  return rows.map((row) => mapAccount(row as unknown as Tables<"finance_accounts">));
 }
 
 export async function createAccount(
   userId: string,
   input: CreateAccountInput,
 ): Promise<FinanceAccount> {
-  const { data, error } = await supabase
-    .from("finance_accounts")
-    .insert({
+  const row = await localInsert(
+    "finance_accounts",
+    {
       user_id: userId,
       name: input.name.trim(),
       type: input.type,
@@ -50,12 +66,11 @@ export async function createAccount(
       initial_balance: input.initialBalance,
       icon: input.icon,
       color: input.color,
-    })
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapAccount(data as Tables<"finance_accounts">);
+      is_archived: false,
+    },
+    userId,
+  );
+  return mapAccount(row as unknown as Tables<"finance_accounts">);
 }
 
 export async function updateAccount(
@@ -71,18 +86,10 @@ export async function updateAccount(
   if (input.color !== undefined) patch.color = input.color;
   if (input.isArchived !== undefined) patch.is_archived = input.isArchived;
 
-  const { data, error } = await supabase
-    .from("finance_accounts")
-    .update(patch)
-    .eq("id", accountId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapAccount(data as Tables<"finance_accounts">);
+  const row = await localUpdate("finance_accounts", accountId, patch);
+  return mapAccount(row as unknown as Tables<"finance_accounts">);
 }
 
 export async function deleteAccount(accountId: string): Promise<void> {
-  const { error } = await supabase.from("finance_accounts").delete().eq("id", accountId);
-  throwIfError(error);
+  await localDelete("finance_accounts", accountId);
 }

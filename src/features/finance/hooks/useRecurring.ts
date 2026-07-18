@@ -22,6 +22,7 @@ export function useRecurring(userId: string | undefined) {
     queryKey: financeKeys.recurring(resolvedUserId),
     queryFn: () => fetchRecurringTransactions(resolvedUserId),
     enabled: Boolean(userId),
+    networkMode: "offlineFirst",
   });
 
   // Posting an occurrence creates a transaction, so invalidate all finance data.
@@ -31,22 +32,26 @@ export function useRecurring(userId: string | undefined) {
     queryClient.invalidateQueries({ queryKey: financeKeys.recurring(resolvedUserId) });
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (input: CreateRecurringInput) => createRecurring(resolvedUserId, input),
     onSuccess: invalidateRecurring,
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ id, input }: { id: string; input: UpdateRecurringInput }) =>
       updateRecurring(id, input),
     onSuccess: invalidateRecurring,
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (id: string) => deleteRecurring(id),
     onSuccess: invalidateRecurring,
   });
 
   const postMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (recurring: RecurringTransaction) =>
       postRecurringOccurrence(resolvedUserId, recurring),
     onSuccess: invalidateAll,
