@@ -1,6 +1,14 @@
 import { supabase } from "@/lib/supabase";
 import type { Tables, TablesUpdate } from "@/types/database";
 import { throwIfError } from "@/features/finance/services/errors";
+import type { LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type { FinanceColor } from "@/features/finance/types/common";
 import type {
   CreateSavingsGoalInput,
@@ -25,15 +33,23 @@ function mapGoal(row: Tables<"savings_goals">): SavingsGoal {
   };
 }
 
-export async function fetchSavingsGoals(userId: string): Promise<SavingsGoal[]> {
+async function fetchServerGoalRows(userId: string): Promise<LocalRow[]> {
   const { data, error } = await supabase
     .from("savings_goals")
     .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
+    .eq("user_id", userId);
   throwIfError(error);
-  return (data ?? []).map(mapGoal);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
+export async function fetchSavingsGoals(userId: string): Promise<SavingsGoal[]> {
+  await pullMirror("savings_goals", () => fetchServerGoalRows(userId));
+
+  const rows = await localRowsByUser("savings_goals", userId);
+  rows.sort((a, b) =>
+    ((b.created_at as string) ?? "").localeCompare((a.created_at as string) ?? ""),
+  );
+  return rows.map((row) => mapGoal(row as unknown as Tables<"savings_goals">));
 }
 
 export async function createSavingsGoal(
@@ -43,9 +59,9 @@ export async function createSavingsGoal(
   const status: SavingsGoalStatus =
     input.currentAmount >= input.targetAmount ? "completed" : "active";
 
-  const { data, error } = await supabase
-    .from("savings_goals")
-    .insert({
+  const row = await localInsert(
+    "savings_goals",
+    {
       user_id: userId,
       name: input.name.trim(),
       target_amount: input.targetAmount,
@@ -54,12 +70,10 @@ export async function createSavingsGoal(
       color: input.color,
       target_date: input.targetDate ?? null,
       status,
-    })
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapGoal(data as Tables<"savings_goals">);
+    },
+    userId,
+  );
+  return mapGoal(row as unknown as Tables<"savings_goals">);
 }
 
 export async function updateSavingsGoal(
@@ -75,15 +89,8 @@ export async function updateSavingsGoal(
   if (input.targetDate !== undefined) patch.target_date = input.targetDate;
   if (input.status !== undefined) patch.status = input.status;
 
-  const { data, error } = await supabase
-    .from("savings_goals")
-    .update(patch)
-    .eq("id", goalId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapGoal(data as Tables<"savings_goals">);
+  const row = await localUpdate("savings_goals", goalId, patch);
+  return mapGoal(row as unknown as Tables<"savings_goals">);
 }
 
 /**
@@ -105,6 +112,5 @@ export async function adjustSavingsGoal(
 }
 
 export async function deleteSavingsGoal(goalId: string): Promise<void> {
-  const { error } = await supabase.from("savings_goals").delete().eq("id", goalId);
-  throwIfError(error);
+  await localDelete("savings_goals", goalId);
 }

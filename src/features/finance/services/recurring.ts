@@ -3,6 +3,14 @@ import type { Tables, TablesUpdate } from "@/types/database";
 import { addDays, parseDateKey, toDateKey } from "@/features/finance/lib/dates";
 import { throwIfError } from "@/features/finance/services/errors";
 import { createTransaction } from "@/features/finance/services/transactions";
+import type { LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type { PaymentMethod } from "@/features/finance/types/common";
 import type {
   CreateRecurringInput,
@@ -49,26 +57,34 @@ export function advanceRecurrence(dateKey: string, frequency: RecurringFrequency
   return toDateKey(date);
 }
 
-export async function fetchRecurringTransactions(
-  userId: string,
-): Promise<RecurringTransaction[]> {
+async function fetchServerRecurringRows(userId: string): Promise<LocalRow[]> {
   const { data, error } = await supabase
     .from("recurring_transactions")
     .select("*")
-    .eq("user_id", userId)
-    .order("next_run_on", { ascending: true });
-
+    .eq("user_id", userId);
   throwIfError(error);
-  return (data ?? []).map(mapRecurring);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
+export async function fetchRecurringTransactions(
+  userId: string,
+): Promise<RecurringTransaction[]> {
+  await pullMirror("recurring_transactions", () => fetchServerRecurringRows(userId));
+
+  const rows = await localRowsByUser("recurring_transactions", userId);
+  rows.sort((a, b) =>
+    ((a.next_run_on as string) ?? "").localeCompare((b.next_run_on as string) ?? ""),
+  );
+  return rows.map((row) => mapRecurring(row as unknown as Tables<"recurring_transactions">));
 }
 
 export async function createRecurring(
   userId: string,
   input: CreateRecurringInput,
 ): Promise<RecurringTransaction> {
-  const { data, error } = await supabase
-    .from("recurring_transactions")
-    .insert({
+  const row = await localInsert(
+    "recurring_transactions",
+    {
       user_id: userId,
       account_id: input.accountId,
       category_id: input.categoryId,
@@ -81,12 +97,11 @@ export async function createRecurring(
       start_on: input.startOn ?? input.nextRunOn,
       end_on: input.endOn ?? null,
       notes: input.notes?.trim() || null,
-    })
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapRecurring(data as Tables<"recurring_transactions">);
+      is_active: true,
+    },
+    userId,
+  );
+  return mapRecurring(row as unknown as Tables<"recurring_transactions">);
 }
 
 export async function updateRecurring(
@@ -107,23 +122,12 @@ export async function updateRecurring(
   if (input.notes !== undefined) patch.notes = input.notes?.trim() || null;
   if (input.isActive !== undefined) patch.is_active = input.isActive;
 
-  const { data, error } = await supabase
-    .from("recurring_transactions")
-    .update(patch)
-    .eq("id", recurringId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapRecurring(data as Tables<"recurring_transactions">);
+  const row = await localUpdate("recurring_transactions", recurringId, patch);
+  return mapRecurring(row as unknown as Tables<"recurring_transactions">);
 }
 
 export async function deleteRecurring(recurringId: string): Promise<void> {
-  const { error } = await supabase
-    .from("recurring_transactions")
-    .delete()
-    .eq("id", recurringId);
-  throwIfError(error);
+  await localDelete("recurring_transactions", recurringId);
 }
 
 /**

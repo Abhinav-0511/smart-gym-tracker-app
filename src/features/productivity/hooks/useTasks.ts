@@ -37,32 +37,38 @@ export function useTasks(
     queryKey: listKey,
     queryFn: () => fetchTasks(resolvedUserId, { includeArchived }),
     enabled: Boolean(userId),
+    networkMode: "offlineFirst",
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: taskKeys.all });
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (input: CreateTaskInput) => createTask(resolvedUserId, input),
     onSuccess: invalidate,
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ taskId, input }: { taskId: string; input: UpdateTaskInput }) =>
       updateTask(taskId, input),
     onSuccess: invalidate,
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (taskId: string) => deleteTask(taskId),
     onSuccess: invalidate,
   });
 
   const duplicateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (task: Task) => duplicateTask(resolvedUserId, task),
     onSuccess: invalidate,
   });
 
   const statusMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) =>
       setTaskStatus(taskId, status),
     onMutate: async ({ taskId, status }) => {
@@ -90,6 +96,7 @@ export function useTasks(
   });
 
   const rescheduleMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ taskId, dueDate }: { taskId: string; dueDate: string | null }) =>
       rescheduleTask(taskId, dueDate),
     onMutate: async ({ taskId, dueDate }) => {

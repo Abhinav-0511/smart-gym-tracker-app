@@ -1,6 +1,14 @@
 import { supabase } from "@/lib/supabase";
 import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 import { throwIfError } from "@/features/finance/services/errors";
+import type { LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type {
   PaymentMethod,
   TransactionType,
@@ -43,10 +51,11 @@ export interface FetchTransactionsOptions {
   limit?: number;
 }
 
-export async function fetchTransactions(
+/** Raw server rows for the requested window (used to refresh the local mirror). */
+async function fetchServerTransactionRows(
   userId: string,
-  options: FetchTransactionsOptions = {},
-): Promise<Transaction[]> {
+  options: FetchTransactionsOptions,
+): Promise<LocalRow[]> {
   let query = supabase
     .from("transactions")
     .select("*")
@@ -60,7 +69,34 @@ export async function fetchTransactions(
 
   const { data, error } = await query;
   throwIfError(error);
-  return (data ?? []).map(mapTransaction);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
+export async function fetchTransactions(
+  userId: string,
+  options: FetchTransactionsOptions = {},
+): Promise<Transaction[]> {
+  // Refresh the local cache from the server when online; read from Dexie always
+  // so the result is identical online and offline.
+  await pullMirror("transactions", () => fetchServerTransactionRows(userId, options));
+
+  const rows = await localRowsByUser("transactions", userId);
+  const windowed = rows.filter((row) => {
+    const occurredOn = row.occurred_on as string;
+    if (options.fromDate && occurredOn < options.fromDate) return false;
+    if (options.toDate && occurredOn > options.toDate) return false;
+    return true;
+  });
+  windowed.sort((a, b) => {
+    const ao = a.occurred_on as string;
+    const bo = b.occurred_on as string;
+    if (ao !== bo) return ao < bo ? 1 : -1; // occurred_on desc
+    const ac = (a.created_at as string) ?? "";
+    const bc = (b.created_at as string) ?? "";
+    return ac < bc ? 1 : -1; // created_at desc
+  });
+  const limited = options.limit ? windowed.slice(0, options.limit) : windowed;
+  return limited.map((row) => mapTransaction(row as unknown as Tables<"transactions">));
 }
 
 function toInsertRow(
@@ -89,14 +125,8 @@ export async function createTransaction(
   userId: string,
   input: CreateTransactionInput,
 ): Promise<Transaction> {
-  const { data, error } = await supabase
-    .from("transactions")
-    .insert(toInsertRow(userId, input))
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapTransaction(data as Tables<"transactions">);
+  const row = await localInsert("transactions", toInsertRow(userId, input), userId);
+  return mapTransaction(row as unknown as Tables<"transactions">);
 }
 
 export async function updateTransaction(
@@ -117,18 +147,10 @@ export async function updateTransaction(
   if (input.receiptUrl !== undefined) patch.receipt_url = input.receiptUrl?.trim() || null;
   if (input.transferAccountId !== undefined) patch.transfer_account_id = input.transferAccountId;
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .update(patch)
-    .eq("id", transactionId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapTransaction(data as Tables<"transactions">);
+  const row = await localUpdate("transactions", transactionId, patch);
+  return mapTransaction(row as unknown as Tables<"transactions">);
 }
 
 export async function deleteTransaction(transactionId: string): Promise<void> {
-  const { error } = await supabase.from("transactions").delete().eq("id", transactionId);
-  throwIfError(error);
+  await localDelete("transactions", transactionId);
 }

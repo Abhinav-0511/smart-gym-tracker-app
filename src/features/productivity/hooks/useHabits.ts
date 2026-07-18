@@ -73,38 +73,44 @@ export function useHabits(
     queryKey: listKey,
     queryFn: () => fetchHabits(resolvedUserId, todayKey, { includeArchived }),
     enabled: Boolean(userId),
+    networkMode: "offlineFirst",
   });
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: habitKeys.all });
 
   const createMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (input: CreateHabitInput) => createHabit(resolvedUserId, input),
     onSuccess: invalidate,
   });
 
   const updateMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ habitId, input }: { habitId: string; input: UpdateHabitInput }) =>
       updateHabit(habitId, input),
     onSuccess: invalidate,
   });
 
   const statusMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ habitId, status }: { habitId: string; status: HabitStatus }) =>
       setHabitStatus(habitId, status),
     onSuccess: invalidate,
   });
 
   const deleteMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: (habitId: string) => deleteHabit(habitId),
     onSuccess: invalidate,
   });
 
   const toggleMutation = useMutation({
+    networkMode: "offlineFirst",
     mutationFn: ({ habit, dateKey, complete }: ToggleCompletionVariables) =>
       complete
         ? completeHabit(resolvedUserId, habit.id, dateKey)
-        : undoHabitCompletion(habit.id, dateKey),
+        : undoHabitCompletion(resolvedUserId, habit.id, dateKey),
     onMutate: async ({ habit, dateKey, complete }) => {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previous = queryClient.getQueryData<HabitWithHistory[]>(listKey);

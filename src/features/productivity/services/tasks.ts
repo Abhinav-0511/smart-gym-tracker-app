@@ -1,5 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import type { Json, Tables, TablesUpdate } from "@/types/database";
+import type { LocalRow } from "@/offline/db";
+import {
+  localDelete,
+  localInsert,
+  localRowsByUser,
+  localUpdate,
+  pullMirror,
+} from "@/offline/repository";
 import type {
   CreateTaskInput,
   Task,
@@ -80,35 +88,44 @@ export interface FetchTasksOptions {
   includeArchived?: boolean;
 }
 
+async function fetchServerTaskRows(userId: string): Promise<LocalRow[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", userId);
+  throwIfError(error);
+  return (data ?? []) as unknown as LocalRow[];
+}
+
 export async function fetchTasks(
   userId: string,
   options: FetchTasksOptions = {},
 ): Promise<Task[]> {
-  const query = supabase
-    .from("tasks")
-    .select("*")
-    .eq("user_id", userId)
-    .order("due_date", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false });
+  await pullMirror("tasks", () => fetchServerTaskRows(userId));
 
+  let rows = await localRowsByUser("tasks", userId);
   if (!options.includeArchived) {
-    query.neq("status", "archived");
+    rows = rows.filter((row) => row.status !== "archived");
   }
-
-  const { data, error } = await query;
-  throwIfError(error);
-  return (data ?? []).map(mapTask);
+  rows.sort((a, b) => {
+    // due_date ascending with nulls last, then created_at descending.
+    const ad = (a.due_date as string | null) ?? "￿";
+    const bd = (b.due_date as string | null) ?? "￿";
+    if (ad !== bd) return ad < bd ? -1 : 1;
+    const ac = (a.created_at as string) ?? "";
+    const bc = (b.created_at as string) ?? "";
+    return ac < bc ? 1 : -1;
+  });
+  return rows.map((row) => mapTask(row as unknown as Tables<"tasks">));
 }
 
 export async function createTask(userId: string, input: CreateTaskInput): Promise<Task> {
-  const { data, error } = await supabase
-    .from("tasks")
-    .insert({ user_id: userId, ...toWritePayload(input), title: input.title.trim() })
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapTask(data as Tables<"tasks">);
+  const row = await localInsert(
+    "tasks",
+    { user_id: userId, ...toWritePayload(input), title: input.title.trim(), status: "pending" },
+    userId,
+  );
+  return mapTask(row as unknown as Tables<"tasks">);
 }
 
 export async function updateTask(taskId: string, input: UpdateTaskInput): Promise<Task> {
@@ -119,15 +136,8 @@ export async function updateTask(taskId: string, input: UpdateTaskInput): Promis
     payload.completed_at = input.status === "completed" ? new Date().toISOString() : null;
   }
 
-  const { data, error } = await supabase
-    .from("tasks")
-    .update(payload)
-    .eq("id", taskId)
-    .select("*")
-    .single();
-
-  throwIfError(error);
-  return mapTask(data as Tables<"tasks">);
+  const row = await localUpdate("tasks", taskId, payload as Record<string, unknown>);
+  return mapTask(row as unknown as Tables<"tasks">);
 }
 
 export async function setTaskStatus(taskId: string, status: TaskStatus): Promise<Task> {
@@ -143,8 +153,7 @@ export async function rescheduleTask(
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
-  const { error } = await supabase.from("tasks").delete().eq("id", taskId);
-  throwIfError(error);
+  await localDelete("tasks", taskId);
 }
 
 export async function duplicateTask(userId: string, task: Task): Promise<Task> {

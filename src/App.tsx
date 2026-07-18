@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AchievementSync from "@/components/achievements/AchievementSync";
@@ -12,11 +13,13 @@ import QuickTipsGate from "@/features/onboarding/QuickTipsGate";
 import ProfileThemeSync from "@/components/profile/ProfileThemeSync";
 import PersonalRecordSync from "@/components/prs/PersonalRecordSync";
 import ScrollToTop from "@/components/ScrollToTop";
+import OfflineIndicator from "@/components/offline/OfflineIndicator";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { PERSIST_BUSTER, PERSIST_MAX_AGE, queryPersister } from "@/offline/query-persister";
 import AuthPage from "./pages/AuthPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.tsx";
@@ -31,7 +34,15 @@ const ProductivityIndex = lazy(
 const FinanceIndex = lazy(() => import("@/features/finance/FinanceIndex"));
 const AdminIndex = lazy(() => import("@/features/admin/AdminIndex"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep inactive queries in cache long enough to be persisted to IndexedDB
+      // for offline browsing (default 5m would evict them before dehydration).
+      gcTime: PERSIST_MAX_AGE,
+    },
+  },
+});
 
 const RouteFallback = () => (
   <div
@@ -47,10 +58,21 @@ const RouteFallback = () => (
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: PERSIST_MAX_AGE,
+        buster: PERSIST_BUSTER,
+        // Persist read caches only — never mutations. Offline writes are owned
+        // by the Dexie sync queue, not React Query's paused-mutation mechanism.
+        dehydrateOptions: { shouldDehydrateMutation: () => false },
+      }}
+    >
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <BrowserRouter>
           <AuthProvider>
             <WorkspaceProvider>
@@ -278,7 +300,7 @@ const App = () => (
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
     </ThemeProvider>
   </ErrorBoundary>
 );
