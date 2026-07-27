@@ -7,6 +7,11 @@ import type { LucideIcon } from "lucide-react";
  */
 export type WorkspaceId = "fitness" | "productivity" | "finance";
 
+export interface WorkspaceModulePreference {
+  id: WorkspaceId;
+  enabled: boolean;
+}
+
 export interface WorkspaceNavItem {
   /** Stable page identifier used by the shell's `activePage` state. */
   id: string;

@@ -7,11 +7,13 @@ import {
   LogOut,
   MessageSquare,
   MoreVertical,
+  Settings2,
   ShieldCheck,
   Star,
   User,
 } from "lucide-react";
 
+import ModuleSettingsDialog from "@/components/profile/ModuleSettingsDialog";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import {
   DropdownMenu,
@@ -57,6 +59,7 @@ const HELP_ENTRIES: { tab: HelpTab; label: string; icon: typeof BookOpen }[] = [
  */
 const AppMenu = ({ pageKey, onOpenProfile, className }: AppMenuProps) => {
   const [helpTab, setHelpTab] = useState<HelpTab | null>(null);
+  const [moduleSettingsOpen, setModuleSettingsOpen] = useState(false);
   const { profile, logout } = useAuth();
   const {
     workspaces,
@@ -130,6 +133,14 @@ const AppMenu = ({ pageKey, onOpenProfile, className }: AppMenuProps) => {
               />
             </DropdownMenuItem>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => setModuleSettingsOpen(true)}
+            className="cursor-pointer gap-3"
+          >
+            <Settings2 size={16} className="shrink-0 text-muted-foreground" />
+            <span className="flex-1 truncate text-sm font-medium">Module settings</span>
+          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
@@ -184,6 +195,11 @@ const AppMenu = ({ pageKey, onOpenProfile, className }: AppMenuProps) => {
           />
         </Suspense>
       )}
+
+      <ModuleSettingsDialog
+        open={moduleSettingsOpen}
+        onOpenChange={setModuleSettingsOpen}
+      />
     </>
   );
 };
