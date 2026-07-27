@@ -1,5 +1,4 @@
 import { Check, ChevronsUpDown, ShieldCheck } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 
 import BrandLogo from "@/components/BrandLogo";
 import {
@@ -10,60 +9,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/useAuth";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import type { WorkspaceId } from "@/features/workspace/types";
+import { useWorkspaceMenu } from "@/features/workspace/useWorkspaceMenu";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 interface WorkspaceSwitcherProps {
   /**
    * "sidebar" — full-width brand block for the navy desktop sidebar.
-   * "compact" — logo-sized trigger for the mobile header.
+   * "compact" — logo-sized trigger for the header, on every viewport.
    */
   variant?: "sidebar" | "compact";
   className?: string;
 }
 
-/** Route the Admin module lands on. Not a workspace — see the admin entry below. */
-const ADMIN_HOME_ROUTE = "/admin";
-
 /**
  * LifeTrack brand + workspace picker. Selecting a workspace navigates to its
  * home route without reloading the app. Rendered in the desktop sidebar and, in
- * its compact form, in the mobile header so switching works on every viewport.
- *
- * The Admin Portal is offered here as a pseudo-module, but only to admins
- * (`profile.is_admin`). It is deliberately not part of the workspace registry —
- * it has its own standalone shell and route tree — so it is handled inline here
- * rather than through `setWorkspace`.
+ * its compact form, as the header app logo so switching works on every viewport.
+ * Selection rules live in `useWorkspaceMenu`, shared with the header `AppMenu`.
  */
 const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcherProps) => {
-  const { workspace, workspaces, activeWorkspaceId, setWorkspace } = useWorkspace();
-  const { profile } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const isAdmin = Boolean(profile?.is_admin);
-  // On an admin route the URL resolves to the default workspace, so we track it
-  // explicitly to drive both the trigger label and the active checkmarks.
-  const isAdminRoute = location.pathname.startsWith(ADMIN_HOME_ROUTE);
-
-  const handleSelect = (id: WorkspaceId) => {
-    // `setWorkspace` no-ops when the id matches the resolved workspace. Leaving
-    // the admin portal it always resolves to the default workspace, so navigate
-    // directly to guarantee the jump lands.
-    if (isAdminRoute) {
-      const target = workspaces.find((item) => item.id === id);
-      if (target) navigate(target.homeRoute);
-      return;
-    }
-    setWorkspace(id);
-  };
-
-  const handleSelectAdmin = () => {
-    if (!isAdminRoute) navigate(ADMIN_HOME_ROUTE);
-  };
+  const {
+    workspace,
+    workspaces,
+    activeWorkspaceId,
+    isAdmin,
+    isAdminRoute,
+    selectWorkspace,
+    selectAdmin,
+  } = useWorkspaceMenu();
 
   return (
     <DropdownMenu>
@@ -71,9 +45,10 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
         {variant === "compact" ? (
           <button
             type="button"
-            aria-label="Switch workspace"
+            aria-label="Switch module"
+            title="Switch module"
             className={cn(
-              "relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              "relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white transition hover:ring-2 hover:ring-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               className,
             )}
           >
@@ -85,7 +60,7 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
         ) : (
           <button
             type="button"
-            aria-label="Switch workspace"
+            aria-label="Switch module"
             className={cn(
               "flex w-full items-center gap-2 rounded-2xl p-1 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               className,
@@ -126,7 +101,7 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
           return (
             <DropdownMenuItem
               key={item.id}
-              onSelect={() => handleSelect(item.id)}
+              onSelect={() => selectWorkspace(item.id)}
               className="cursor-pointer gap-3 py-2.5"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
@@ -147,7 +122,7 @@ const WorkspaceSwitcher = ({ variant = "sidebar", className }: WorkspaceSwitcher
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={handleSelectAdmin}
+              onSelect={selectAdmin}
               className="cursor-pointer gap-3 py-2.5"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary shadow-sm">

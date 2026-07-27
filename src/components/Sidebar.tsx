@@ -1,5 +1,9 @@
+import { LogOut } from "lucide-react";
+
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import VernexAttribution from "@/components/VernexAttribution";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { BRAND } from "@/lib/brand";
@@ -12,9 +16,21 @@ interface SidebarNavProps {
 }
 
 const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
-  const { profile } = useAuth();
+  const { profile, logout } = useAuth();
   const { workspace } = useWorkspace();
   const fullName = profile?.full_name ?? `${BRAND.name} Member`;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not sign out",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-white/10 bg-[#0b2454] text-white md:flex">
@@ -41,24 +57,36 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
       ))}
     </nav>
     <div className="space-y-3 p-4">
-      <div className="rounded-2xl border border-white/10 bg-white/[.06] p-4">
-        <div className="flex items-center gap-3">
-          <ProfileAvatar
-            avatarPath={profile?.avatar_url}
-            fullName={fullName}
-            fallbackClassName="text-sm"
-          />
-          <div>
-            <p className="text-sm font-medium text-white line-clamp-1">{fullName}</p>
-            <p className="text-xs text-white/50">
-              {formatProfileValue(profile?.experience_level ?? null)}
-            </p>
-          </div>
+      <button
+        type="button"
+        onClick={() => onNavigate("profile")}
+        className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[.06] p-4 text-left transition hover:bg-white/[.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <ProfileAvatar
+          avatarPath={profile?.avatar_url}
+          fullName={fullName}
+          fallbackClassName="text-sm"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-white line-clamp-1">{fullName}</p>
+          <p className="text-xs text-white/50">
+            {formatProfileValue(profile?.experience_level ?? null)}
+          </p>
         </div>
-      </div>
-      <p className="text-center text-[10px] font-medium uppercase tracking-[.14em] text-white/35">
-        {BRAND.poweredBy}
-      </p>
+      </button>
+      <button
+        type="button"
+        onClick={() => void handleLogout()}
+        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white/60 transition hover:bg-red-500/15 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <LogOut size={20} />
+        Log out
+      </button>
+      <VernexAttribution
+        variant="stacked"
+        logoClassName="h-7 w-24 ring-white/10"
+        textClassName="text-white/35"
+      />
     </div>
     </aside>
   );

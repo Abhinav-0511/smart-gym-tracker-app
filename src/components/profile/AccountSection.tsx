@@ -5,6 +5,7 @@ import {
   Globe,
   KeyRound,
   Clock,
+  LayoutGrid,
   LogOut,
   Moon,
   Settings2,
@@ -13,6 +14,7 @@ import {
 
 import BrandAbout from "@/components/BrandAbout";
 import EditAccountDialog from "@/components/profile/EditAccountDialog";
+import ModuleSettingsDialog from "@/components/profile/ModuleSettingsDialog";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { resetQuickTips } from "@/features/onboarding/useQuickTips";
@@ -35,6 +37,7 @@ const AccountSection = ({ className }: AccountSectionProps) => {
   const { user, profile, logout, updateProfile } = useAuth();
   const { toast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
+  const [moduleSettingsOpen, setModuleSettingsOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [replayingTour, setReplayingTour] = useState(false);
@@ -177,6 +180,17 @@ const AccountSection = ({ className }: AccountSectionProps) => {
             </span>
           </button>
 
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-xl px-2 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary/60"
+            onClick={() => setModuleSettingsOpen(true)}
+          >
+            <span className="flex items-center gap-3">
+              <LayoutGrid size={16} className="text-muted-foreground" /> Modules
+            </span>
+            <ChevronRight size={16} className="text-muted-foreground" />
+          </button>
+
           <div className="flex w-full items-center justify-between px-2 py-2.5 text-sm">
             <span className="flex items-center gap-3 text-foreground">
               <Globe size={16} className="text-muted-foreground" /> Language
@@ -240,6 +254,11 @@ const AccountSection = ({ className }: AccountSectionProps) => {
         profile={profile}
         onOpenChange={setEditOpen}
         onSave={handleSaveAccount}
+      />
+
+      <ModuleSettingsDialog
+        open={moduleSettingsOpen}
+        onOpenChange={setModuleSettingsOpen}
       />
     </section>
   );

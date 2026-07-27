@@ -16,10 +16,19 @@ import FaqList from "./FaqList";
 import FeedbackForm from "./FeedbackForm";
 import TipsList from "./TipsList";
 
+/** The Help Center sections, in tab order. */
+export type HelpTab = "about" | "tips" | "faq" | "support" | "feedback";
+
 interface HelpCenterProps {
   pageKey: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Section to land on. The header overflow menu links straight to a section
+   * ("Tips", "FAQ", …), so the sheet must be able to open past the first tab.
+   * About/Tips/FAQ fall back to Support on pages with no registry entry.
+   */
+  defaultTab?: HelpTab;
 }
 
 const FEEDBACK_MODULES: FeedbackModule[] = [
@@ -40,9 +49,15 @@ function moduleFromPageKey(pageKey: string): FeedbackModule {
  * Contact Support and Feedback are always available. Renders even when a page
  * has no registered entry, falling back to just the support + feedback forms.
  */
-const HelpCenter = ({ pageKey, open, onOpenChange }: HelpCenterProps) => {
+const HelpCenter = ({ pageKey, open, onOpenChange, defaultTab }: HelpCenterProps) => {
   const config = getPageHelp(pageKey);
   const defaultModule = moduleFromPageKey(pageKey);
+  const registryTab = defaultTab === "about" || defaultTab === "tips" || defaultTab === "faq";
+  // Registry-backed tabs are not rendered without a config entry; Radix would
+  // then show an empty sheet, so fall through to a tab that always exists.
+  const activeTab = !defaultTab || (registryTab && !config)
+    ? (config ? "about" : "support")
+    : defaultTab;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -58,7 +73,7 @@ const HelpCenter = ({ pageKey, open, onOpenChange }: HelpCenterProps) => {
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8">
-          <Tabs defaultValue={config ? "about" : "support"} className="w-full">
+          <Tabs key={activeTab} defaultValue={activeTab} className="w-full">
             <TabsList className="mb-4 grid w-full grid-cols-5">
               {config && (
                 <>

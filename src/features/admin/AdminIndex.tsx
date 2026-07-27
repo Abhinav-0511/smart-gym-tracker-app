@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import VernexAttribution from "@/components/VernexAttribution";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import { Button } from "@/components/ui/button";
 import HelpButton from "@/features/help/components/HelpButton";
@@ -98,9 +99,11 @@ const AdminIndex = ({ page }: AdminIndexProps) => {
             <LogOut size={18} />
             Sign out
           </button>
-          <p className="text-center text-[10px] font-medium uppercase tracking-[.14em] text-white/35">
-            {BRAND.poweredBy}
-          </p>
+          <VernexAttribution
+            variant="stacked"
+            logoClassName="h-7 w-24 ring-white/10"
+            textClassName="text-white/35"
+          />
         </div>
       </aside>
 

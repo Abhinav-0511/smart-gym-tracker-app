@@ -12,8 +12,8 @@ const AuthLoadingScreen = () => (
       <div className="relative h-24 w-24">
         <span className="brand-glow absolute -inset-2 rounded-full bg-primary/25 blur-2xl" />
         <span className="brand-ring absolute -inset-1 rounded-full" />
-        <span className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[26px] bg-white shadow-lg ring-1 ring-border/50">
-          <BrandLogo kind="app" className="h-[82%] w-[82%] max-w-none" />
+        <span className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[26px] bg-card/80 shadow-lg ring-1 ring-primary/30 backdrop-blur-sm">
+          <BrandLogo kind="app" className="h-full w-full max-w-none" />
         </span>
       </div>
       <p className="mt-6 text-sm font-semibold text-foreground">{BRAND.name}</p>

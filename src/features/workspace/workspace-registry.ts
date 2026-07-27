@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 
 import { BRAND_LOGOS } from "@/lib/brand";
-import type { WorkspaceDefinition, WorkspaceId } from "@/features/workspace/types";
+import type {
+  WorkspaceDefinition,
+  WorkspaceId,
+  WorkspaceModulePreference,
+} from "@/features/workspace/types";
 
 /**
  * Declarative registry of every workspace. The shell, switcher, sidebar, and
@@ -88,6 +92,12 @@ export const WORKSPACES: readonly WorkspaceDefinition[] = [
 /** The workspace shown to first-time users before any preference is stored. */
 export const DEFAULT_WORKSPACE_ID: WorkspaceId = "fitness";
 
+export const DEFAULT_MODULE_PREFERENCES: readonly WorkspaceModulePreference[] =
+  WORKSPACES.map((workspace) => ({
+    id: workspace.id,
+    enabled: true,
+  }));
+
 const workspacesById = new Map<WorkspaceId, WorkspaceDefinition>(
   WORKSPACES.map((workspace) => [workspace.id, workspace]),
 );
@@ -98,6 +108,57 @@ export function getWorkspace(id: WorkspaceId): WorkspaceDefinition {
     throw new Error(`Unknown workspace: ${id}`);
   }
   return workspace;
+}
+
+export function normalizeModulePreferences(
+  preferences: unknown,
+): WorkspaceModulePreference[] {
+  const knownIds = new Set(WORKSPACES.map((workspace) => workspace.id));
+  const normalized: WorkspaceModulePreference[] = [];
+
+  if (Array.isArray(preferences)) {
+    preferences.forEach((item) => {
+      if (
+        typeof item === "object"
+        && item !== null
+        && "id" in item
+        && knownIds.has(item.id as WorkspaceId)
+        && !normalized.some((preference) => preference.id === item.id)
+      ) {
+        normalized.push({
+          id: item.id as WorkspaceId,
+          enabled: "enabled" in item ? Boolean(item.enabled) : true,
+        });
+      }
+    });
+  }
+
+  WORKSPACES.forEach((workspace) => {
+    if (!normalized.some((preference) => preference.id === workspace.id)) {
+      normalized.push({ id: workspace.id, enabled: true });
+    }
+  });
+
+  if (!normalized.some((preference) => preference.enabled)) {
+    const defaultIndex = normalized.findIndex(
+      (preference) => preference.id === DEFAULT_WORKSPACE_ID,
+    );
+    normalized[defaultIndex >= 0 ? defaultIndex : 0] = {
+      ...normalized[defaultIndex >= 0 ? defaultIndex : 0],
+      enabled: true,
+    };
+  }
+
+  return normalized;
+}
+
+export function getOrderedWorkspaces(
+  preferences: readonly WorkspaceModulePreference[],
+  options: { enabledOnly?: boolean } = {},
+): WorkspaceDefinition[] {
+  return preferences
+    .filter((preference) => !options.enabledOnly || preference.enabled)
+    .map((preference) => getWorkspace(preference.id));
 }
 
 /**

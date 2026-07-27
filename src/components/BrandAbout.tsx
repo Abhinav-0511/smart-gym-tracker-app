@@ -1,4 +1,5 @@
 import BrandLogo from "@/components/BrandLogo";
+import VernexAttribution from "@/components/VernexAttribution";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
@@ -29,9 +30,7 @@ const BrandAbout = ({ className }: BrandAboutProps) => (
         Version {BRAND.version}
       </span>
     </div>
-    <p className="py-3 text-center text-[11px] font-medium uppercase tracking-[.16em] text-muted-foreground">
-      {BRAND.poweredBy}
-    </p>
+    <VernexAttribution className="px-4 py-3" variant="stacked" />
   </section>
 );
 

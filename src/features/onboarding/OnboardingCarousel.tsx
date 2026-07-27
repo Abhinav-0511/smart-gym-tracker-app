@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft } from "lucide-react";
 
 import BrandLogo from "@/components/BrandLogo";
+import VernexAttribution from "@/components/VernexAttribution";
 import { Button } from "@/components/ui/button";
-import { BRAND } from "@/lib/brand";
 import { ONBOARDING_SLIDES } from "./slides";
 
 interface OnboardingCarouselProps {
@@ -129,9 +129,10 @@ const OnboardingCarousel = ({ onComplete }: OnboardingCarouselProps) => {
           </Button>
         </div>
 
-        <p className="text-[11px] font-medium uppercase tracking-[.16em] text-white/40">
-          {BRAND.poweredBy}
-        </p>
+        <VernexAttribution
+          logoClassName="h-7 w-24 ring-white/10"
+          textClassName="text-white/40"
+        />
       </div>
     </div>
   );
