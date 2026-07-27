@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vernex Gen Technologies - Corporate Profile</title>
+</head>
+<body>
+<style>
+  :root{
+    --navy:#0B2454;
+    --navy-2:#0A1E45;
+    --navy-3:#071734;
+    --gold:#D8B36A;
+    --gold-2:#E7CE9F;
+    --gold-3:#B7924A;
+    --white:#FFFFFF;
+    --gray:#F5F6FA;
+    --gray-2:#ECEEF4;
+    --ink:#141B2E;
+    --muted:#5A657B;
+    --muted-2:#8A93A6;
+    --line:#E2E6EE;
+    --hair:rgba(216,179,106,.28);
+    --font:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --sheet-w:210mm;
+    --sheet-h:297mm;
+    --pad:19mm;
+  }
+
+  *{box-sizing:border-box}
+
+  /* ---------- viewer canvas (screen only, theme-aware) ---------- */
+  .canvas{
+    font-family:var(--font);
+    background:#0d1526;
+    color:#e8ecf4;
+    min-height:100vh;
+    padding:40px 16px 80px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:34px;
+  }
+  @media (prefers-color-scheme:light){
+    .canvas{background:#dfe3ec;color:#1b2437}
+  }
+  :root[data-theme="dark"] .canvas{background:#0d1526;color:#e8ecf4}
+  :root[data-theme="light"] .canvas{background:#dfe3ec;color:#1b2437}
+
+  .toolbar{
+    width:min(var(--sheet-w),100%);
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    font-size:13px;letter-spacing:.02em;
+  }
+  .toolbar .brandline{display:flex;align-items:center;gap:10px;font-weight:600;opacity:.85}
+  .toolbar .brandline .dot{width:9px;height:9px;border-radius:50%;background:var(--gold)}
+  .toolbar button{
+    font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:#0B2454;background:var(--gold);border:none;border-radius:999px;
+    padding:9px 18px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;
+    box-shadow:0 6px 18px rgba(216,179,106,.3);
+  }
+  .toolbar button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(216,179,106,.42)}
+  .toolbar button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+  /* ---------- the A4 sheet ---------- */
+  .page{
+    position:relative;
+    width:var(--sheet-w);
+    min-height:var(--sheet-h);
+    height:var(--sheet-h);
+    background:var(--white);
+    color:var(--ink);
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);
+    border-radius:2px;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    display:flex;flex-direction:column;
+  }
+  .page.navy{background:var(--navy);color:#EAF0FB}
+  .page.gray{background:var(--gray)}
+
+  .pad{padding:var(--pad);flex:1;display:flex;flex-direction:column;position:relative;z-index:2}
+
+  /* ---------- shared type ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:12px;
+    font-size:11.5px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--gold-3);
+  }
+  .navy .eyebrow{color:var(--gold)}
+  .eyebrow::before{content:"";width:34px;height:2px;background:var(--gold);border-radius:2px}
+
+  h1,h2,h3,h4{margin:0;text-wrap:balance;line-height:1.04;letter-spacing:-.02em}
+  .title{font-size:44px;font-weight:800;color:var(--navy);margin-top:16px}
+  .navy .title{color:#fff}
+  .title.sm{font-size:34px}
+  .title .g{color:var(--gold-3)}
+  .navy .title .g{color:var(--gold)}
+
+  .lede{
+    font-size:14px;line-height:1.62;color:var(--muted);max-width:62ch;font-weight:400;
+    margin-top:18px;
+  }
+  .navy .lede{color:#BCC8DE}
+  .lede strong{color:var(--ink);font-weight:600}
+  .navy .lede strong{color:#fff}
+
+  .label{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-3)}
+  .navy .label{color:var(--gold)}
+
+  /* ---------- icon system ---------- */
+  .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .ic.lg{width:26px;height:26px}
+  .chip{
+    width:46px;height:46px;border-radius:13px;flex:none;
+    display:grid;place-items:center;color:var(--navy);
+    background:linear-gradient(150deg,#FBF6EB,#F1E4C6);
+    border:1px solid var(--hair);
+  }
+  .navy .chip{
+    color:var(--gold);
+    background:linear-gradient(150deg,rgba(216,179,106,.16),rgba(216,179,106,.05));
+    border:1px solid rgba(216,179,106,.32);
+  }
+  .chip.solid{background:var(--navy);color:var(--gold);border:none}
+
+  /* ---------- footer / page furniture ---------- */
+  .foot{
+    position:absolute;left:var(--pad);right:var(--pad);bottom:11mm;z-index:3;
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);
+    padding-top:8px;
+  }
+  .navy .foot{color:rgba(190,203,226,.6)}
+  .foot .fnum{font-weight:700;color:var(--gold-3);font-variant-numeric:tabular-nums}
+  .navy .foot .fnum{color:var(--gold)}
+  .foot .fline{flex:1;height:1px;background:var(--line);margin:0 14px}
+  .navy .foot .fline{background:rgba(216,179,106,.22)}
+
+  .wordmark{display:inline-flex;align-items:center;gap:8px;font-weight:800;letter-spacing:-.01em}
+  .wordmark .mk{
+    width:20px;height:20px;border-radius:5px;background:var(--navy);
+    display:grid;place-items:center;color:var(--gold);font-size:12px;font-weight:800;
+  }
+  .navy .wordmark .mk{background:var(--gold);color:var(--navy)}
+
+  /* ---------- decorative layers ---------- */
+  .bg{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .corner-tl,.corner-br{position:absolute;width:0;height:0;z-index:1}
+  .corner-tl{top:0;left:0;border-top:30mm solid var(--gold);border-right:30mm solid transparent;opacity:.9}
+  .corner-br{bottom:0;right:0;border-bottom:26mm solid var(--navy);border-left:26mm solid transparent}
+
+  .glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5}
+
+  /* ---------- generic cards ---------- */
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+  .navy .card,.glass{
+    background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid rgba(216,179,106,.2);
+    border-radius:16px;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  }
+
+  /* ---------- utility layout ---------- */
+  .row{display:flex;gap:14px}
+  .col{display:flex;flex-direction:column}
+  .grow{flex:1}
+  .between{justify-content:space-between}
+  .center{align-items:center}
+  .wrap{flex-wrap:wrap}
+
+  /* ======================================================= */
+  /*  PAGE 1 — COVER                                          */
+  /* ======================================================= */
+  .cover .pad{padding:0}
+  .cover-inner{flex:1;display:flex;flex-direction:column;padding:22mm var(--pad) 0}
+  .cover-hero{
+    position:relative;margin:0 calc(var(--pad) * -1);flex:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cover-badge{
+    display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
+    padding:8px 16px;border-radius:999px;border:1px solid rgba(216,179,106,.4);
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:700;
+    background:rgba(216,179,106,.06);
+  }
+  .cover h1{font-size:58px;font-weight:800;color:#fff;margin-top:26px;letter-spacing:-.025em;line-height:1}
+  .cover h1 .g{color:var(--gold)}
+  .cover .sub{font-size:19px;color:var(--gold-2);font-weight:600;margin-top:20px;letter-spacing:-.01em}
+  .cover .desc{font-size:14px;color:#B4C1DA;margin-top:14px;max-width:52ch;line-height:1.6}
+  .capstrip{
+    display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;
+    padding:16px var(--pad);margin:0 calc(var(--pad) * -1);
+    border-top:1px solid rgba(216,179,106,.25);
+    background:linear-gradient(180deg,transparent,rgba(216,179,106,.05));
+  }
+  .capstrip span{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#CBD6EA;padding:0 18px;position:relative}
+  .capstrip span+span::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--gold)}
+
+  /* ---------- feature grids ---------- */
+  .fgrid{display:grid;gap:12px}
+  .fgrid.c2{grid-template-columns:repeat(2,1fr)}
+  .fgrid.c3{grid-template-columns:repeat(3,1fr)}
+  .fgrid.c5{grid-template-columns:repeat(5,1fr)}
+  .fitem{
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;
+    padding:16px 8px;border-radius:14px;background:#fff;border:1px solid var(--line);
+  }
+  .gray .fitem{background:#fff}
+  .navy .fitem{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015));border-color:rgba(216,179,106,.18)}
+  .fitem .fic{
+    width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(150deg,#FBF6EB,#F0E2C4);color:var(--navy);border:1px solid var(--hair);
+  }
+  .navy .fitem .fic{background:linear-gradient(150deg,rgba(216,179,106,.16),rgba(216,179,106,.04));color:var(--gold);border-color:rgba(216,179,106,.3)}
+  .fitem .ft{font-size:11.5px;font-weight:600;color:var(--ink);letter-spacing:-.005em;line-height:1.25}
+  .navy .fitem .ft{color:#E7EDF9}
+
+  /* list with gold ticks */
+  .ticklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+  .ticklist li{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--ink);line-height:1.35}
+  .navy .ticklist li{color:#CFD9EC}
+  .ticklist li .tk{width:16px;height:16px;flex:none;margin-top:1px;color:var(--gold-3)}
+  .navy .ticklist li .tk{color:var(--gold)}
+
+  /* ---------- product page template ---------- */
+  .prod-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+  .prod-tag{font-size:13.5px;color:var(--muted);font-weight:600;margin-top:6px}
+  .prod-badge{
+    display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;
+    background:var(--navy);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;flex:none;
+  }
+  .prod-num{font-size:52px;font-weight:800;color:var(--gray-2);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+
+  .pfeat{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 26px}
+  .pfeat .pf{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .pfeat .pf .pfic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(150deg,#FBF6EB,#F0E2C4);color:var(--navy);border:1px solid var(--hair);flex:none}
+  .pfeat .pf .pfic .ic{width:17px;height:17px}
+  .pfeat .pf span{font-size:12.5px;font-weight:600;color:var(--ink)}
+
+  .bestfor{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .pill{
+    padding:7px 15px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+    background:var(--navy);color:#EAF0FB;
+  }
+  .gray .pill,.pill.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+
+  .cta-link{display:inline-flex;align-items:center;gap:9px;font-weight:700;color:var(--navy);font-size:14px}
+  .cta-link .ic{width:18px;height:18px;color:var(--gold-3)}
+
+  /* QR placeholder */
+  .qr{width:78px;height:78px;border-radius:12px;background:#fff;border:1px solid var(--line);padding:7px;flex:none}
+  .qr svg{width:100%;height:100%;display:block}
+  .qr-wrap{display:flex;align-items:center;gap:12px}
+  .qr-wrap .qtxt{font-size:10px;color:var(--muted);line-height:1.4;letter-spacing:.02em}
+  .qr-wrap .qtxt b{display:block;color:var(--ink);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+
+  /* ---------- dashboard mock ---------- */
+  .dash{
+    border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    background:#fff;box-shadow:0 20px 40px rgba(11,36,84,.1);display:flex;flex-direction:column;
+  }
+  .navy .dash{border-color:rgba(216,179,106,.25);box-shadow:0 24px 50px rgba(0,0,0,.35)}
+  .dash .dbar{display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.06)}
+  .dash .dbar i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.25)}
+  .dash .dbar i:first-child{background:var(--gold)}
+  .dash .dbar .dttl{margin-left:8px;color:#cdd8ec;font-size:10.5px;font-weight:600;letter-spacing:.04em}
+  .dash .dbar .dpill{margin-left:auto;font-size:9px;color:var(--gold);border:1px solid rgba(216,179,106,.4);padding:3px 9px;border-radius:999px;letter-spacing:.1em;text-transform:uppercase}
+  .dbody{display:flex;flex:1;background:#F7F9FC}
+  .dside{width:26%;background:var(--navy);padding:12px 10px;display:flex;flex-direction:column;gap:7px}
+  .dside .dlogo{font-size:11px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.01em}
+  .dside .dlogo b{color:var(--gold)}
+  .dnav{height:9px;border-radius:4px;background:rgba(255,255,255,.08)}
+  .dnav.on{background:var(--gold);width:80%}
+  .dmain{flex:1;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .dkpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .dkpi{background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px}
+  .dkpi small{font-size:7.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.08em;display:block}
+  .dkpi b{font-size:14px;color:var(--navy);font-weight:800;font-variant-numeric:tabular-nums}
+  .dkpi.gold b{color:var(--gold-3)}
+  .dcharts{display:grid;grid-template-columns:1.1fr 1fr;gap:8px;flex:1}
+  .dcard{background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .dcard .dct{font-size:8.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em}
+  .donut{width:74px;height:74px;border-radius:50%;margin:2px auto;
+    background:conic-gradient(var(--gold) 0 68%,#2b4a86 68% 86%,var(--gray-2) 86% 100%);
+    display:grid;place-items:center;position:relative}
+  .donut::after{content:"";width:44px;height:44px;border-radius:50%;background:#fff}
+  .donut b{position:absolute;font-size:12px;font-weight:800;color:var(--navy);z-index:1}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:74px;padding-top:4px}
+  .bars span{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--gold),var(--gold-3))}
+  .bars span:nth-child(even){background:linear-gradient(180deg,#2b4a86,var(--navy))}
+
+  /* ---------- timeline (why choose) ---------- */
+  .timeline{display:flex;align-items:stretch;gap:0;position:relative}
+  .tstep{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;position:relative;padding:0 4px}
+  .tstep .tnode{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:var(--gold);border:2px solid var(--gold);z-index:2;position:relative}
+  .tstep .tnum{position:absolute;top:-8px;right:calc(50% - 30px);font-size:9px;font-weight:800;color:var(--gold-3);background:#fff;border-radius:50%;width:16px;height:16px;display:grid;place-items:center;border:1px solid var(--hair)}
+  .tstep .tl{font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.01em}
+  .tstep::before{content:"";position:absolute;top:20px;left:-50%;width:100%;height:2px;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,transparent 6px 11px);z-index:1}
+  .tstep:first-child::before{display:none}
+
+  /* ---------- portfolio table ---------- */
+  .ptable{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .ptable th{background:var(--navy);color:#fff;text-align:left;padding:14px 18px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .ptable th:last-child{text-align:right}
+  .ptable td{padding:13px 18px;border-bottom:1px solid var(--line);background:#fff}
+  .ptable tr:nth-child(even) td{background:var(--gray)}
+  .ptable td:first-child{font-weight:600;color:var(--navy);display:flex;align-items:center;gap:11px}
+  .ptable td:last-child{text-align:right}
+  .ptable .picn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(150deg,#FBF6EB,#F0E2C4);color:var(--navy);border:1px solid var(--hair)}
+  .ptable .picn .ic{width:16px;height:16px}
+  .st{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .st.live{background:rgba(34,140,84,.12);color:#1f8a52}
+  .st.beta{background:rgba(216,179,106,.16);color:var(--gold-3)}
+  .st.soon{background:rgba(43,74,134,.12);color:#2b4a86}
+  .st.dev{background:rgba(120,90,190,.12);color:#6a53b0}
+  .st.rsv{background:var(--gray-2);color:var(--muted)}
+
+  /* ---------- contact ---------- */
+  .contact-line{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid rgba(216,179,106,.18)}
+  .contact-line .cic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(216,179,106,.12);color:var(--gold);border:1px solid rgba(216,179,106,.3)}
+  .contact-line small{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .contact-line b{font-size:15px;color:#fff;font-weight:600}
+
+  .quote{
+    font-size:20px;font-weight:600;color:#fff;line-height:1.4;letter-spacing:-.01em;text-wrap:balance;
+  }
+  .quote .g{color:var(--gold)}
+
+  /* section heading small */
+  .shead{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--navy);text-transform:uppercase}
+  .navy .shead{color:var(--gold)}
+  .shead .sbar{width:22px;height:3px;background:var(--gold);border-radius:2px}
+
+  /* two-col split */
+  .split{display:grid;grid-template-columns:1.15fr .85fr;gap:26px}
+
+  /* value chips */
+  .vchips{display:flex;flex-wrap:wrap;gap:9px}
+  .vchip{display:inline-flex;align-items:center;gap:9px;padding:9px 15px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--navy)}
+  .vchip .ic{width:16px;height:16px;color:var(--gold-3)}
+
+  /* what-we-do columns */
+  .wwd{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .wwd .wcol{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 14px;display:flex;flex-direction:column;gap:11px}
+  .wwd .whead{display:flex;flex-direction:column;gap:9px}
+  .wwd .whead .wt{font-size:14px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+  .wwd .wl{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+  .wwd .wl li{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;line-height:1.3}
+  .wwd .wl li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);flex:none}
+
+  @media print{
+    .canvas{background:#fff;padding:0;gap:0;display:block}
+    .toolbar{display:none}
+    .page{box-shadow:none;border-radius:0;margin:0;break-after:page;page-break-after:always}
+    .page:last-child{break-after:auto}
+  }
+  @page{size:A4;margin:0}
+</style>
+
+<!-- ============ ICON SPRITE ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20v-.5a5.5 5.5 0 0 1 11 0V20"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17.5 20v-.5a5.5 5.5 0 0 0-3-4.9"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><circle cx="9" cy="14" r="1.1"/><circle cx="15" cy="14" r="1.1"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14h2"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8h6M9 11h6M14 8c0 3-2 3.5-4 3.5 2 0 3 1 4 4"/></symbol>
+  <symbol id="i-exam" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/><path d="M15.5 16.5l1.3 1.3 2.4-2.6" stroke-width="1.4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2 2 0 0 1 6 3.5h13v14H6A2 2 0 0 0 4 19.5z"/><path d="M4 19.5A2 2 0 0 1 6 17.5h13"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-4 3.5V16H4z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><rect x="7" y="12" width="2.6" height="5"/><rect x="11.5" y="8" width="2.6" height="9"/><rect x="16" y="10" width="2.6" height="7"/></symbol>
+  <symbol id="i-mobile" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-shield-lock" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><rect x="9.5" y="11" width="5" height="4.5" rx="1"/><path d="M10.5 11v-1.2a1.5 1.5 0 0 1 3 0V11"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-graduation" viewBox="0 0 24 24"><path d="M2.5 8.5L12 4l9.5 4.5L12 13z"/><path d="M6 10.5v4.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5M21.5 8.5v5"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 9.5a3.75 3.75 0 0 1-.5 8.5z"/></symbol>
+  <symbol id="i-cloud-lock" viewBox="0 0 24 24"><path d="M7 15.5a3.5 3.5 0 0 1-.4-7A5 5 0 0 1 16.5 8"/><rect x="12.5" y="13" width="8" height="7" rx="1.5"/><path d="M14 13v-1.3a2.5 2.5 0 0 1 5 0V13"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.5 4.5A2.5 2.5 0 0 0 7 7a2.5 2.5 0 0 0-1.5 4.5A2.5 2.5 0 0 0 7 16a2.5 2.5 0 0 0 2.5 2.5V4.5z"/><path d="M14.5 4.5A2.5 2.5 0 0 1 17 7a2.5 2.5 0 0 1 1.5 4.5A2.5 2.5 0 0 1 17 16a2.5 2.5 0 0 1-2.5 2.5V4.5z"/><path d="M12 4v15"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/><path d="M8 7.5h.01M8 16.5h.01"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.4 3.8 5.6 3.8 9S14.5 18.6 12 21c-2.5-2.4-3.8-5.6-3.8-9S9.5 5.4 12 3z"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="18" r="2.2"/><path d="M11 6.8L6.2 16M13 6.8L17.8 16M7 18h10"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.5M12 19v2.5M4.5 4.5l1.8 1.8M17.7 17.7l1.8 1.8M2.5 12H5M19 12h2.5M4.5 19.5l1.8-1.8M17.7 6.3l1.8-1.8"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-11h-6z"/></symbol>
+  <symbol id="i-workflow" viewBox="0 0 24 24"><rect x="3" y="4" width="6" height="5" rx="1.2"/><rect x="15" y="15" width="6" height="5" rx="1.2"/><path d="M6 9v4a2 2 0 0 0 2 2h7"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13 5l-2 14"/></symbol>
+  <symbol id="i-desktop" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5"/></symbol>
+  <symbol id="i-trending" viewBox="0 0 24 24"><path d="M3 16l6-6 4 4 8-8"/><path d="M15 6h6v6"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18 15l.7 1.8L20.5 17.5l-1.8.7L18 20l-.7-1.8L15.5 17.5l1.8-.7z"/></symbol>
+  <symbol id="i-scan-face" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10v1M15 10v1M9.5 14.5a3 3 0 0 0 5 0"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 24 24"><path d="M8 11a4 4 0 0 1 8 0v2M6.5 13a5.5 5.5 0 0 1 11 0v1.5M9.5 21a12 12 0 0 1-1-4v-4a2.5 2.5 0 0 1 5 0M12 21a14 14 0 0 1-1-5"/><path d="M15 20.5a10 10 0 0 0 .8-4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 9l1-4.5h14L20 9M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M4 9a2.4 2.4 0 0 0 4 0 2.4 2.4 0 0 0 4 0 2.4 2.4 0 0 0 4 0 2.4 2.4 0 0 0 4 0M9.5 20v-5h5v5"/></symbol>
+  <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 4 0V3M9 11v10M16 3c-1.5 0-2.5 2-2.5 5S15 13 15 13v8"/></symbol>
+  <symbol id="i-hotel" viewBox="0 0 24 24"><path d="M3 21V7l7-3v17M10 21h11V11h-6"/><path d="M13.5 14h.01M17.5 14h.01M13.5 17.5h.01M17.5 17.5h.01M6 8h.01M6 11.5h.01M6 15h.01"/></symbol>
+  <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 21V9l5 3.5V9l5 3.5V9l5 3.5V21z"/><path d="M3 21h18M6.5 21v-3M11 21v-3M15.5 21v-3"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5.5A2 2 0 0 1 10 3.5h4a2 2 0 0 1 2 2V7M3 12h18"/></symbol>
+  <symbol id="i-landmark" viewBox="0 0 24 24"><path d="M3 21h18M4 21V10M20 21V10M8 21V10M16 21V10M12 21V10M2.5 10L12 4l9.5 6z"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 3c3.5 2 5 5.5 5 9l-2.5 3h-5L7 12c0-3.5 1.5-7 5-9z"/><circle cx="12" cy="9.5" r="1.5"/><path d="M9.5 15l-2 4M14.5 15l2 4"/></symbol>
+  <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6.5 8v8M4 9.5v5M17.5 8v8M20 9.5v5M6.5 12h11"/></symbol>
+  <symbol id="i-heart-pulse" viewBox="0 0 24 24"><path d="M12 20S3.5 14.5 3.5 8.8A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8.5 1.8C20.5 14.5 12 20 12 20z"/><path d="M6 12h2.5l1.5-2.5 2 4 1.5-2.5H18" stroke-width="1.3"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 9.5h18M6.5 14.5h4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5L12 12l9-4.5M12 12v9"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 11V4h7l10.5 10.5a1.5 1.5 0 0 1 0 2L14 23.5"/><circle cx="7" cy="8" r="1.5"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21z"/><path d="M9 8h6M9 12h6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 4h4v2.5a1.5 1.5 0 0 0 3 0V4h3v3h-2.5a1.5 1.5 0 0 0 0 3H20v4h-2.5a1.5 1.5 0 0 1 0 3H20v3h-4v-2.5a1.5 1.5 0 0 0-3 0V20H9v-3h2.5a1.5 1.5 0 0 0 0-3H4v-4h2.5a1.5 1.5 0 0 0 0-3H4V4h3v2.5a1.5 1.5 0 0 0 3 0z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-pie" viewBox="0 0 24 24"><path d="M12 3v9h9a9 9 0 1 0-9-9z"/><path d="M21 12a9 9 0 1 1-9-9" opacity=".4"/></symbol>
+  <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 3.5 10.8c-.6.5-.9 1-1 1.7l-.2 1.5H9.7l-.2-1.5c-.1-.7-.4-1.2-1-1.7A6 6 0 0 1 12 3z"/></symbol>
+  <symbol id="i-handshake" viewBox="0 0 24 24"><path d="M11 6L8 8.5a2 2 0 0 0 2.7 3l1.3-1.2 4 4a1.5 1.5 0 0 1-2 2.2M12 17l1.5 1.5a1.5 1.5 0 0 0 2.2-2M14 15l1.5 1.5a1.5 1.5 0 0 0 2.2-2L13 9l-2-3H3M21 6h-3l-3 3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2.5z"/></symbol>
+  <symbol id="i-linkedin" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M8 10.5V16M8 7.7v.01M11.5 16v-3a2 2 0 0 1 4 0v3M11.5 16v-5.5"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l3.5-3.5"/><circle cx="12" cy="15" r="1.3"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01M10.5 21v-3h3v3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a8 8 0 0 0-14-3L4 7M4 5v3h3M4 16a8 8 0 0 0 14 3l2-2M20 19v-3h-3"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M5 8l-3 6h6zM19 8l3 6h-6zM5 8l7-2 7 2"/></symbol>
+  <symbol id="i-doc-ai" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9.5 15l.8 2 .7-2 .7 2 .8-2M9 12h6" stroke-width="1.3"/></symbol>
+  <symbol id="i-monitor-cloud" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/><path d="M8.5 10.5a1.6 1.6 0 0 1-.2-3.2A2.3 2.3 0 0 1 13 7.5a1.7 1.7 0 0 1-.2 3z" stroke-width="1.2"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 3.5L16 11H5"/></symbol>
+</svg>
+
+<div class="canvas">
+
+  <div class="toolbar">
+    <span class="brandline"><span class="dot"></span>Vernex Gen Technologies — Corporate Profile · 12 pages · A4</span>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 1 — COVER                                               -->
+  <!-- ============================================================ -->
+  <section class="page navy cover">
+    <div class="bg">
+      <div class="glow" style="width:340px;height:340px;background:#1c3d7a;top:-80px;right:-60px"></div>
+      <div class="glow" style="width:300px;height:300px;background:rgba(216,179,106,.28);bottom:60px;left:-90px"></div>
+      <!-- circuitry / world dots -->
+      <svg viewBox="0 0 620 877" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;opacity:.5">
+        <defs>
+          <radialGradient id="cg" cx="70%" cy="34%" r="60%">
+            <stop offset="0%" stop-color="#1a3a7a" stop-opacity="0"/>
+          </radialGradient>
+          <pattern id="dots" width="17" height="17" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.1" fill="#4f6ea8" opacity=".55"/>
+          </pattern>
+        </defs>
+        <rect x="330" y="230" width="300" height="220" fill="url(#dots)"/>
+        <g stroke="#2f508e" stroke-width="1" fill="none" opacity=".8">
+          <path d="M60 300 L200 360 L360 300 L520 380"/>
+          <path d="M80 520 L260 470 L420 540 L560 470"/>
+          <path d="M200 360 L260 470M360 300 L420 540M520 380 L560 470"/>
+        </g>
+        <g fill="#D8B36A">
+          <circle cx="200" cy="360" r="4"/><circle cx="360" cy="300" r="4"/><circle cx="520" cy="380" r="4"/>
+          <circle cx="260" cy="470" r="3.4"/><circle cx="420" cy="540" r="3.4"/>
+        </g>
+        <g fill="#6f8cc0"><circle cx="60" cy="300" r="2.6"/><circle cx="80" cy="520" r="2.6"/><circle cx="560" cy="470" r="2.6"/></g>
+      </svg>
+    </div>
+    <div class="cover-inner">
+      <span class="cover-badge"><svg class="ic" style="width:15px;height:15px"><use href="#i-flag"/></svg>Corporate Profile</span>
+      <div style="margin-top:auto"></div>
+      <div class="wordmark" style="font-size:15px;color:#cdd8ec;margin-bottom:6px">
+        <span class="mk" style="background:var(--gold);color:var(--navy)">V</span> VERNEX GEN TECHNOLOGIES
+      </div>
+      <h1>Engineering<br><span class="g">Digital</span> Transformation</h1>
+      <p class="sub">Enterprise Software · AI Products · Intelligent Business Solutions</p>
+      <p class="desc">We build intelligent digital platforms that help organizations modernize operations, automate workflows, and make smarter decisions — powered by cloud, data, and artificial intelligence.</p>
+      <div style="margin-top:34px;margin-bottom:20px"></div>
+    </div>
+    <div class="capstrip">
+      <span>Enterprise Software</span><span>Artificial Intelligence</span><span>Cloud</span><span>Automation</span><span>Analytics</span>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 2 — ABOUT                                               -->
+  <!-- ============================================================ -->
+  <section class="page">
+    <span class="corner-tl"></span>
+    <div class="pad">
+      <span class="eyebrow">About Vernex</span>
+      <h1 class="title">Who We Are</h1>
+      <div class="split" style="margin-top:22px">
+        <div class="col" style="gap:14px">
+          <p class="lede" style="margin-top:0">Vernex Gen Technologies is a next-generation software company focused on building intelligent digital solutions that help organizations <strong>modernize operations, automate workflows, and make smarter decisions</strong>.</p>
+          <p class="lede" style="margin-top:0">From educational institutions and healthcare providers to retail businesses, hospitality brands, and enterprises, we create scalable technology that simplifies complexity and accelerates growth.</p>
+          <p class="lede" style="margin-top:0">We believe software should not only solve today's challenges but also prepare organizations for tomorrow's opportunities.</p>
+
+          <div class="card" style="background:var(--navy);border:none;margin-top:6px;padding:20px">
+            <div class="shead" style="color:var(--gold)"><span class="sbar"></span>Our Vision</div>
+            <p style="margin:11px 0 0;font-size:15px;line-height:1.5;color:#EAF0FB;font-weight:600">To become one of the world's most trusted technology companies by delivering innovative, scalable, and AI-powered software solutions.</p>
+          </div>
+        </div>
+
+        <div class="col" style="gap:14px">
+          <div class="card" style="padding:18px">
+            <div class="shead"><span class="sbar"></span>Our Mission</div>
+            <ul class="ticklist" style="margin-top:13px">
+              <li><svg class="ic tk"><use href="#i-check"/></svg>Build practical software</li>
+              <li><svg class="ic tk"><use href="#i-check"/></svg>Deliver exceptional quality</li>
+              <li><svg class="ic tk"><use href="#i-check"/></svg>Create long-term partnerships</li>
+              <li><svg class="ic tk"><use href="#i-check"/></svg>Continuously innovate through AI</li>
+              <li><svg class="ic tk"><use href="#i-check"/></svg>Enable businesses to grow digitally</li>
+            </ul>
+          </div>
+          <div class="card" style="padding:18px;flex:1">
+            <div class="shead"><span class="sbar"></span>What Drives Us</div>
+            <p class="lede" style="margin-top:11px">A single conviction: technology should adapt to how organizations actually work — quietly removing friction, surfacing insight, and scaling as ambition grows.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="shead" style="margin-bottom:14px"><span class="sbar"></span>Core Values</div>
+      <div class="vchips">
+        <span class="vchip"><svg class="ic"><use href="#i-sparkles"/></svg>Innovation</span>
+        <span class="vchip"><svg class="ic"><use href="#i-shield-check"/></svg>Integrity</span>
+        <span class="vchip"><svg class="ic"><use href="#i-check"/></svg>Quality</span>
+        <span class="vchip"><svg class="ic"><use href="#i-target"/></svg>Customer Success</span>
+        <span class="vchip"><svg class="ic"><use href="#i-lock"/></svg>Security</span>
+        <span class="vchip"><svg class="ic"><use href="#i-refresh"/></svg>Continuous Improvement</span>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Corporate Profile</span><span class="fnum">&nbsp;02</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 3 — WHAT WE DO                                          -->
+  <!-- ============================================================ -->
+  <section class="page gray">
+    <div class="pad">
+      <span class="eyebrow">What We Do</span>
+      <h1 class="title">Technology That Powers<br><span class="g">Modern Businesses</span></h1>
+      <p class="lede">Rather than offering isolated services, Vernex delivers complete digital ecosystems that integrate <strong>software, automation, analytics, and artificial intelligence</strong> into one seamless experience.</p>
+
+      <div class="wwd" style="margin-top:26px;flex:1">
+        <div class="wcol">
+          <div class="whead"><div class="chip"><svg class="ic lg"><use href="#i-layers"/></svg></div><div class="wt">Enterprise Software</div></div>
+          <ul class="wl">
+            <li>ERP Platforms</li><li>Business Management Systems</li><li>CRM Solutions</li><li>HRMS</li>
+            <li>Billing Systems</li><li>Inventory Systems</li><li>Healthcare Platforms</li><li>Education Platforms</li>
+          </ul>
+        </div>
+        <div class="wcol">
+          <div class="whead"><div class="chip"><svg class="ic lg"><use href="#i-brain"/></svg></div><div class="wt">AI Solutions</div></div>
+          <ul class="wl">
+            <li>Artificial Intelligence</li><li>Machine Learning</li><li>Computer Vision</li><li>Generative AI</li>
+            <li>Chatbots</li><li>Document Intelligence</li><li>OCR</li><li>Predictive Analytics</li>
+          </ul>
+        </div>
+        <div class="wcol">
+          <div class="whead"><div class="chip"><svg class="ic lg"><use href="#i-code"/></svg></div><div class="wt">Software Development</div></div>
+          <ul class="wl">
+            <li>Web Applications</li><li>Mobile Applications</li><li>Desktop Software</li><li>Cloud Platforms</li>
+            <li>API Development</li><li>System Integration</li><li>Custom Dashboards</li>
+          </ul>
+        </div>
+        <div class="wcol">
+          <div class="whead"><div class="chip"><svg class="ic lg"><use href="#i-bolt"/></svg></div><div class="wt">Digital Transformation</div></div>
+          <ul class="wl">
+            <li>Workflow Automation</li><li>Cloud Migration</li><li>Business Intelligence</li><li>Data Analytics</li>
+            <li>Operational Consulting</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;background:var(--navy);border:none;display:flex;align-items:center;gap:16px;padding:16px 20px">
+        <div class="chip solid" style="width:42px;height:42px;border-radius:11px"><svg class="ic lg"><use href="#i-network"/></svg></div>
+        <p style="margin:0;font-size:13.5px;color:#EAF0FB;line-height:1.45"><strong style="color:#fff">One integrated ecosystem.</strong> Every capability is designed to connect — so data, decisions, and operations flow across the organization without silos.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>What We Do</span><span class="fnum">&nbsp;03</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 4 — INDUSTRIES                                          -->
+  <!-- ============================================================ -->
+  <section class="page navy">
+    <div class="bg"><div class="glow" style="width:300px;height:300px;background:rgba(216,179,106,.2);top:-70px;left:-60px"></div></div>
+    <div class="pad">
+      <span class="eyebrow">Industries We Serve</span>
+      <h1 class="title">Built for Every Sector</h1>
+      <p class="lede">Our platforms are engineered to flex around the realities of each industry — its workflows, its compliance needs, and its people.</p>
+
+      <div class="fgrid c5" style="margin-top:24px">
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-graduation"/></svg></div><div class="ft">Education</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-heart-pulse"/></svg></div><div class="ft">Healthcare</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-store"/></svg></div><div class="ft">Retail</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-utensils"/></svg></div><div class="ft">Restaurants</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-hotel"/></svg></div><div class="ft">Hotels</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-factory"/></svg></div><div class="ft">Manufacturing</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-briefcase"/></svg></div><div class="ft">Corporate</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-landmark"/></svg></div><div class="ft">Government</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-rocket"/></svg></div><div class="ft">Startups</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-building"/></svg></div><div class="ft">SMEs</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-layers"/></svg></div><div class="ft">Enterprises</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-wallet"/></svg></div><div class="ft">Financial Services</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-dumbbell"/></svg></div><div class="ft">Fitness</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-book"/></svg></div><div class="ft">Training Institutes</div></div>
+        <div class="fitem" style="background:linear-gradient(150deg,rgba(216,179,106,.2),rgba(216,179,106,.05));border-color:rgba(216,179,106,.4)"><div class="fic" style="background:var(--gold);color:var(--navy)"><svg class="ic lg"><use href="#i-arrow"/></svg></div><div class="ft" style="color:var(--gold)">& More</div></div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="glass" style="padding:26px 28px;display:flex;align-items:center;gap:22px;margin-top:24px">
+        <svg class="ic" style="width:40px;height:40px;color:var(--gold);flex:none"><use href="#i-sparkles"/></svg>
+        <p class="quote" style="margin:0">Every industry has unique challenges. We build technology that <span class="g">adapts</span> — not the other way around.</p>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Industries</span><span class="fnum">&nbsp;04</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 5 — PRODUCT: SCHOOL ERP                                 -->
+  <!-- ============================================================ -->
+  <section class="page">
+    <span class="corner-tl"></span>
+    <div class="pad">
+      <div class="prod-head">
+        <div>
+          <span class="eyebrow">Product Ecosystem · 01</span>
+          <h1 class="title sm" style="margin-top:14px">Vernex School ERP</h1>
+          <p class="prod-tag">One Platform. Complete School Management.</p>
+        </div>
+        <div class="col" style="align-items:flex-end;gap:8px">
+          <div class="chip solid" style="width:52px;height:52px;border-radius:14px"><svg class="ic" style="width:28px;height:28px"><use href="#i-graduation"/></svg></div>
+          <span class="st live" style="margin-top:4px">Live</span>
+        </div>
+      </div>
+
+      <p class="lede" style="margin-top:16px">Vernex School ERP is a cloud-based education management platform that connects administrators, teachers, students, parents, accountants, librarians, and management through <strong>one secure ecosystem</strong> — streamlining admissions, academics, attendance, examinations, communication, finance, and institutional reporting while reducing paperwork.</p>
+
+      <div class="pfeat" style="margin-top:20px">
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-user"/></svg></span><span>Student Information</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-calendar"/></svg></span><span>Attendance</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-rupee"/></svg></span><span>Fee Management</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-exam"/></svg></span><span>Examinations</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-book"/></svg></span><span>Library</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-file"/></svg></span><span>Assignments</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-message"/></svg></span><span>Communication</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-chart"/></svg></span><span>Analytics</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-mobile"/></svg></span><span>Mobile Access</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-shield-lock"/></svg></span><span>Role-based Access</span></div>
+      </div>
+
+      <!-- dashboard mock -->
+      <div class="dash" style="margin-top:18px">
+        <div class="dbar"><i></i><i></i><i></i><span class="dttl">Vernex School ERP — Admin Dashboard</span><span class="dpill">Screenshot Placeholder</span></div>
+        <div class="dbody">
+          <div class="dside"><div class="dlogo">Verne<b>X</b></div><div class="dnav on"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div></div>
+          <div class="dmain">
+            <div class="dkpis">
+              <div class="dkpi"><small>Students</small><b>1,245</b></div>
+              <div class="dkpi"><small>Teachers</small><b>98</b></div>
+              <div class="dkpi"><small>Classes</small><b>45</b></div>
+              <div class="dkpi gold"><small>Collected</small><b>8.4L</b></div>
+            </div>
+            <div class="dcharts">
+              <div class="dcard"><div class="dct">Attendance Overview</div><div class="donut"><b>92%</b></div></div>
+              <div class="dcard"><div class="dct">Fee Collection</div><div class="bars"><span style="height:55%"></span><span style="height:72%"></span><span style="height:48%"></span><span style="height:88%"></span><span style="height:64%"></span><span style="height:80%"></span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="row between center" style="margin-top:20px;align-items:flex-end">
+        <div>
+          <div class="label" style="margin-bottom:9px">Best For</div>
+          <div class="bestfor"><span class="pill">Schools</span><span class="pill">Colleges</span><span class="pill">Training Institutions</span><span class="pill">Educational Groups</span></div>
+          <a class="cta-link" style="margin-top:16px">Learn More <svg class="ic"><use href="#i-arrow"/></svg><span style="font-size:11px;color:var(--muted);font-weight:500">Product brochure available</span></a>
+        </div>
+        <div class="qr-wrap">
+          <div class="qtxt"><b>Scan</b>Full product<br>brochure & demo</div>
+          <div class="qr">SCRIPT_QR</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Product · School ERP</span><span class="fnum">&nbsp;05</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 6 — PRODUCT: BILLING                                    -->
+  <!-- ============================================================ -->
+  <section class="page gray">
+    <div class="pad">
+      <div class="prod-head">
+        <div>
+          <span class="eyebrow">Product Ecosystem · 02</span>
+          <h1 class="title sm" style="margin-top:14px">Vernex Billing Software</h1>
+          <p class="prod-tag">Smart Billing. Complete Business Control.</p>
+        </div>
+        <div class="col" style="align-items:flex-end;gap:8px">
+          <div class="chip solid" style="width:52px;height:52px;border-radius:14px"><svg class="ic" style="width:28px;height:28px"><use href="#i-receipt"/></svg></div>
+          <span class="st live" style="margin-top:4px">Live</span>
+        </div>
+      </div>
+
+      <p class="lede" style="margin-top:16px">Vernex Billing Software simplifies billing, inventory, customer management, and sales reporting through one modern platform designed for growing retail and service businesses. Whether managing a single outlet or multiple branches, it delivers <strong>complete operational visibility</strong> with fast billing and inventory control.</p>
+
+      <div class="pfeat" style="margin-top:20px">
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-store"/></svg></span><span>POS Billing</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-box"/></svg></span><span>Inventory</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-users"/></svg></span><span>Customers</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-trending"/></svg></span><span>Sales</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-wallet"/></svg></span><span>Expenses</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-chart"/></svg></span><span>Reports</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-card"/></svg></span><span>Multi-payment</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-file"/></svg></span><span>GST</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-receipt"/></svg></span><span>Receipt Printing</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-shield-lock"/></svg></span><span>Access Control</span></div>
+      </div>
+
+      <div class="dash" style="margin-top:18px">
+        <div class="dbar"><i></i><i></i><i></i><span class="dttl">Vernex Billing — Point of Sale</span><span class="dpill">Screenshot Placeholder</span></div>
+        <div class="dbody">
+          <div class="dside"><div class="dlogo">Verne<b>X</b></div><div class="dnav on"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div></div>
+          <div class="dmain">
+            <div class="dkpis">
+              <div class="dkpi"><small>Today Sales</small><b>₹42.8k</b></div>
+              <div class="dkpi"><small>Invoices</small><b>318</b></div>
+              <div class="dkpi"><small>Items</small><b>2,410</b></div>
+              <div class="dkpi gold"><small>Profit</small><b>₹11.2k</b></div>
+            </div>
+            <div class="dcharts">
+              <div class="dcard"><div class="dct">Sales Trend</div><div class="bars"><span style="height:40%"></span><span style="height:60%"></span><span style="height:52%"></span><span style="height:78%"></span><span style="height:66%"></span><span style="height:92%"></span></div></div>
+              <div class="dcard"><div class="dct">Stock Status</div><div class="donut" style="background:conic-gradient(var(--gold) 0 54%,#2b4a86 54% 82%,var(--gray-2) 82% 100%)"><b>54%</b></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="row between center" style="margin-top:20px;align-items:flex-end">
+        <div>
+          <div class="label" style="margin-bottom:9px">Best For</div>
+          <div class="bestfor"><span class="pill">Retail</span><span class="pill">Restaurants</span><span class="pill">Supermarkets</span><span class="pill">Cafes</span><span class="pill">Service Centers</span><span class="pill">Shops</span></div>
+          <a class="cta-link" style="margin-top:16px">Learn More <svg class="ic"><use href="#i-arrow"/></svg><span style="font-size:11px;color:var(--muted);font-weight:500">Product brochure available</span></a>
+        </div>
+        <div class="qr-wrap">
+          <div class="qtxt"><b>Scan</b>Full product<br>brochure & demo</div>
+          <div class="qr">SCRIPT_QR</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Product · Billing</span><span class="fnum">&nbsp;06</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 7 — PRODUCT: SMART ATTENDANCE AI                        -->
+  <!-- ============================================================ -->
+  <section class="page">
+    <span class="corner-tl"></span>
+    <div class="pad">
+      <div class="prod-head">
+        <div>
+          <span class="eyebrow">Product Ecosystem · 03</span>
+          <h1 class="title sm" style="margin-top:14px">Vernex Smart Attendance AI</h1>
+          <p class="prod-tag">One Platform. Multiple Attendance Technologies.</p>
+        </div>
+        <div class="col" style="align-items:flex-end;gap:8px">
+          <div class="chip solid" style="width:52px;height:52px;border-radius:14px"><svg class="ic" style="width:28px;height:28px"><use href="#i-scan-face"/></svg></div>
+          <span class="st live" style="margin-top:4px">Live</span>
+        </div>
+      </div>
+
+      <p class="lede" style="margin-top:16px">Vernex Smart Attendance AI modernizes attendance management through <strong>AI-powered face recognition, QR attendance, biometric integration, fingerprint authentication, and intelligent reporting</strong>. Designed for organizations of every size, it delivers secure, flexible, and highly accurate attendance management.</p>
+
+      <div class="pfeat" style="margin-top:20px">
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-scan-face"/></svg></span><span>Face Recognition</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-search"/></svg></span><span>QR Attendance</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-finger"/></svg></span><span>Fingerprint</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-eye"/></svg></span><span>Iris</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-chart"/></svg></span><span>Reports</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-layers"/></svg></span><span>Departments</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-user"/></svg></span><span>Visitors</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-shield-lock"/></svg></span><span>Role Management</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-trending"/></svg></span><span>Attendance Analytics</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-cloud"/></svg></span><span>Cloud Dashboard</span></div>
+      </div>
+
+      <div class="dash" style="margin-top:18px">
+        <div class="dbar"><i></i><i></i><i></i><span class="dttl">Smart Attendance AI — Live Recognition</span><span class="dpill">Screenshot Placeholder</span></div>
+        <div class="dbody">
+          <div class="dside"><div class="dlogo">Verne<b>X</b></div><div class="dnav on"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div></div>
+          <div class="dmain">
+            <div class="dkpis">
+              <div class="dkpi"><small>Present</small><b>1,182</b></div>
+              <div class="dkpi"><small>Accuracy</small><b>99.4%</b></div>
+              <div class="dkpi"><small>Modes</small><b>4</b></div>
+              <div class="dkpi gold"><small>Avg Check-in</small><b>1.2s</b></div>
+            </div>
+            <div class="dcharts">
+              <div class="dcard" style="align-items:center;justify-content:center"><div class="dct" style="align-self:flex-start">Face Match</div><div style="width:80px;height:64px;border:2px solid var(--gold);border-radius:10px;position:relative;margin:auto"><span style="position:absolute;inset:8px;border:1px dashed rgba(216,179,106,.6);border-radius:6px"></span><span style="position:absolute;left:8px;right:8px;top:50%;height:2px;background:var(--gold)"></span></div></div>
+              <div class="dcard"><div class="dct">Weekly Attendance</div><div class="bars"><span style="height:70%"></span><span style="height:84%"></span><span style="height:76%"></span><span style="height:90%"></span><span style="height:82%"></span><span style="height:60%"></span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="row between center" style="margin-top:20px;align-items:flex-end">
+        <div>
+          <div class="label" style="margin-bottom:9px">Best For</div>
+          <div class="bestfor"><span class="pill">Schools</span><span class="pill">Companies</span><span class="pill">Hospitals</span><span class="pill">Gyms</span><span class="pill">Training Centres</span><span class="pill">Factories</span></div>
+          <a class="cta-link" style="margin-top:16px">Learn More <svg class="ic"><use href="#i-arrow"/></svg><span style="font-size:11px;color:var(--muted);font-weight:500">Product brochure available</span></a>
+        </div>
+        <div class="qr-wrap">
+          <div class="qtxt"><b>Scan</b>Full product<br>brochure & demo</div>
+          <div class="qr">SCRIPT_QR</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Product · Smart Attendance AI</span><span class="fnum">&nbsp;07</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 8 — PRODUCT: BUSINESS INTELLIGENCE                      -->
+  <!-- ============================================================ -->
+  <section class="page gray">
+    <div class="pad">
+      <div class="prod-head">
+        <div>
+          <span class="eyebrow">Product Ecosystem · 04</span>
+          <h1 class="title sm" style="margin-top:14px">Vernex Business Intelligence</h1>
+          <p class="prod-tag">Turn Business Data Into Better Decisions.</p>
+        </div>
+        <div class="col" style="align-items:flex-end;gap:8px">
+          <div class="chip solid" style="width:52px;height:52px;border-radius:14px"><svg class="ic" style="width:28px;height:28px"><use href="#i-gauge"/></svg></div>
+          <span class="st live" style="margin-top:4px">Live</span>
+        </div>
+      </div>
+
+      <p class="lede" style="margin-top:16px">Vernex Business Intelligence transforms operational data into powerful dashboards, actionable insights, and <strong>AI-assisted recommendations</strong>. Designed for restaurants, hospitality businesses, and growing enterprises, it helps organizations understand profitability, customer behavior, operational efficiency, and growth opportunities.</p>
+
+      <div class="pfeat" style="margin-top:20px">
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-pie"/></svg></span><span>Power BI Dashboards</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-brain"/></svg></span><span>AI Analysis</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-file"/></svg></span><span>Monthly Reports</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-message"/></svg></span><span>Consultation</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-trending"/></svg></span><span>Trend Analysis</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-chart"/></svg></span><span>Sales Analytics</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-users"/></svg></span><span>Customer Insights</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-target"/></svg></span><span>Performance Tracking</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-gauge"/></svg></span><span>Business Intelligence</span></div>
+        <div class="pf"><span class="pfic"><svg class="ic"><use href="#i-sparkles"/></svg></span><span>AI Recommendations</span></div>
+      </div>
+
+      <div class="dash" style="margin-top:18px">
+        <div class="dbar"><i></i><i></i><i></i><span class="dttl">Business Intelligence — Executive Overview</span><span class="dpill">Screenshot Placeholder</span></div>
+        <div class="dbody">
+          <div class="dside"><div class="dlogo">Verne<b>X</b></div><div class="dnav on"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div><div class="dnav"></div></div>
+          <div class="dmain">
+            <div class="dkpis">
+              <div class="dkpi"><small>Revenue</small><b>₹18.4L</b></div>
+              <div class="dkpi"><small>Growth</small><b>+7.8%</b></div>
+              <div class="dkpi"><small>Avg Ticket</small><b>₹612</b></div>
+              <div class="dkpi gold"><small>Margin</small><b>26%</b></div>
+            </div>
+            <div class="dcharts">
+              <div class="dcard"><div class="dct">Revenue by Month</div><div class="bars"><span style="height:48%"></span><span style="height:58%"></span><span style="height:52%"></span><span style="height:70%"></span><span style="height:66%"></span><span style="height:94%"></span></div></div>
+              <div class="dcard"><div class="dct">Category Split</div><div class="donut" style="background:conic-gradient(var(--gold) 0 42%,#2b4a86 42% 74%,#5a78b4 74% 100%)"><b>42%</b></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="row between center" style="margin-top:20px;align-items:flex-end">
+        <div>
+          <div class="label" style="margin-bottom:9px">Best For</div>
+          <div class="bestfor"><span class="pill">Restaurants</span><span class="pill">Hotels</span><span class="pill">Cafe Chains</span><span class="pill">Retail</span><span class="pill">Hospitality</span><span class="pill">Franchises</span></div>
+          <a class="cta-link" style="margin-top:16px">Learn More <svg class="ic"><use href="#i-arrow"/></svg><span style="font-size:11px;color:var(--muted);font-weight:500">Product brochure available</span></a>
+        </div>
+        <div class="qr-wrap">
+          <div class="qtxt"><b>Scan</b>Full product<br>brochure & demo</div>
+          <div class="qr">SCRIPT_QR</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Product · Business Intelligence</span><span class="fnum">&nbsp;08</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 9 — INNOVATION PIPELINE                                 -->
+  <!-- ============================================================ -->
+  <section class="page">
+    <span class="corner-tl"></span>
+    <div class="pad">
+      <span class="eyebrow">Innovation Pipeline</span>
+      <h1 class="title">Our Product Portfolio</h1>
+      <p class="lede">A growing ecosystem of intelligent products — each one designed to plug into the same trusted platform. This portfolio is built to expand: new solutions are added as they move from research to release.</p>
+
+      <div style="margin-top:24px;border-radius:16px;overflow:hidden;border:1px solid var(--line)">
+        <table class="ptable">
+          <thead><tr><th>Product</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-graduation"/></svg></span>Vernex School ERP</td><td><span class="st live">Live</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-receipt"/></svg></span>Vernex Billing Software</td><td><span class="st live">Live</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-scan-face"/></svg></span>Vernex Smart Attendance AI</td><td><span class="st live">Live</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-gauge"/></svg></span>Vernex Business Intelligence</td><td><span class="st live">Live</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-refresh"/></svg></span>LifeTrack</td><td><span class="st beta">Beta · Coming Soon</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-heart-pulse"/></svg></span>ClinicOS</td><td><span class="st soon">Coming Soon</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-user"/></svg></span>Pregnancy Tracker</td><td><span class="st dev">In Development</span></td></tr>
+            <tr><td><span class="picn"><svg class="ic"><use href="#i-bolt"/></svg></span>AI Automation Platform</td><td><span class="st dev">Research</span></td></tr>
+            <tr><td style="color:var(--muted-2)"><span class="picn" style="background:var(--gray-2);color:var(--muted-2);border-style:dashed"><svg class="ic"><use href="#i-arrow"/></svg></span>Your Next Product</td><td><span class="st rsv">Reserved</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="card" style="background:var(--navy);border:none;padding:22px 24px;display:flex;align-items:center;gap:20px;margin-top:22px">
+        <div class="chip solid" style="width:48px;height:48px;border-radius:13px;flex:none"><svg class="ic lg"><use href="#i-network"/></svg></div>
+        <div>
+          <div class="shead" style="color:var(--gold)"><span class="sbar"></span>A Growing Ecosystem</div>
+          <p style="margin:9px 0 0;font-size:13px;color:#CFD9EC;line-height:1.5">Every new solution strengthens the Vernex platform ecosystem, enabling businesses to manage more operations through a single, unified technology partner — with each product built to slot in without disrupting the others.</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Innovation Pipeline</span><span class="fnum">&nbsp;09</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 10 — WHY CHOOSE VERNEX                                  -->
+  <!-- ============================================================ -->
+  <section class="page navy">
+    <div class="bg"><div class="glow" style="width:280px;height:280px;background:rgba(216,179,106,.18);bottom:120px;right:-70px"></div></div>
+    <div class="pad">
+      <span class="eyebrow">Why Choose Vernex</span>
+      <h1 class="title">Built on Trust,<br><span class="g">Engineered to Scale</span></h1>
+      <p class="lede">More than software — a technology partner whose architecture, security, and support are designed for organizations that intend to grow.</p>
+
+      <div class="fgrid c5" style="margin-top:22px">
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-layers"/></svg></div><div class="ft">Enterprise-grade Architecture</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-desktop"/></svg></div><div class="ft">Modern UI / UX</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-cloud"/></svg></div><div class="ft">Cloud Native</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-brain"/></svg></div><div class="ft">AI Ready</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-bolt"/></svg></div><div class="ft">Fast Deployment</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-server"/></svg></div><div class="ft">Scalable Infrastructure</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-message"/></svg></div><div class="ft">Dedicated Support</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-code"/></svg></div><div class="ft">Custom Development</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-shield-check"/></svg></div><div class="ft">Secure Platforms</div></div>
+        <div class="fitem"><div class="fic"><svg class="ic lg"><use href="#i-sparkles"/></svg></div><div class="ft">Future-ready Technology</div></div>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <div class="shead" style="color:var(--gold);margin-top:26px;margin-bottom:20px"><span class="sbar"></span>How We Deliver</div>
+      <div class="timeline">
+        <div class="tstep"><span class="tnum">1</span><div class="tnode"><svg class="ic"><use href="#i-message"/></svg></div><div class="tl" style="color:#fff">Consultation</div></div>
+        <div class="tstep"><span class="tnum">2</span><div class="tnode"><svg class="ic"><use href="#i-target"/></svg></div><div class="tl" style="color:#fff">Planning</div></div>
+        <div class="tstep"><span class="tnum">3</span><div class="tnode"><svg class="ic"><use href="#i-desktop"/></svg></div><div class="tl" style="color:#fff">Design</div></div>
+        <div class="tstep"><span class="tnum">4</span><div class="tnode"><svg class="ic"><use href="#i-code"/></svg></div><div class="tl" style="color:#fff">Development</div></div>
+        <div class="tstep"><span class="tnum">5</span><div class="tnode"><svg class="ic"><use href="#i-shield-check"/></svg></div><div class="tl" style="color:#fff">Testing</div></div>
+        <div class="tstep"><span class="tnum">6</span><div class="tnode"><svg class="ic"><use href="#i-cloud"/></svg></div><div class="tl" style="color:#fff">Deployment</div></div>
+        <div class="tstep"><span class="tnum">7</span><div class="tnode"><svg class="ic"><use href="#i-refresh"/></svg></div><div class="tl" style="color:#fff">Support</div></div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Why Vernex</span><span class="fnum">&nbsp;10</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 11 — PARTNER WITH VERNEX                                -->
+  <!-- ============================================================ -->
+  <section class="page gray">
+    <div class="pad">
+      <span class="eyebrow">Partnership</span>
+      <h1 class="title">Partner With Vernex</h1>
+      <p class="lede">Whether you're a startup building your first digital platform or an established enterprise modernizing operations, Vernex provides the <strong>expertise, technology, and long-term support</strong> required for sustainable growth.</p>
+
+      <div class="split" style="margin-top:24px;flex:1">
+        <div class="card" style="padding:20px">
+          <div class="shead"><span class="sbar"></span>We Partner With</div>
+          <div class="fgrid c2" style="margin-top:15px">
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-graduation"/></svg></div><div class="ft">Educational Institutions</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-heart-pulse"/></svg></div><div class="ft">Healthcare Providers</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-store"/></svg></div><div class="ft">Retail Businesses</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-utensils"/></svg></div><div class="ft">Restaurants</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-briefcase"/></svg></div><div class="ft">Corporate Organizations</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-landmark"/></svg></div><div class="ft">Government Agencies</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-rocket"/></svg></div><div class="ft">Startups</div></div>
+            <div class="fitem" style="flex-direction:row;text-align:left;padding:12px 14px;gap:12px"><div class="fic" style="width:38px;height:38px"><svg class="ic"><use href="#i-globe"/></svg></div><div class="ft">International Clients</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:20px;display:flex;flex-direction:column">
+          <div class="shead"><span class="sbar"></span>Engagement Models</div>
+          <ul class="ticklist" style="margin-top:16px;gap:14px">
+            <li><svg class="ic tk"><use href="#i-tag"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Product Licensing</b><span style="font-size:11px;color:var(--muted)">Ready-to-deploy platform subscriptions</span></div></li>
+            <li><svg class="ic tk"><use href="#i-code"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Custom Software Development</b><span style="font-size:11px;color:var(--muted)">Tailored builds for unique workflows</span></div></li>
+            <li><svg class="ic tk"><use href="#i-layers"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Enterprise Solutions</b><span style="font-size:11px;color:var(--muted)">Multi-branch, high-scale deployments</span></div></li>
+            <li><svg class="ic tk"><use href="#i-refresh"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Annual Maintenance</b><span style="font-size:11px;color:var(--muted)">Ongoing updates, support & SLAs</span></div></li>
+            <li><svg class="ic tk"><use href="#i-cloud"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Cloud Migration</b><span style="font-size:11px;color:var(--muted)">Move legacy systems to secure cloud</span></div></li>
+            <li><svg class="ic tk"><use href="#i-brain"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">AI Integration</b><span style="font-size:11px;color:var(--muted)">Add intelligence to existing systems</span></div></li>
+            <li><svg class="ic tk"><use href="#i-message"/></svg><div><b style="display:block;color:var(--navy);font-size:13px">Technology Consulting</b><span style="font-size:11px;color:var(--muted)">Strategy, architecture & roadmaps</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="wordmark"><span class="mk">V</span>Vernex Gen Technologies</span><span class="fline"></span><span>Partnership</span><span class="fnum">&nbsp;11</span></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- PAGE 12 — CONTACT / CLOSING                                  -->
+  <!-- ============================================================ -->
+  <section class="page navy cover">
+    <div class="bg">
+      <div class="glow" style="width:340px;height:340px;background:#1c3d7a;top:-90px;left:-70px"></div>
+      <div class="glow" style="width:280px;height:280px;background:rgba(216,179,106,.26);bottom:-40px;right:-60px"></div>
+      <svg viewBox="0 0 620 877" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4">
+        <g stroke="#2f508e" stroke-width="1" fill="none">
+          <path d="M-20 700 Q200 620 340 690 T680 660"/><path d="M-20 740 Q220 660 360 730 T680 700"/>
+        </g>
+        <g fill="#D8B36A"><circle cx="340" cy="690" r="3.5"/><circle cx="200" cy="640" r="3"/><circle cx="500" cy="672" r="3"/></g>
+      </svg>
+    </div>
+    <div class="pad" style="justify-content:center">
+      <span class="eyebrow">Let's Build the Future Together</span>
+      <h1 style="font-size:46px;font-weight:800;color:#fff;margin-top:18px;letter-spacing:-.025em;line-height:1.02">Ready to modernize<br>your organization?</h1>
+      <p class="lede" style="font-size:16px;color:#C4D0E6;max-width:48ch">Let's discuss your next software solution — from a single product to a full digital transformation, we'll help you get there.</p>
+
+      <div class="split" style="margin-top:34px;grid-template-columns:1.4fr .6fr;align-items:center">
+        <div class="col">
+          <div class="contact-line"><span class="cic"><svg class="ic"><use href="#i-globe"/></svg></span><div><small>Website</small><b>vernex.in</b></div></div>
+          <div class="contact-line"><span class="cic"><svg class="ic"><use href="#i-mail"/></svg></span><div><small>Email</small><b>connect@vernex.in</b></div></div>
+          <div class="contact-line"><span class="cic"><svg class="ic"><use href="#i-phone"/></svg></span><div><small>Phone</small><b>+91 97899 12805</b></div></div>
+          <div class="contact-line" style="border-bottom:none"><span class="cic"><svg class="ic"><use href="#i-linkedin"/></svg></span><div><small>LinkedIn</small><b>/vernex-gen-technologies</b></div></div>
+        </div>
+        <div class="col center" style="gap:10px">
+          <div class="qr" style="width:130px;height:130px;padding:10px">SCRIPT_QR</div>
+          <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700">Scan to connect</span>
+        </div>
+      </div>
+
+      <div style="margin-top:44px;padding-top:24px;border-top:1px solid rgba(216,179,106,.25)">
+        <div class="wordmark" style="font-size:22px;color:#fff">
+          <span class="mk" style="width:30px;height:30px;border-radius:7px;background:var(--gold);color:var(--navy);font-size:17px">V</span> VERNEX GEN TECHNOLOGIES
+        </div>
+        <p style="margin:12px 0 0;font-size:15px;color:var(--gold-2);font-weight:600;letter-spacing:.01em">Engineering Tomorrow's Digital Solutions.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Generate deterministic QR-style placeholders (finder patterns + pseudo-random modules)
+  (function(){
+    function qrSVG(seed){
+      var N=21, cell=100/N, s=seed>>>0;
+      function rnd(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }
+      var parts=['<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'];
+      parts.push('<rect width="100" height="100" fill="#fff"/>');
+      function finder(x,y){
+        parts.push('<rect x="'+(x*cell)+'" y="'+(y*cell)+'" width="'+(7*cell)+'" height="'+(7*cell)+'" fill="#0B2454"/>');
+        parts.push('<rect x="'+((x+1)*cell)+'" y="'+((y+1)*cell)+'" width="'+(5*cell)+'" height="'+(5*cell)+'" fill="#fff"/>');
+        parts.push('<rect x="'+((x+2)*cell)+'" y="'+((y+2)*cell)+'" width="'+(3*cell)+'" height="'+(3*cell)+'" fill="#D8B36A"/>');
+      }
+      for(var y=0;y<N;y++){for(var x=0;x<N;x++){
+        var inFinder=((x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9));
+        if(inFinder) continue;
+        if(rnd()>0.55){
+          parts.push('<rect x="'+(x*cell).toFixed(2)+'" y="'+(y*cell).toFixed(2)+'" width="'+cell.toFixed(2)+'" height="'+cell.toFixed(2)+'" fill="#0B2454"/>');
+        }
+      }}
+      finder(0,0); finder(N-7,0); finder(0,N-7);
+      parts.push('</svg>');
+      return parts.join('');
+    }
+    var nodes=document.querySelectorAll('.qr');
+    nodes.forEach(function(n,i){ n.innerHTML=qrSVG(1000+i*777); });
+  })();
+</script>
+
+</body></html>

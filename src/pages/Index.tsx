@@ -1,12 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import AppMenu from "@/components/AppMenu";
 import BottomNav from "@/components/BottomNav";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import SidebarNav from "@/components/Sidebar";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
-import HelpButton from "@/features/help/components/HelpButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { BRAND } from "@/lib/brand";
@@ -109,10 +109,7 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
         <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-xl md:px-8">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <div className="flex items-center gap-3">
-              <WorkspaceSwitcher variant="compact" className="md:hidden" />
-              <span className="hidden h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm md:flex">
-                <img src={workspace.logo} alt="" aria-hidden className="h-full w-full object-contain" />
-              </span>
+              <WorkspaceSwitcher variant="compact" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-primary">
                   {activePage === "home" ? workspace.tagline : BRAND.name}
@@ -121,11 +118,14 @@ const Index = ({ initialPage = "home" }: IndexProps) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <HelpButton pageKey={`fitness.${activePage === "home" ? "dashboard" : activePage}`} />
               <NotificationCenter userId={user?.id} onNavigate={handleNavigate} />
-              <button aria-label="Open profile" onClick={() => handleNavigate("profile")} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <button aria-label="Open profile" title="Profile" onClick={() => handleNavigate("profile")} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <ProfileAvatar avatarPath={profile?.avatar_url} fullName={profile?.full_name ?? `${BRAND.name} Member`} className="h-10 w-10 border-2 border-primary/50" />
               </button>
+              <AppMenu
+                pageKey={`fitness.${activePage === "home" ? "dashboard" : activePage}`}
+                onOpenProfile={() => handleNavigate("profile")}
+              />
             </div>
           </div>
         </header>

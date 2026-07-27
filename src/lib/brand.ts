@@ -30,7 +30,7 @@ export const BRAND = {
   description:
     "LifeTrack unifies your fitness, productivity and finances in one premium life-management app.",
   /** Displayed app version (About screen). */
-  version: "1.2",
+  version: "1.2.0",
 } as const;
 
 /**
