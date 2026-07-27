@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 
 import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 interface AdminRouteProps {
   children: ReactNode;
@@ -18,7 +19,9 @@ interface AdminRouteProps {
  */
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { session, profile, loading } = useAuth();
+  const { workspaces } = useWorkspace();
   const location = useLocation();
+  const preferredWorkspaceRoute = workspaces[0]?.homeRoute ?? "/dashboard";
 
   if (loading) {
     return <AuthLoadingScreen />;
@@ -30,7 +33,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (!profile?.is_admin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={preferredWorkspaceRoute} replace />;
   }
 
   return children;
