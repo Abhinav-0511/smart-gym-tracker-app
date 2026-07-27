@@ -20,6 +20,7 @@ const ALT_TEXT: Record<BrandLogoKind, string> = {
   fitness: `${BRAND.name} Fitness`,
   productivity: `${BRAND.name} Productivity`,
   finance: `${BRAND.name} Finance`,
+  vernex: BRAND.company,
 };
 
 const BrandLogo = ({ kind = "app", className, alt }: BrandLogoProps) => (

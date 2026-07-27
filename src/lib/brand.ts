@@ -30,7 +30,7 @@ export const BRAND = {
   description:
     "LifeTrack unifies your fitness, productivity and finances in one premium life-management app.",
   /** Displayed app version (About screen). */
-  version: "1.2.0",
+  version: "1.3.0",
 } as const;
 
 /**
@@ -44,6 +44,7 @@ export const BRAND_LOGOS = {
   fitness: fitnessLogo,
   productivity: productivityLogo,
   finance: financeLogo,
+  vernex: "/vernex-logo-transparent.png",
 } as const;
 
 export type BrandLogoKind = keyof typeof BRAND_LOGOS;

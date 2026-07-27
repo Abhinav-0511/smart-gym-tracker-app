@@ -1,13 +1,31 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, Eye, EyeOff, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, LoaderCircle, Sparkles } from "lucide-react";
 
 import BrandLogo from "@/components/BrandLogo";
 import GlassCard from "@/components/GlassCard";
+import VernexAttribution from "@/components/VernexAttribution";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { BRAND } from "@/lib/brand";
 import { getAuthErrorMessage, isValidEmailAddress, normalizeEmailAddress, requestPasswordReset } from "@/services/auth";
+
+const BrandWordmark = ({ compact = false }: { compact?: boolean }) => (
+  <div className="min-w-0">
+    <p
+      className={`font-extrabold leading-none tracking-tight text-white ${
+        compact ? "text-lg" : "text-2xl"
+      }`}
+    >
+      Life<span className="text-gradient">Track</span>
+    </p>
+    {!compact && (
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.18em] text-white/55">
+        Track Your Life
+      </p>
+    )}
+  </div>
+);
 
 const AuthPage = () => {
   const { login, signup } = useAuth();
@@ -176,17 +194,22 @@ const AuthPage = () => {
               {BRAND.motto}
             </p>
           </div>
-          <p className="splash-item splash-delay-4 absolute inset-x-0 bottom-9 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[.16em] text-white/45">
-            <ShieldCheck size={13} /> {BRAND.poweredBy}
-          </p>
+          <VernexAttribution
+            className="splash-item splash-delay-4 absolute inset-x-0 bottom-9"
+            logoClassName="h-7 w-24 ring-white/10"
+            textClassName="text-white/45"
+          />
         </div>
       )}
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
       <section className="auth-hero bg-brand-navy relative hidden min-h-screen flex-col justify-between overflow-hidden p-12 text-white md:flex">
         <div className="auth-orbit absolute -right-20 top-6 h-60 w-60 rounded-full border border-primary/20 md:-right-24 md:top-24 md:h-80 md:w-80" />
         <div className="auth-orbit auth-orbit-delayed absolute -right-4 top-16 h-60 w-60 rounded-full border border-primary/10 md:-right-8 md:top-40 md:h-80 md:w-80" />
-        <div className="auth-reveal flex h-14 w-fit items-center justify-center rounded-2xl bg-white px-5 shadow-xl">
-          <BrandLogo kind="full" className="h-8 w-auto max-w-[190px]" />
+        <div className="auth-reveal flex w-fit items-center gap-3 rounded-2xl border border-white/10 bg-white/[.06] px-3 py-2 shadow-xl backdrop-blur-sm">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-white/15">
+            <BrandLogo kind="app" className="h-full w-full max-w-none" />
+          </span>
+          <BrandWordmark />
         </div>
         <div className="relative z-10 max-w-xl">
           <div className="auth-reveal auth-delay-1 mb-4 hidden items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-xs font-semibold text-primary sm:inline-flex md:mb-8">
@@ -199,7 +222,11 @@ const AuthPage = () => {
             {BRAND.motto} One account for every pillar of your life — plan, build habits, and grow your money in a single premium space.
           </p>
         </div>
-        <p className="auth-reveal auth-delay-4 hidden items-center gap-2 text-xs text-white/45 md:flex"><ShieldCheck size={14} /> {BRAND.poweredBy}</p>
+        <VernexAttribution
+          className="auth-reveal auth-delay-4 hidden justify-start md:flex"
+          logoClassName="h-7 w-24 ring-white/10"
+          textClassName="text-white/45"
+        />
       </section>
       <div className="login-reveal relative flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
       <div className="w-full max-w-md space-y-7 animate-fade-in">
@@ -207,8 +234,11 @@ const AuthPage = () => {
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] bg-white shadow-xl ring-1 ring-border/50">
             <BrandLogo kind="app" className="h-[112%] w-[112%] max-w-none" />
           </div>
-          <div className="mx-auto flex h-11 w-fit items-center justify-center rounded-2xl bg-white px-4 shadow-sm ring-1 ring-border/50">
-            <BrandLogo kind="full" className="h-6 w-auto max-w-[160px]" />
+          <div className="mx-auto flex w-fit items-center gap-2 rounded-2xl border border-border/60 bg-card/50 px-3 py-2 shadow-sm">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/60">
+              <BrandLogo kind="app" className="h-full w-full max-w-none" />
+            </span>
+            <BrandWordmark compact />
           </div>
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">
             {isLogin ? "Welcome back" : `Welcome to ${BRAND.name}`}
@@ -418,9 +448,7 @@ const AuthPage = () => {
             </form>
           )}
         </GlassCard>
-        <p className="text-center text-[11px] font-medium uppercase tracking-[.16em] text-muted-foreground/70">
-          {BRAND.poweredBy}
-        </p>
+        <VernexAttribution textClassName="text-muted-foreground/70" />
       </div>
       </div>
     </div>
