@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, ChevronUp, Minus, Plus, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Minus, Plus, TrendingUp, X } from "lucide-react";
 
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,23 @@ import {
   sanitizeIntegerString,
 } from "@/lib/input-sanitizers";
 import type {
+  Rir,
+  SetType,
   WorkoutSessionExercise,
   WorkoutSessionSet,
   WorkoutSetUpdate,
 } from "@/types/workout-session";
+
+const RIR_OPTIONS: { value: Rir; label: string }[] = [
+  { value: 0, label: "0" },
+  { value: 1, label: "1" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3" },
+  { value: 4, label: "4+" },
+];
+
+const SET_ROW_GRID =
+  "grid grid-cols-[1.75rem_1fr_1fr_3rem_2.5rem_2.5rem] items-center gap-1.5 sm:grid-cols-[2.25rem_1fr_1fr_3.5rem_2.75rem_2.75rem] sm:gap-2";
 
 interface SessionSetRowProps {
   set: WorkoutSessionSet;
@@ -85,9 +98,30 @@ const SessionSetRow = ({
     }
   };
 
+  const handleRirChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const raw = event.target.value;
+    void onUpdate(set.id, { rir: raw === "" ? null : (Number(raw) as Rir) });
+  };
+
+  const toggleSetType = () => {
+    void onUpdate(set.id, { setType: set.setType === "warmup" ? "working" : "warmup" });
+  };
+
   return (
-    <div className={`grid grid-cols-[1.5rem_1fr_1fr_2.5rem_2.5rem] items-center gap-1.5 rounded-xl transition-colors duration-200 sm:grid-cols-[2rem_1fr_1fr_2.75rem_2.75rem] sm:gap-2 ${set.isCompleted ? "bg-primary/[.06]" : ""}`}>
-      <span className="text-sm text-muted-foreground text-center">{set.setNumber}</span>
+    <div className={`${SET_ROW_GRID} rounded-xl transition-colors duration-200 ${set.isCompleted ? "bg-primary/[.06]" : ""}`}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={toggleSetType}
+        title={set.setType === "warmup" ? "Warm-up set — tap to mark as working" : "Working set — tap to mark as warm-up"}
+        className={`flex h-11 items-center justify-center rounded-xl text-xs font-medium transition-colors ${
+          set.setType === "warmup"
+            ? "bg-amber-500/15 text-amber-500"
+            : "text-muted-foreground"
+        }`}
+      >
+        {set.setType === "warmup" ? "W" : set.setNumber}
+      </button>
       <input
         aria-label={`Set ${set.setNumber} actual reps`}
         type="text"
@@ -113,6 +147,20 @@ const SessionSetRow = ({
         onBlur={() => void saveWeight()}
         className="h-11 w-full min-w-0 rounded-xl border border-transparent bg-secondary px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
+      <select
+        aria-label={`Set ${set.setNumber} RIR (reps in reserve)`}
+        value={set.rir === null ? "" : String(set.rir)}
+        disabled={disabled || set.isCompleted}
+        onChange={handleRirChange}
+        className="h-11 w-full min-w-0 rounded-xl border border-transparent bg-secondary px-1 text-center text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+      >
+        <option value="">–</option>
+        {RIR_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       <Button
         variant={set.isCompleted ? "default" : "ghost"}
         size="icon"
@@ -142,8 +190,12 @@ interface SessionExerciseCardProps {
   disabled: boolean;
   /** When true, reopening completed sets asks for confirmation (saved workouts). */
   confirmReopen: boolean;
+  /** Read-only line summarizing the most recent prior session for this exercise. */
+  previousSetsSummary?: string | null;
+  /** Neutral, non-prescriptive progressive-overload note. Never auto-changes weight. */
+  overloadHint?: string | null;
   onUpdateSet: (setId: string, updates: WorkoutSetUpdate) => Promise<void>;
-  onAddSet: (exerciseId: string) => Promise<void>;
+  onAddSet: (exerciseId: string, setType: SetType) => Promise<void>;
   onRemoveSet: (setId: string) => Promise<void>;
   onRemove: (exerciseId: string) => Promise<void>;
 }
@@ -152,6 +204,8 @@ const SessionExerciseCard = ({
   exercise,
   disabled,
   confirmReopen,
+  previousSetsSummary,
+  overloadHint,
   onUpdateSet,
   onAddSet,
   onRemoveSet,
@@ -168,6 +222,11 @@ const SessionExerciseCard = ({
           <p className="text-xs text-muted-foreground mt-0.5">
             {completedSets}/{exercise.sets.length} sets completed
           </p>
+          {previousSetsSummary && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Previous: <span className="text-foreground/80">{previousSetsSummary}</span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -192,12 +251,20 @@ const SessionExerciseCard = ({
         </div>
       </div>
 
+      {overloadHint && (
+        <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-secondary/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+          <TrendingUp size={13} className="mt-0.5 shrink-0" />
+          <span>{overloadHint}</span>
+        </div>
+      )}
+
       {expanded && (
         <div className="mt-3 space-y-2">
-          <div className="grid grid-cols-[1.5rem_1fr_1fr_2.5rem_2.5rem] gap-1.5 px-1 text-xs font-medium text-muted-foreground sm:grid-cols-[2rem_1fr_1fr_2.75rem_2.75rem] sm:gap-2">
+          <div className={`${SET_ROW_GRID} px-1 text-xs font-medium text-muted-foreground`}>
             <span>Set</span>
             <span>Reps</span>
             <span>Weight (kg)</span>
+            <span>RIR</span>
             <span />
             <span />
           </div>
@@ -213,17 +280,30 @@ const SessionExerciseCard = ({
               onRemove={onRemoveSet}
             />
           ))}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="mt-1 w-full"
-            disabled={disabled}
-            onClick={() => void onAddSet(exercise.id)}
-          >
-            <Plus size={14} />
-            Add Set
-          </Button>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              disabled={disabled}
+              onClick={() => void onAddSet(exercise.id, "warmup")}
+            >
+              <Plus size={14} />
+              Warm-up Set
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              disabled={disabled}
+              onClick={() => void onAddSet(exercise.id, "working")}
+            >
+              <Plus size={14} />
+              Working Set
+            </Button>
+          </div>
         </div>
       )}
     </GlassCard>

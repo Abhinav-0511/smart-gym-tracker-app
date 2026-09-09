@@ -13,6 +13,7 @@ import {
   updateWorkoutSessionSet,
 } from "@/services/workout-sessions";
 import type {
+  SetType,
   StartWorkoutInput,
   WorkoutSession,
   WorkoutSetUpdate,
@@ -77,6 +78,10 @@ export function useWorkoutSession(userId: string | undefined) {
                             ? new Date().toISOString()
                             : null,
                         }),
+                    ...(updates.rir === undefined ? {} : { rir: updates.rir }),
+                    ...(updates.setType === undefined
+                      ? {}
+                      : { setType: updates.setType }),
                   }
                 : set,
             ),
@@ -104,10 +109,12 @@ export function useWorkoutSession(userId: string | undefined) {
     mutationFn: ({
       sessionId,
       sessionExerciseId,
+      setType,
     }: {
       sessionId: string;
       sessionExerciseId: string;
-    }) => addWorkoutSessionSet(sessionId, sessionExerciseId),
+      setType?: SetType;
+    }) => addWorkoutSessionSet(sessionId, sessionExerciseId, setType ?? "working"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 

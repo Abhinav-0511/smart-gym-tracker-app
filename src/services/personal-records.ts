@@ -38,7 +38,7 @@ export async function fetchCompletedSetHistory(
   const [setsResult, catalogResult] = await Promise.all([
     supabase
       .from("workout_session_sets")
-      .select("id, workout_session_exercise_id, reps, weight_kg, completed_at")
+      .select("id, workout_session_exercise_id, reps, weight_kg, completed_at, rir, set_type")
       .in("workout_session_exercise_id", exercises.map((exercise) => exercise.id))
       .eq("is_completed", true)
       .not("reps", "is", null)
@@ -82,6 +82,8 @@ export async function fetchCompletedSetHistory(
         completedAt: set.completed_at,
         reps: set.reps,
         weightKg: set.weight_kg,
+        rir: set.rir,
+        setType: set.set_type as "warmup" | "working",
       }];
     })
     .sort(

@@ -21,6 +21,14 @@ vi.mock("@/hooks/useDashboard", () => ({
   useDashboard: () => dashboardMock.value,
 }));
 
+vi.mock("@/hooks/useCheckin", () => ({
+  useCheckin: () => ({ recentCheckinsQuery: { data: [] } }),
+}));
+
+vi.mock("@/hooks/useFitnessTargets", () => ({
+  useFitnessTargets: () => ({ targetsQuery: { data: null } }),
+}));
+
 // The Getting Started card is covered by its own logic; stub it here so these
 // tests stay focused on the dashboard and need no QueryClient provider.
 vi.mock("@/features/onboarding/checklist/GettingStartedCard", () => ({

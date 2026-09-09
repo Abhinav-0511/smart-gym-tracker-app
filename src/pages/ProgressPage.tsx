@@ -185,6 +185,37 @@ const ProgressPage = () => {
       </GlassCard>
 
       <GlassCard>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-foreground">Waist</h3>
+          <span className="text-xs text-primary font-medium">
+            {data.waistChangeCm === null
+              ? "No trend yet"
+              : formatTrend(data.waistChangeCm, " cm")}
+          </span>
+        </div>
+        <div className="h-44">
+          {data.waist.length ? (
+            <ResponsiveChart>
+              <AreaChart data={data.waist}>
+                <defs>
+                  <linearGradient id="waistGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={["dataMin - 1", "dataMax + 1"]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Area type="monotone" dataKey="waist" stroke="hsl(var(--primary))" fill="url(#waistGrad)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveChart>
+          ) : (
+            <EmptyChart message="Add a waist measurement from your Daily Check-in to start this chart." />
+          )}
+        </div>
+      </GlassCard>
+
+      <GlassCard>
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="font-semibold text-foreground">Strength Progress</h3>

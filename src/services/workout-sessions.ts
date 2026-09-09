@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import type { Tables } from "@/types/database";
 import { getLocalDateString } from "@/types/dashboard";
 import type {
+  Rir,
+  SetType,
   StartWorkoutInput,
   WorkoutSession,
   WorkoutSetUpdate,
@@ -138,6 +140,8 @@ async function hydrateSession(
           weightKg: set.weight_kg,
           isCompleted: set.is_completed,
           completedAt: set.completed_at,
+          rir: set.rir as Rir | null,
+          setType: set.set_type as SetType,
         })),
       };
     }),
@@ -232,6 +236,10 @@ export async function updateWorkoutSessionSet(
     p_weight_provided: updates.weightKg !== undefined,
     p_is_completed: updates.isCompleted === undefined ? null : updates.isCompleted,
     p_completed_provided: updates.isCompleted !== undefined,
+    p_rir: updates.rir === undefined ? null : updates.rir,
+    p_rir_provided: updates.rir !== undefined,
+    p_set_type: updates.setType === undefined ? null : updates.setType,
+    p_set_type_provided: updates.setType !== undefined,
   });
 
   throwIfError(error);
@@ -241,10 +249,12 @@ export async function updateWorkoutSessionSet(
 export async function addWorkoutSessionSet(
   sessionId: string,
   sessionExerciseId: string,
+  setType: SetType = "working",
 ): Promise<void> {
   const { data, error } = await supabase.rpc("add_workout_session_set", {
     p_session_id: sessionId,
     p_session_exercise_id: sessionExerciseId,
+    p_set_type: setType,
   });
 
   throwIfError(error);

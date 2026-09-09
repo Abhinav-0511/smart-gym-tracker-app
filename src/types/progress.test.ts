@@ -55,10 +55,30 @@ describe("progress aggregation", () => {
     const data = calculateProgressData([], [], "2026-07-09");
 
     expect(data.bodyWeight).toEqual([]);
+    expect(data.waist).toEqual([]);
+    expect(data.waistChangeCm).toBeNull();
     expect(data.exerciseProgressions).toEqual([]);
     expect(data.averageWorkoutDurationMinutes).toBeNull();
     expect(data.consistencyPercent).toBe(0);
     expect(data.weeklyFrequency).toHaveLength(8);
     expect(data.monthlyFrequency).toHaveLength(6);
+  });
+
+  it("derives a waist trend from check-in measurements", () => {
+    const data = calculateProgressData(
+      [],
+      [],
+      "2026-07-09",
+      [
+        { date: "2026-07-01", waist: 91 },
+        { date: "2026-07-09", waist: 89.5 },
+      ],
+    );
+
+    expect(data.waist).toEqual([
+      { date: "2026-07-01", waist: 91 },
+      { date: "2026-07-09", waist: 89.5 },
+    ]);
+    expect(data.waistChangeCm).toBe(-1.5);
   });
 });

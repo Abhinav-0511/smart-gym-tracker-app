@@ -27,6 +27,8 @@ export interface ExerciseHistoryPoint {
   completedAt: string;
   reps: number;
   weightKg: number;
+  rir: number | null;
+  setType: "warmup" | "working";
 }
 
 export type AutoPRCandidate = ExerciseHistoryPoint;

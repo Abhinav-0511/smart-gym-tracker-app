@@ -36,6 +36,7 @@ function table(name: SyncQueueItem["table"]): GenericMutableTable {
  */
 const UPSERT_CONFLICT_TARGET: Partial<Record<SyncQueueItem["table"], string>> = {
   habit_logs: "habit_id,log_date",
+  daily_checkins: "user_id,checkin_date",
 };
 
 /**

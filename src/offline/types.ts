@@ -34,6 +34,9 @@ export const SYNCED_TABLES = [
   "personal_records",
   "body_weight_entries",
   "user_achievements",
+  // Fitness (writable — Winter Arc daily check-ins and targets)
+  "daily_checkins",
+  "fitness_targets",
 ] as const;
 
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
@@ -50,6 +53,8 @@ export const WRITABLE_TABLES = [
   "habits",
   "habit_logs",
   "profiles",
+  "daily_checkins",
+  "fitness_targets",
 ] as const satisfies readonly SyncedTable[];
 
 export type WritableTable = (typeof WRITABLE_TABLES)[number];

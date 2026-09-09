@@ -270,6 +270,7 @@ describe("useWorkoutSession", () => {
     expect(serviceMocks.addWorkoutSessionSet).toHaveBeenCalledWith(
       "session-1",
       "session-exercise-1",
+      "working",
     );
   });
 
