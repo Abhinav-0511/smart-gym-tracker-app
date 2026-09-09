@@ -13,6 +13,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_checkins: {
+        Row: {
+          calories: number | null;
+          checkin_date: string;
+          created_at: string;
+          energy: number | null;
+          id: string;
+          mood: number | null;
+          notes: string | null;
+          protein_g: number | null;
+          sleep_hours: number | null;
+          steps: number | null;
+          updated_at: string;
+          user_id: string;
+          waist_cm: number | null;
+          water_liters: number | null;
+          weight_kg: number | null;
+        };
+        Insert: {
+          calories?: number | null;
+          checkin_date?: string;
+          created_at?: string;
+          energy?: number | null;
+          id?: string;
+          mood?: number | null;
+          notes?: string | null;
+          protein_g?: number | null;
+          sleep_hours?: number | null;
+          steps?: number | null;
+          updated_at?: string;
+          user_id: string;
+          waist_cm?: number | null;
+          water_liters?: number | null;
+          weight_kg?: number | null;
+        };
+        Update: {
+          calories?: number | null;
+          checkin_date?: string;
+          created_at?: string;
+          energy?: number | null;
+          id?: string;
+          mood?: number | null;
+          notes?: string | null;
+          protein_g?: number | null;
+          sleep_hours?: number | null;
+          steps?: number | null;
+          updated_at?: string;
+          user_id?: string;
+          waist_cm?: number | null;
+          water_liters?: number | null;
+          weight_kg?: number | null;
+        };
+        Relationships: [];
+      };
+      fitness_targets: {
+        Row: {
+          calorie_target: number | null;
+          created_at: string;
+          id: string;
+          protein_target_g: number;
+          sleep_target_hours: number;
+          steps_target: number;
+          updated_at: string;
+          user_id: string;
+          water_target_liters: number | null;
+        };
+        Insert: {
+          calorie_target?: number | null;
+          created_at?: string;
+          id?: string;
+          protein_target_g?: number;
+          sleep_target_hours?: number;
+          steps_target?: number;
+          updated_at?: string;
+          user_id: string;
+          water_target_liters?: number | null;
+        };
+        Update: {
+          calorie_target?: number | null;
+          created_at?: string;
+          id?: string;
+          protein_target_g?: number;
+          sleep_target_hours?: number;
+          steps_target?: number;
+          updated_at?: string;
+          user_id?: string;
+          water_target_liters?: number | null;
+        };
+        Relationships: [];
+      };
       body_weight_entries: {
         Row: {
           created_at: string;
@@ -324,6 +414,7 @@ export type Database = {
           id: string;
           set_number: number;
           target_reps: number;
+          target_rir: number | null;
           target_weight_kg: number | null;
           updated_at: string;
           workout_plan_exercise_id: string;
@@ -333,6 +424,7 @@ export type Database = {
           id?: string;
           set_number: number;
           target_reps: number;
+          target_rir?: number | null;
           target_weight_kg?: number | null;
           updated_at?: string;
           workout_plan_exercise_id: string;
@@ -342,6 +434,7 @@ export type Database = {
           id?: string;
           set_number?: number;
           target_reps?: number;
+          target_rir?: number | null;
           target_weight_kg?: number | null;
           updated_at?: string;
           workout_plan_exercise_id?: string;
@@ -442,7 +535,9 @@ export type Database = {
           id: string;
           is_completed: boolean;
           reps: number | null;
+          rir: number | null;
           set_number: number;
+          set_type: string;
           updated_at: string;
           weight_kg: number | null;
           workout_session_exercise_id: string;
@@ -453,7 +548,9 @@ export type Database = {
           id?: string;
           is_completed?: boolean;
           reps?: number | null;
+          rir?: number | null;
           set_number: number;
+          set_type?: string;
           updated_at?: string;
           weight_kg?: number | null;
           workout_session_exercise_id: string;
@@ -464,7 +561,9 @@ export type Database = {
           id?: string;
           is_completed?: boolean;
           reps?: number | null;
+          rir?: number | null;
           set_number?: number;
+          set_type?: string;
           updated_at?: string;
           weight_kg?: number | null;
           workout_session_exercise_id?: string;
@@ -1252,6 +1351,7 @@ export type Database = {
         Args: {
           p_session_exercise_id: string;
           p_session_id: string;
+          p_set_type?: string;
         };
         Returns: string;
       };
@@ -1327,8 +1427,12 @@ export type Database = {
           p_is_completed: boolean | null;
           p_reps: number | null;
           p_reps_provided: boolean;
+          p_rir?: number | null;
+          p_rir_provided?: boolean;
           p_session_id: string;
           p_set_id: string;
+          p_set_type?: string | null;
+          p_set_type_provided?: boolean;
           p_weight_provided: boolean;
           p_weight_kg: number | null;
         };

@@ -183,8 +183,8 @@ const AuthPage = () => {
           <div className="relative flex flex-col items-center">
             <div className="brand-reveal relative mb-8 h-28 w-28">
               <span className="brand-glow absolute -inset-3 rounded-[36px] bg-primary/30 blur-2xl" />
-              <span className="brand-float relative flex h-full w-full items-center justify-center overflow-hidden rounded-[30px] bg-white shadow-2xl ring-1 ring-white/40">
-                <BrandLogo kind="app" className="h-[84%] w-[84%] max-w-none" />
+              <span className="brand-float relative flex h-full w-full items-center justify-center overflow-hidden rounded-[30px] bg-card/80 shadow-2xl ring-1 ring-primary/30 backdrop-blur-sm">
+                <BrandLogo kind="app" className="h-full w-full max-w-none" />
               </span>
             </div>
             <h1 className="splash-item splash-delay-1 text-[2.75rem] font-extrabold leading-none tracking-tight">
@@ -231,8 +231,8 @@ const AuthPage = () => {
       <div className="login-reveal relative flex min-h-screen items-center justify-center px-4 py-10 md:px-8">
       <div className="w-full max-w-md space-y-7 animate-fade-in">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] bg-white shadow-xl ring-1 ring-border/50">
-            <BrandLogo kind="app" className="h-[112%] w-[112%] max-w-none" />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] bg-card/80 shadow-xl ring-1 ring-primary/25">
+            <BrandLogo kind="app" className="h-full w-full max-w-none" />
           </div>
           <div className="mx-auto flex w-fit items-center gap-2 rounded-2xl border border-border/60 bg-card/50 px-3 py-2 shadow-sm">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/60">

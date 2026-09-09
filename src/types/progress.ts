@@ -18,6 +18,11 @@ export interface BodyWeightPoint {
   weight: number;
 }
 
+export interface WaistPoint {
+  date: string;
+  waist: number;
+}
+
 export interface PeriodValue {
   period: string;
   label: string;
@@ -32,6 +37,7 @@ export interface ExerciseProgression {
 
 export interface ProgressData {
   bodyWeight: BodyWeightPoint[];
+  waist: WaistPoint[];
   exerciseProgressions: ExerciseProgression[];
   weeklyFrequency: PeriodValue[];
   monthlyFrequency: PeriodValue[];
@@ -40,6 +46,7 @@ export interface ProgressData {
   averageWorkoutDurationMinutes: number | null;
   consistencyPercent: number;
   bodyWeightChangeKg: number | null;
+  waistChangeCm: number | null;
   volumeTrendPercent: number | null;
   workoutTrendPercent: number | null;
 }
@@ -104,6 +111,7 @@ export function calculateProgressData(
   workouts: ProgressWorkout[],
   bodyWeightEntries: BodyWeightPoint[],
   nowDate: string,
+  waistEntries: WaistPoint[] = [],
 ): ProgressData {
   const weeks = recentWeekStarts(nowDate, 8);
   const months = recentMonths(nowDate, 6);
@@ -219,6 +227,9 @@ export function calculateProgressData(
   const sortedWeights = [...bodyWeightEntries].sort((left, right) =>
     left.date.localeCompare(right.date),
   );
+  const sortedWaist = [...waistEntries].sort((left, right) =>
+    left.date.localeCompare(right.date),
+  );
   const latestWeekly = weeklyFrequency.at(-1)?.value ?? 0;
   const previousWeekly = weeklyFrequency.at(-2)?.value ?? 0;
   const latestVolume = weeklyVolume.at(-1)?.value ?? 0;
@@ -226,6 +237,7 @@ export function calculateProgressData(
 
   return {
     bodyWeight: sortedWeights,
+    waist: sortedWaist,
     exerciseProgressions,
     weeklyFrequency,
     monthlyFrequency,
@@ -248,6 +260,10 @@ export function calculateProgressData(
               sortedWeights.at(-1)!.weight - sortedWeights[0].weight
             ).toFixed(2),
           )
+        : null,
+    waistChangeCm:
+      sortedWaist.length > 1
+        ? Number((sortedWaist.at(-1)!.waist - sortedWaist[0].waist).toFixed(2))
         : null,
     volumeTrendPercent: percentChange(latestVolume, previousVolume),
     workoutTrendPercent: percentChange(latestWeekly, previousWeekly),

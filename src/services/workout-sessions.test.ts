@@ -77,6 +77,10 @@ describe("workout session mutations", () => {
       p_weight_provided: true,
       p_is_completed: true,
       p_completed_provided: true,
+      p_rir: null,
+      p_rir_provided: false,
+      p_set_type: null,
+      p_set_type_provided: false,
     });
   });
 
@@ -94,6 +98,10 @@ describe("workout session mutations", () => {
       p_weight_provided: true,
       p_is_completed: null,
       p_completed_provided: false,
+      p_rir: null,
+      p_rir_provided: false,
+      p_set_type: null,
+      p_set_type_provided: false,
     });
   });
 
@@ -118,6 +126,7 @@ describe("workout session mutations", () => {
     expect(supabaseMock.rpc).toHaveBeenCalledWith("add_workout_session_set", {
       p_session_id: "session-1",
       p_session_exercise_id: "session-exercise-1",
+      p_set_type: "working",
     });
   });
 

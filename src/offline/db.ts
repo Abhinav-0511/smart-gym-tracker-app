@@ -47,6 +47,10 @@ export class LifeTrackDB extends Dexie {
   body_weight_entries!: Table<LocalRow, string>;
   user_achievements!: Table<LocalRow, string>;
 
+  // --- Fitness (writable — Winter Arc daily check-ins and targets) ---
+  daily_checkins!: Table<LocalRow, string>;
+  fitness_targets!: Table<LocalRow, string>;
+
   // --- Offline infrastructure ---
   sync_queue!: Table<SyncQueueItem, number>;
   metadata!: Table<MetadataRecord, string>;
@@ -87,6 +91,12 @@ export class LifeTrackDB extends Dexie {
       // Infrastructure. `++seq` = auto-incrementing replay order.
       sync_queue: "++seq, id, status, table, entityId, userId, nextAttemptAt",
       metadata: "key",
+    });
+
+    // Winter Arc: daily check-ins and fitness targets (writable).
+    this.version(2).stores({
+      daily_checkins: "id, user_id, checkin_date, updated_at",
+      fitness_targets: "id, user_id, updated_at",
     });
   }
 }

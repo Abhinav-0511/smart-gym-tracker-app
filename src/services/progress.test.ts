@@ -10,6 +10,10 @@ vi.mock("@/lib/supabase", () => ({
   supabase: supabaseMock,
 }));
 
+vi.mock("@/services/checkins", () => ({
+  fetchRecentCheckins: vi.fn().mockResolvedValue([]),
+}));
+
 describe("progress historical source", () => {
   beforeEach(() => {
     vi.clearAllMocks();

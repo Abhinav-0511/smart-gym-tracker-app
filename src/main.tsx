@@ -3,6 +3,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerServiceWorker } from "@/offline/pwa";
 import { startOfflineSync } from "@/offline/sync";
+import { lockMobileZoom } from "@/lib/mobile-zoom-lock";
+
+lockMobileZoom();
 
 createRoot(document.getElementById("root")!).render(<App />);
 

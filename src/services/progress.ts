@@ -1,10 +1,12 @@
 import { supabase } from "@/lib/supabase";
+import { fetchRecentCheckins } from "@/services/checkins";
 import { getLocalDateString } from "@/types/dashboard";
 import {
   calculateProgressData,
   type BodyWeightPoint,
   type ProgressData,
   type ProgressWorkout,
+  type WaistPoint,
 } from "@/types/progress";
 
 function throwIfError(error: { message: string } | null): void {
@@ -15,7 +17,7 @@ export async function fetchProgressData(
   userId: string,
   timezone: string,
 ): Promise<ProgressData> {
-  const [sessionsResult, bodyWeightResult] = await Promise.all([
+  const [sessionsResult, bodyWeightResult, checkins] = await Promise.all([
     supabase
       .from("workout_sessions")
       .select("id, workout_date, started_at, completed_at")
@@ -28,6 +30,7 @@ export async function fetchProgressData(
       .select("recorded_on, weight_kg")
       .eq("user_id", userId)
       .order("recorded_on", { ascending: true }),
+    fetchRecentCheckins(userId),
   ]);
 
   throwIfError(sessionsResult.error);
@@ -101,16 +104,30 @@ export async function fetchProgressData(
     completedAt: session.completed_at,
     sets: setsBySessionId.get(session.id) ?? [],
   }));
-  const bodyWeight: BodyWeightPoint[] = (bodyWeightResult.data ?? []).map(
-    (entry) => ({
-      date: entry.recorded_on,
-      weight: entry.weight_kg,
-    }),
+  // Weight can be logged two ways — the Profile "current weight" field
+  // (body_weight_entries) and the Daily Check-in (daily_checkins). Merge them
+  // into one trend by date so the chart reflects whichever flow the user used;
+  // a check-in entry wins on a shared date since it's the more recent flow.
+  const weightByDate = new Map<string, number>();
+  for (const entry of bodyWeightResult.data ?? []) {
+    weightByDate.set(entry.recorded_on, entry.weight_kg);
+  }
+  for (const checkin of checkins) {
+    if (checkin.weightKg !== null) weightByDate.set(checkin.checkinDate, checkin.weightKg);
+  }
+  const bodyWeight: BodyWeightPoint[] = Array.from(
+    weightByDate,
+    ([date, weight]) => ({ date, weight }),
   );
+
+  const waist: WaistPoint[] = checkins
+    .filter((checkin) => checkin.waistCm !== null)
+    .map((checkin) => ({ date: checkin.checkinDate, waist: checkin.waistCm as number }));
 
   return calculateProgressData(
     workouts,
     bodyWeight,
     getLocalDateString(new Date(), timezone),
+    waist,
   );
 }

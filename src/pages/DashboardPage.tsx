@@ -3,6 +3,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  ClipboardCheck,
   Clock3,
   Dumbbell,
   Flame,
@@ -19,7 +20,9 @@ import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import GettingStartedCard from "@/features/onboarding/checklist/GettingStartedCard";
 import { useAuth } from "@/hooks/useAuth";
+import { useCheckin } from "@/hooks/useCheckin";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useFitnessTargets } from "@/hooks/useFitnessTargets";
 import { getGreeting, getLocalDateString } from "@/types/dashboard";
 import { getWeekday } from "@/types/workout-plan";
 
@@ -38,6 +41,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
     isPending,
     error,
   } = useDashboard(user?.id, timezone);
+  const { recentCheckinsQuery } = useCheckin(user?.id);
+  const { targetsQuery } = useFitnessTargets(user?.id);
 
   if (isPending) {
     return (
@@ -91,6 +96,8 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
     activePlan?.days.find((day) => day.dayOfWeek === todayDayOfWeek) ?? null;
   const todayCompletedWorkout = aggregate.todayCompletedWorkout;
   const greeting = getGreeting(new Date(), timezone);
+  const todayCheckin = recentCheckinsQuery.data?.find((entry) => entry.checkinDate === today) ?? null;
+  const targets = targetsQuery.data ?? null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -275,6 +282,69 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
       </Button>
 
       <div>
+        <h2 className="mb-3 text-lg font-semibold tracking-tight text-foreground">
+          Today’s Check-in
+        </h2>
+        {todayCheckin ? (
+          <GlassCard>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <CheckinMetric
+                label="Weight"
+                value={todayCheckin.weightKg !== null ? `${todayCheckin.weightKg} kg` : "—"}
+              />
+              <CheckinMetric
+                label="Waist"
+                value={todayCheckin.waistCm !== null ? `${todayCheckin.waistCm} cm` : "—"}
+              />
+              <CheckinMetric
+                label="Protein"
+                value={
+                  todayCheckin.proteinG !== null
+                    ? `${todayCheckin.proteinG} / ${targets?.proteinTargetG ?? 145} g`
+                    : "—"
+                }
+              />
+              <CheckinMetric
+                label="Steps"
+                value={
+                  todayCheckin.steps !== null
+                    ? `${todayCheckin.steps} / ${targets?.stepsTarget ?? 8000}`
+                    : "—"
+                }
+              />
+              <CheckinMetric
+                label="Sleep"
+                value={
+                  todayCheckin.sleepHours !== null
+                    ? `${todayCheckin.sleepHours} / ${targets?.sleepTargetHours ?? 8} h`
+                    : "—"
+                }
+              />
+            </div>
+            <Button variant="ghost" size="sm" className="mt-3" onClick={() => onNavigate("workout")}>
+              <Pencil size={14} />
+              Update Check-in
+            </Button>
+          </GlassCard>
+        ) : (
+          <GlassCard hover className="group" onClick={() => onNavigate("workout")}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ClipboardCheck className="text-primary" size={20} />
+                <div>
+                  <p className="font-medium text-foreground">Complete today’s check-in</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Weight, waist, sleep, steps — takes under a minute.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+          </GlassCard>
+        )}
+      </div>
+
+      <div>
         <h2 className="mb-3 text-lg font-semibold tracking-tight text-foreground">This Week</h2>
         <div className="flex gap-2">
           {aggregate.weeklyDays.map((day) => {
@@ -401,5 +471,12 @@ const DashboardPage = ({ onNavigate }: DashboardPageProps) => {
     </div>
   );
 };
+
+const CheckinMetric = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <p className="text-xs text-muted-foreground">{label}</p>
+    <p className="text-sm font-medium text-foreground">{value}</p>
+  </div>
+);
 
 export default DashboardPage;

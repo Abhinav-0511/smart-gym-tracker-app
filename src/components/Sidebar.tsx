@@ -77,15 +77,17 @@ const SidebarNav = ({ active, onNavigate }: SidebarNavProps) => {
       <button
         type="button"
         onClick={() => void handleLogout()}
-        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white/60 transition hover:bg-red-500/15 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white/60 transition hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500"
       >
         <LogOut size={20} />
         Log out
       </button>
+    </div>
+    <div className="bg-white px-4 py-3">
       <VernexAttribution
         variant="stacked"
-        logoClassName="h-7 w-24 ring-white/10"
-        textClassName="text-white/35"
+        logoClassName="h-8 w-28"
+        textClassName="text-blue-700"
       />
     </div>
     </aside>

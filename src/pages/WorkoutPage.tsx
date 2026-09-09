@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   CheckCircle2,
+  Download,
   LoaderCircle,
   Plus,
   RefreshCw,
@@ -14,6 +15,7 @@ import {
 import GlassCard from "@/components/GlassCard";
 import AddExerciseDialog from "@/components/plan/AddExerciseDialog";
 import SessionExerciseCard from "@/components/workout/SessionExerciseCard";
+import WorkoutCheckinCard from "@/components/workout/WorkoutCheckinCard";
 import { Button } from "@/components/ui/button";
 import PageSkeleton from "@/components/ui/page-skeleton";
 import {
@@ -25,12 +27,15 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCheckin } from "@/hooks/useCheckin";
 import { useWorkoutPlans } from "@/hooks/useWorkoutPlans";
 import { useWorkoutSession } from "@/hooks/useWorkoutSession";
+import { getOverloadHint, groupMostRecentSetsByExercise } from "@/lib/progressive-overload";
+import { fetchCompletedSetHistory } from "@/services/personal-records";
 import { fetchCompletedWorkoutSessionForPlanDay } from "@/services/workout-sessions";
 import { getLocalDateString } from "@/types/dashboard";
 import { getWeekday } from "@/types/workout-plan";
-import type { WorkoutSetUpdate } from "@/types/workout-session";
+import type { SetType, WorkoutSetUpdate } from "@/types/workout-session";
 
 function getCurrentDayOfWeek(timezone: string): number {
   const weekday = new Intl.DateTimeFormat("en-US", {
@@ -97,10 +102,12 @@ const WorkoutPage = () => {
     addExerciseMutation,
     removeExerciseMutation,
   } = useWorkoutSession(user?.id);
+  const { recentCheckinsQuery } = useCheckin(user?.id);
   const [selectedDayId, setSelectedDayId] = useState("");
   const [notes, setNotes] = useState("");
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
   const [outcome, setOutcome] = useState<string | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const activePlan = plansQuery.data?.find((plan) => plan.isActive) ?? null;
   const trainingDays = useMemo(
@@ -136,6 +143,16 @@ const WorkoutPage = () => {
   const canEditWorkout = Boolean(session);
   const shouldLoadCompletedSession = Boolean(user?.id && selectedDay?.id && !activeSession);
   const duration = useWorkoutDuration(session?.startedAt, session?.completedAt);
+
+  const historyQuery = useQuery({
+    queryKey: ["exercise-history", user?.id ?? ""],
+    queryFn: () => fetchCompletedSetHistory(user?.id ?? ""),
+    enabled: Boolean(user?.id && session),
+  });
+  const previousSetsByExercise = useMemo(
+    () => groupMostRecentSetsByExercise(historyQuery.data ?? [], session?.workoutDate ?? today),
+    [historyQuery.data, session?.workoutDate, today],
+  );
 
   useEffect(() => {
     if (!trainingDays.length || selectedDayId) return;
@@ -191,10 +208,10 @@ const WorkoutPage = () => {
     }
   };
 
-  const handleAddSet = async (sessionExerciseId: string) => {
+  const handleAddSet = async (sessionExerciseId: string, setType: SetType) => {
     if (!session || !canEditWorkout) return;
     try {
-      await addSetMutation.mutateAsync({ sessionId: session.id, sessionExerciseId });
+      await addSetMutation.mutateAsync({ sessionId: session.id, sessionExerciseId, setType });
       if (isSavedWorkout) {
         await completedSessionQuery.refetch();
       }
@@ -270,6 +287,26 @@ const WorkoutPage = () => {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (!session) return;
+    setExportingPdf(true);
+    try {
+      const { exportWorkoutPdf } = await import("@/lib/workout-pdf");
+      const checkin =
+        recentCheckinsQuery.data?.find((entry) => entry.checkinDate === session.workoutDate)
+        ?? null;
+      exportWorkoutPdf(session, checkin);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Couldn’t export workout",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   if (
     sessionQuery.isPending
     || plansQuery.isPending
@@ -322,6 +359,8 @@ const WorkoutPage = () => {
           </div>
         </div>
 
+        {user?.id && <WorkoutCheckinCard userId={user.id} date={today} />}
+
         <GlassCard className="border-primary/20 bg-primary/[.04]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -336,35 +375,71 @@ const WorkoutPage = () => {
                   : "Workout changes are saved automatically."}
               </p>
             </div>
+            {isSavedWorkout && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={exportingPdf}
+                onClick={() => void handleExportPdf()}
+              >
+                {exportingPdf ? (
+                  <LoaderCircle className="animate-spin" size={14} />
+                ) : (
+                  <Download size={14} />
+                )}
+                Export Workout
+              </Button>
+            )}
           </div>
         </GlassCard>
 
         <div className="space-y-3">
-          {session.exercises.map((exercise) => (
-            <SessionExerciseCard
-              key={exercise.id}
-              exercise={exercise}
-              disabled={controlsDisabled}
-              confirmReopen={isSavedWorkout}
-              onUpdateSet={handleSetUpdate}
-              onAddSet={handleAddSet}
-              onRemoveSet={handleRemoveSet}
-              onRemove={async (sessionExerciseId) => {
-                try {
-                  await removeExerciseMutation.mutateAsync({
-                    sessionId: session.id,
-                    sessionExerciseId,
-                  });
-                } catch (error) {
-                  toast({
-                    variant: "destructive",
-                    title: "Couldn’t remove exercise",
-                    description: error instanceof Error ? error.message : "Please try again.",
-                  });
-                }
-              }}
-            />
-          ))}
+          {session.exercises.map((exercise) => {
+            const previousSets = previousSetsByExercise.get(exercise.exerciseId) ?? [];
+            const previousSetsSummary = previousSets.length
+              ? previousSets
+                  .map((set) => `${set.weightKg} kg × ${set.reps}`)
+                  .join(", ")
+              : null;
+            const targetReps =
+              selectedDay?.exercises.find((planned) => planned.exerciseId === exercise.exerciseId)
+                ?.sets[0]?.targetReps ?? null;
+            const overloadHint = getOverloadHint(
+              targetReps,
+              exercise.sets
+                .filter((set) => set.setType === "working" && set.isCompleted && set.reps !== null && set.weightKg !== null)
+                .map((set) => ({ reps: set.reps as number, weightKg: set.weightKg as number })),
+              previousSets.map((set) => ({ reps: set.reps, weightKg: set.weightKg })),
+            );
+
+            return (
+              <SessionExerciseCard
+                key={exercise.id}
+                exercise={exercise}
+                disabled={controlsDisabled}
+                confirmReopen={isSavedWorkout}
+                previousSetsSummary={previousSetsSummary}
+                overloadHint={overloadHint}
+                onUpdateSet={handleSetUpdate}
+                onAddSet={handleAddSet}
+                onRemoveSet={handleRemoveSet}
+                onRemove={async (sessionExerciseId) => {
+                  try {
+                    await removeExerciseMutation.mutateAsync({
+                      sessionId: session.id,
+                      sessionExerciseId,
+                    });
+                  } catch (error) {
+                    toast({
+                      variant: "destructive",
+                      title: "Couldn’t remove exercise",
+                      description: error instanceof Error ? error.message : "Please try again.",
+                    });
+                  }
+                }}
+              />
+            );
+          })}
         </div>
 
         {!isSavedWorkout && (
@@ -462,6 +537,8 @@ const WorkoutPage = () => {
           <p className="text-sm text-foreground">{outcome}</p>
         </GlassCard>
       )}
+
+      {user?.id && <WorkoutCheckinCard userId={user.id} date={today} />}
 
       {!activePlan || !trainingDays.length ? (
         <GlassCard className="text-center py-8">
