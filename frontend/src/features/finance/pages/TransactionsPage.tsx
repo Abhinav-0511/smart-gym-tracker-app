@@ -27,6 +27,7 @@ import TransactionFilterSheet from "@/features/finance/components/TransactionFil
 import TransactionFormDialog from "@/features/finance/components/TransactionFormDialog";
 import TransactionItem from "@/features/finance/components/TransactionItem";
 import { useFinanceData } from "@/features/finance/hooks/useFinanceData";
+import { useCategories } from "@/features/finance/hooks/useCategories";
 import { useRecurring } from "@/features/finance/hooks/useRecurring";
 import { useTransactions } from "@/features/finance/hooks/useTransactions";
 import { buildMonthGrid, transactionsOnDay } from "@/features/finance/lib/calendar";
@@ -88,6 +89,7 @@ const TransactionsPage = () => {
     timezone,
   );
   const recurring = useRecurring(user?.id);
+  const { createMutation: createCategoryMutation } = useCategories(user?.id);
 
   const [view, setView] = useState<View>("list");
   const [search, setSearch] = useState("");
@@ -317,6 +319,7 @@ const TransactionsPage = () => {
                         transaction={tx}
                         category={tx.categoryId ? data.categoriesById.get(tx.categoryId) : undefined}
                         currency={currency}
+                        accountName={tx.accountId ? data.accountsById.get(tx.accountId)?.name : undefined}
                         showDate={false}
                         onEdit={openEdit}
                         onDelete={setPendingDelete}
@@ -395,6 +398,9 @@ const TransactionsPage = () => {
         transaction={editing}
         categories={data.categories}
         accounts={data.accounts}
+        onCreateCategory={(name, kind) =>
+          createCategoryMutation.mutateAsync({ name, kind, icon: "circle", color: "slate" })
+        }
         defaultDateKey={formDate}
         saving={createMutation.isPending || updateMutation.isPending}
         onOpenChange={setFormOpen}
@@ -419,6 +425,7 @@ const TransactionsPage = () => {
         open={filterOpen}
         filters={filters}
         categories={data.categories}
+        accounts={data.accounts}
         onOpenChange={setFilterOpen}
         onChange={setFilters}
         onClear={() => setFilters(defaultFilters())}

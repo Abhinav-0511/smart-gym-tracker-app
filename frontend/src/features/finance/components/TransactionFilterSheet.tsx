@@ -17,6 +17,7 @@ import {
   type PaymentMethod,
   type TransactionType,
 } from "@/features/finance/types/common";
+import type { FinanceAccount } from "@/features/finance/types/account";
 import type { TransactionCategory } from "@/features/finance/types/category";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ interface TransactionFilterSheetProps {
   open: boolean;
   filters: TransactionFilters;
   categories: TransactionCategory[];
+  accounts: FinanceAccount[];
   onOpenChange: (open: boolean) => void;
   onChange: (filters: TransactionFilters) => void;
   onClear: () => void;
@@ -49,6 +51,7 @@ const TransactionFilterSheet = ({
   open,
   filters,
   categories,
+  accounts,
   onOpenChange,
   onChange,
   onClear,
@@ -83,6 +86,26 @@ const TransactionFilterSheet = ({
               ))}
             </div>
           </div>
+
+          {accounts.length > 0 && (
+            <div className="space-y-2">
+              <Label>Accounts</Label>
+              <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+                {accounts.map((account) => (
+                  <button
+                    key={account.id}
+                    type="button"
+                    className={chipClass(filters.accountIds.includes(account.id))}
+                    onClick={() =>
+                      onChange({ ...filters, accountIds: toggle(filters.accountIds, account.id) })
+                    }
+                  >
+                    {account.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Payment method</Label>

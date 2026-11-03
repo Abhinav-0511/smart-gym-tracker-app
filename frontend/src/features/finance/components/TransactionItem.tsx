@@ -18,6 +18,8 @@ interface TransactionItemProps {
   transaction: Transaction;
   category: TransactionCategory | undefined;
   currency: string;
+  /** Name of the account this transaction belongs to, shown in the meta line. */
+  accountName?: string;
   /** When true, show the full date; otherwise only the time (day is implied). */
   showDate?: boolean;
   onEdit?: (transaction: Transaction) => void;
@@ -28,6 +30,7 @@ const TransactionItem = ({
   transaction,
   category,
   currency,
+  accountName,
   showDate = true,
   onEdit,
   onDelete,
@@ -43,6 +46,7 @@ const TransactionItem = ({
 
   const metaParts = [
     category?.name ?? "Uncategorized",
+    accountName,
     PAYMENT_METHOD_LABELS[transaction.paymentMethod],
     showDate ? formatDayLabel(transaction.occurredOn) : transaction.occurredAt?.slice(0, 5),
   ].filter(Boolean);
