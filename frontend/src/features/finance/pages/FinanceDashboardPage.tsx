@@ -23,6 +23,7 @@ import StatCard from "@/features/finance/components/StatCard";
 import TransactionFormDialog from "@/features/finance/components/TransactionFormDialog";
 import TransactionItem from "@/features/finance/components/TransactionItem";
 import { useBudgets } from "@/features/finance/hooks/useBudgets";
+import { useCategories } from "@/features/finance/hooks/useCategories";
 import { useFinanceData } from "@/features/finance/hooks/useFinanceData";
 import { useRecurring } from "@/features/finance/hooks/useRecurring";
 import { useTransactions } from "@/features/finance/hooks/useTransactions";
@@ -48,6 +49,7 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
 
   const data = useFinanceData(user?.id, timezone);
   const { createMutation } = useTransactions(user?.id, timezone);
+  const { createMutation: createCategoryMutation } = useCategories(user?.id);
   const { budgetsQuery } = useBudgets(user?.id);
   const { recurringQuery, postMutation } = useRecurring(user?.id);
 
@@ -327,6 +329,9 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
         transaction={null}
         categories={data.categories}
         accounts={data.accounts}
+        onCreateCategory={(name, kind) =>
+          createCategoryMutation.mutateAsync({ name, kind, icon: "circle", color: "slate" })
+        }
         defaultDateKey={data.todayKey}
         saving={createMutation.isPending}
         onOpenChange={setFormOpen}

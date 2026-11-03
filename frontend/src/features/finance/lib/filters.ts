@@ -88,7 +88,10 @@ export function filterTransactions(
       return false;
     }
     if (filters.accountIds.length) {
-      if (!tx.accountId || !filters.accountIds.includes(tx.accountId)) return false;
+      const inSource = tx.accountId !== null && filters.accountIds.includes(tx.accountId);
+      const inDestination =
+        tx.transferAccountId !== null && filters.accountIds.includes(tx.transferAccountId);
+      if (!inSource && !inDestination) return false;
     }
     if (filters.minAmount !== null && tx.amount < filters.minAmount) return false;
     if (filters.maxAmount !== null && tx.amount > filters.maxAmount) return false;

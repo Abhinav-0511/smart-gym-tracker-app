@@ -1,8 +1,8 @@
-import appLogo from "../../images/Main_App_Logo.png";
-import fullLogo from "../../images/Full_Logo.png";
-import fitnessLogo from "../../images/Fitness_Logo.png";
-import productivityLogo from "../../images/Productivity_Logo.png";
-import financeLogo from "../../images/Finance_Logo.png";
+import appLogo from "../assets/brand/Main_App_Logo.png";
+import fullLogo from "../assets/brand/Full_Logo.png";
+import fitnessLogo from "../assets/brand/Fitness_Logo.png";
+import productivityLogo from "../assets/brand/Productivity_Logo.png";
+import financeLogo from "../assets/brand/Finance_Logo.png";
 
 import type { WorkspaceId } from "@/features/workspace/types";
 

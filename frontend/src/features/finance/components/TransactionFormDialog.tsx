@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { slugifyCategory } from "@/features/finance/lib/default-categories";
 import { parseAmount } from "@/features/finance/lib/money";
 import {
   PAYMENT_METHOD_LABELS,
@@ -29,7 +30,7 @@ import {
   type TransactionType,
 } from "@/features/finance/types/common";
 import type { FinanceAccount } from "@/features/finance/types/account";
-import type { TransactionCategory } from "@/features/finance/types/category";
+import type { CategoryKind, TransactionCategory } from "@/features/finance/types/category";
 import type {
   CreateTransactionInput,
   Transaction,
@@ -53,6 +54,8 @@ interface TransactionFormDialogProps {
   saving: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: CreateTransactionInput) => Promise<void>;
+  /** Creates a new category when the typed name doesn't match an existing one. */
+  onCreateCategory: (name: string, kind: CategoryKind) => Promise<TransactionCategory>;
 }
 
 const TransactionFormDialog = ({
@@ -64,11 +67,12 @@ const TransactionFormDialog = ({
   saving,
   onOpenChange,
   onSubmit,
+  onCreateCategory,
 }: TransactionFormDialogProps) => {
   const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
   const [title, setTitle] = useState("");
-  const [categoryId, setCategoryId] = useState<string>(NONE_VALUE);
+  const [categoryText, setCategoryText] = useState("");
   const [accountId, setAccountId] = useState<string>(NONE_VALUE);
   const [transferAccountId, setTransferAccountId] = useState<string>(NONE_VALUE);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
@@ -83,7 +87,9 @@ const TransactionFormDialog = ({
     setType(transaction?.type ?? "expense");
     setAmount(transaction ? String(transaction.amount) : "");
     setTitle(transaction?.title ?? "");
-    setCategoryId(transaction?.categoryId ?? NONE_VALUE);
+    setCategoryText(
+      categories.find((category) => category.id === transaction?.categoryId)?.name ?? "",
+    );
     setAccountId(transaction?.accountId ?? NONE_VALUE);
     setTransferAccountId(transaction?.transferAccountId ?? NONE_VALUE);
     setPaymentMethod(transaction?.paymentMethod ?? "cash");
@@ -92,6 +98,7 @@ const TransactionFormDialog = ({
     setNotes(transaction?.notes ?? "");
     setTags(transaction?.tags.join(", ") ?? "");
     setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when the dialog opens
   }, [open, transaction, defaultDateKey]);
 
   const availableCategories = useMemo(
@@ -99,13 +106,14 @@ const TransactionFormDialog = ({
     [categories, type],
   );
 
-  // Keep the selected category valid when the type flips.
-  useEffect(() => {
-    if (type === "transfer") return;
-    if (categoryId !== NONE_VALUE && !availableCategories.some((c) => c.id === categoryId)) {
-      setCategoryId(NONE_VALUE);
-    }
-  }, [type, availableCategories, categoryId]);
+  const matchCategory = (text: string) => {
+    const wanted = text.trim().toLowerCase();
+    if (!wanted) return undefined;
+    const wantedSlug = slugifyCategory(text);
+    return availableCategories.find(
+      (category) => category.name.toLowerCase() === wanted || category.slug === wantedSlug,
+    );
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -138,11 +146,18 @@ const TransactionFormDialog = ({
       .slice(0, 20);
 
     try {
+      let resolvedCategoryId: string | null = null;
+      if (type !== "transfer" && categoryText.trim()) {
+        const existing = matchCategory(categoryText);
+        resolvedCategoryId = existing
+          ? existing.id
+          : (await onCreateCategory(categoryText.trim(), type)).id;
+      }
       await onSubmit({
         type,
         amount: parsedAmount,
         title: trimmedTitle,
-        categoryId: type === "transfer" ? null : categoryId === NONE_VALUE ? null : categoryId,
+        categoryId: resolvedCategoryId,
         accountId: accountId === NONE_VALUE ? null : accountId,
         transferAccountId:
           type === "transfer" && transferAccountId !== NONE_VALUE ? transferAccountId : null,
@@ -228,20 +243,28 @@ const TransactionFormDialog = ({
 
           {type !== "transfer" && (
             <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId} disabled={saving}>
-                <SelectTrigger aria-label="Category">
-                  <SelectValue placeholder="Uncategorized" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_VALUE}>Uncategorized</SelectItem>
-                  {availableCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="tx-category">Category</Label>
+              <Input
+                id="tx-category"
+                list="tx-category-options"
+                value={categoryText}
+                maxLength={40}
+                autoComplete="off"
+                autoCapitalize="words"
+                placeholder="Type or pick a category"
+                onChange={(event) => setCategoryText(event.target.value)}
+                disabled={saving}
+              />
+              <datalist id="tx-category-options">
+                {availableCategories.map((category) => (
+                  <option key={category.id} value={category.name} />
+                ))}
+              </datalist>
+              {categoryText.trim() && !matchCategory(categoryText) && (
+                <p className="text-xs text-muted-foreground">
+                  “{categoryText.trim()}” will be added as a new category.
+                </p>
+              )}
             </div>
           )}
 

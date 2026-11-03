@@ -148,17 +148,17 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
       {/* Stat rings + streaks */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <GlassCard className="flex items-center gap-3">
-          <CompletionRing value={habitStats.pct} label="Habits" />
-          <div>
-            <p className="text-sm font-bold text-foreground">{habitStats.completed}/{habitStats.total}</p>
-            <p className="text-xs text-muted-foreground">completed</p>
-          </div>
-        </GlassCard>
-        <GlassCard className="flex items-center gap-3">
           <CompletionRing value={taskStats.pct} label="Tasks" />
           <div>
             <p className="text-sm font-bold text-foreground">{taskStats.completedToday}</p>
             <p className="text-xs text-muted-foreground">done today</p>
+          </div>
+        </GlassCard>
+        <GlassCard className="flex items-center gap-3">
+          <CompletionRing value={habitStats.pct} label="Habits" />
+          <div>
+            <p className="text-sm font-bold text-foreground">{habitStats.completed}/{habitStats.total}</p>
+            <p className="text-xs text-muted-foreground">completed</p>
           </div>
         </GlassCard>
         <GlassCard>
@@ -180,62 +180,6 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Today's habits */}
-        <GlassCard className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
-              <CheckSquare size={16} className="text-primary" /> Today’s Habits
-            </h3>
-            <button
-              type="button"
-              onClick={() => onNavigate("habits")}
-              className="text-xs font-semibold text-primary hover:underline"
-            >
-              View all
-            </button>
-          </div>
-          {dashboard.habitsDueToday.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">No habits scheduled today.</p>
-          ) : (
-            <ul className="space-y-2">
-              {dashboard.habitsDueToday.map((habit) => {
-                const colors = getHabitColorClasses(habit.color);
-                const Icon = getHabitIcon(habit.icon);
-                const done = habit.stats.completedToday;
-                const locked = done && undo.isLocked("habit", habit.id, dashboard.todayKey);
-                return (
-                  <li key={habit.id} className="flex items-center gap-3">
-                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", colors.chip)}>
-                      <Icon size={18} className={colors.icon} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={cn("truncate text-sm font-semibold text-foreground", done && "line-through opacity-60")}>
-                        {habit.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{habit.stats.currentStreak} day streak</p>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={locked ? "Completed — locked for today" : done ? "Undo completion" : "Mark done"}
-                      aria-pressed={done}
-                      title={locked ? "Already undone once today — locked as done" : undefined}
-                      onClick={() => handleHabitClick(habit)}
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition",
-                        done
-                          ? cn(colors.solid, "border-transparent text-white", locked && "cursor-default opacity-90")
-                          : "border-border text-muted-foreground hover:border-primary hover:text-primary",
-                      )}
-                    >
-                      {locked ? <Lock size={13} strokeWidth={2.5} /> : <Check size={16} strokeWidth={done ? 3 : 2} />}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </GlassCard>
-
         {/* Today's tasks */}
         <GlassCard className="space-y-3">
           <div className="flex items-center justify-between">
@@ -288,6 +232,62 @@ const ProductivityDashboardPage = ({ onNavigate }: ProductivityDashboardPageProp
                       {task.title}
                     </p>
                     <span className="shrink-0 text-xs capitalize text-muted-foreground">{task.priority}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </GlassCard>
+
+        {/* Today's habits */}
+        <GlassCard className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <CheckSquare size={16} className="text-primary" /> Today’s Habits
+            </h3>
+            <button
+              type="button"
+              onClick={() => onNavigate("habits")}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View all
+            </button>
+          </div>
+          {dashboard.habitsDueToday.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">No habits scheduled today.</p>
+          ) : (
+            <ul className="space-y-2">
+              {dashboard.habitsDueToday.map((habit) => {
+                const colors = getHabitColorClasses(habit.color);
+                const Icon = getHabitIcon(habit.icon);
+                const done = habit.stats.completedToday;
+                const locked = done && undo.isLocked("habit", habit.id, dashboard.todayKey);
+                return (
+                  <li key={habit.id} className="flex items-center gap-3">
+                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", colors.chip)}>
+                      <Icon size={18} className={colors.icon} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={cn("truncate text-sm font-semibold text-foreground", done && "line-through opacity-60")}>
+                        {habit.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{habit.stats.currentStreak} day streak</p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={locked ? "Completed — locked for today" : done ? "Undo completion" : "Mark done"}
+                      aria-pressed={done}
+                      title={locked ? "Already undone once today — locked as done" : undefined}
+                      onClick={() => handleHabitClick(habit)}
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition",
+                        done
+                          ? cn(colors.solid, "border-transparent text-white", locked && "cursor-default opacity-90")
+                          : "border-border text-muted-foreground hover:border-primary hover:text-primary",
+                      )}
+                    >
+                      {locked ? <Lock size={13} strokeWidth={2.5} /> : <Check size={16} strokeWidth={done ? 3 : 2} />}
+                    </button>
                   </li>
                 );
               })}
