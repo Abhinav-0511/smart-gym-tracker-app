@@ -6,6 +6,7 @@ import {
   filterTransactions,
   hasActiveFilters,
   sortByRecency,
+  summarizeTransactions,
 } from "@/features/finance/lib/filters";
 
 const sample = [
@@ -50,6 +51,13 @@ describe("hasActiveFilters", () => {
   it("ignores the free-text search", () => {
     expect(hasActiveFilters({ ...defaultFilters(), search: "x" })).toBe(false);
     expect(hasActiveFilters({ ...defaultFilters(), types: ["income"] })).toBe(true);
+  });
+});
+
+describe("summarizeTransactions", () => {
+  it("totals income and expense, ignoring transfers", () => {
+    const withTransfer = [...sample, makeTx({ id: "t", type: "transfer", amount: 999, occurredOn: "2026-07-13" })];
+    expect(summarizeTransactions(withTransfer)).toEqual({ income: 1000, expense: 300, net: 700 });
   });
 });
 
