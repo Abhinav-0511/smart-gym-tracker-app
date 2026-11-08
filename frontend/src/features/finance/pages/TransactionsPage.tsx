@@ -5,6 +5,13 @@ import { toast as sonnerToast } from "sonner";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -31,12 +38,13 @@ import { useCategories } from "@/features/finance/hooks/useCategories";
 import { useRecurring } from "@/features/finance/hooks/useRecurring";
 import { useTransactions } from "@/features/finance/hooks/useTransactions";
 import { buildMonthGrid, transactionsOnDay } from "@/features/finance/lib/calendar";
-import { formatDayLabel, isInMonth } from "@/features/finance/lib/dates";
+import { endOfMonthKey, formatDayLabel, isInMonth, startOfMonthKey } from "@/features/finance/lib/dates";
 import {
   defaultFilters,
   filterTransactions,
   hasActiveFilters,
   sortByRecency,
+  summarizeTransactions,
   type TransactionFilters,
 } from "@/features/finance/lib/filters";
 import { formatCurrency } from "@/features/finance/lib/money";
@@ -96,6 +104,8 @@ const TransactionsPage = () => {
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters());
   const [filterOpen, setFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [periodMode, setPeriodMode] = useState<"overall" | "month">("overall");
+  const [periodMonth, setPeriodMonth] = useState(data.monthKey);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -111,9 +121,24 @@ const TransactionsPage = () => {
     useState<RecurringTransaction | null>(null);
 
   const filtered = useMemo(() => {
-    const withSearch = { ...filters, search };
+    const withSearch: TransactionFilters = {
+      ...filters,
+      search,
+      ...(periodMode === "month"
+        ? { fromDate: startOfMonthKey(periodMonth), toDate: endOfMonthKey(periodMonth) }
+        : {}),
+    };
     return sortByRecency(filterTransactions(data.transactions, withSearch, data.categoryNameById));
-  }, [data.transactions, data.categoryNameById, filters, search]);
+  }, [data.transactions, data.categoryNameById, filters, search, periodMode, periodMonth]);
+
+  const totals = useMemo(() => summarizeTransactions(filtered), [filtered]);
+
+  const accountSelectValue =
+    filters.accountIds.length === 0
+      ? "all"
+      : filters.accountIds.length === 1
+        ? filters.accountIds[0]
+        : "multiple";
 
   const visible = filtered.slice(0, visibleCount);
 
@@ -238,6 +263,82 @@ const TransactionsPage = () => {
 
       {view === "list" && (
         <>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex gap-1 rounded-full bg-secondary p-1">
+              {(["overall", "month"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    setPeriodMode(mode);
+                    setVisibleCount(PAGE_SIZE);
+                  }}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    periodMode === mode
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {mode === "overall" ? "Overall" : "Month-wise"}
+                </button>
+              ))}
+            </div>
+            {periodMode === "month" && (
+              <MonthNav
+                monthKey={periodMonth}
+                onChange={(next) => {
+                  setPeriodMonth(next);
+                  setVisibleCount(PAGE_SIZE);
+                }}
+                maxMonthKey={data.monthKey}
+              />
+            )}
+            {data.accounts.length > 0 && (
+              <Select
+                value={accountSelectValue}
+                onValueChange={(value) => {
+                  setFilters({ ...filters, accountIds: value === "all" ? [] : [value] });
+                  setVisibleCount(PAGE_SIZE);
+                }}
+              >
+                <SelectTrigger className="h-9 w-auto min-w-[10rem]" aria-label="Filter by account">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All accounts</SelectItem>
+                  {accountSelectValue === "multiple" && (
+                    <SelectItem value="multiple" disabled>
+                      {filters.accountIds.length} accounts
+                    </SelectItem>
+                  )}
+                  {data.accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <GlassCard className="p-3 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Income</p>
+              <p className="mt-1 text-sm font-bold text-emerald-500">{formatCurrency(totals.income, currency)}</p>
+            </GlassCard>
+            <GlassCard className="p-3 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Spending</p>
+              <p className="mt-1 text-sm font-bold text-rose-500">{formatCurrency(totals.expense, currency)}</p>
+            </GlassCard>
+            <GlassCard className="p-3 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Net</p>
+              <p className={cn("mt-1 text-sm font-bold", totals.net >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                {formatCurrency(totals.net, currency)}
+              </p>
+            </GlassCard>
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

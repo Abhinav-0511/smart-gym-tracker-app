@@ -102,6 +102,23 @@ export function filterTransactions(
   });
 }
 
+export interface TransactionTotals {
+  income: number;
+  expense: number;
+  net: number;
+}
+
+/** Income / spending totals for a set of transactions. Transfers are excluded. */
+export function summarizeTransactions(transactions: Transaction[]): TransactionTotals {
+  let income = 0;
+  let expense = 0;
+  for (const tx of transactions) {
+    if (tx.type === "income") income += tx.amount;
+    else if (tx.type === "expense") expense += tx.amount;
+  }
+  return { income, expense, net: income - expense };
+}
+
 /** Sort transactions newest-first (by day, then time, then insertion). */
 export function sortByRecency(transactions: Transaction[]): Transaction[] {
   return [...transactions].sort(
