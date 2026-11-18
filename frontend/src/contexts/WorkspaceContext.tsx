@@ -5,6 +5,7 @@ import {
   WorkspaceContext,
   type WorkspaceContextValue,
 } from "@/contexts/workspace-context";
+import { saveLastRoute } from "@/lib/last-route";
 import type { WorkspaceId } from "@/features/workspace/types";
 import {
   DEFAULT_MODULE_PREFERENCES,
@@ -61,6 +62,10 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(STORAGE_KEY, activeWorkspaceId);
   }, [activeWorkspaceId]);
+
+  useEffect(() => {
+    saveLastRoute(location.pathname, location.search);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const activePreference = modulePreferences.find(
