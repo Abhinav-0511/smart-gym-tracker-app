@@ -19,6 +19,7 @@ import {
   logoutSession,
   signupWithPassword,
   subscribeToAuthChanges,
+  withTimeout,
   type LoginCredentials,
   type SignupCredentials,
 } from "@/services/auth";
@@ -31,6 +32,8 @@ import {
   type Profile,
   type ProfileUpdate,
 } from "@/services/profiles";
+
+const PROFILE_TIMEOUT_MS = 5000;
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -64,7 +67,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
 
     try {
-      const nextProfile = await getOrCreateProfile(nextSession.user);
+      // Offline: skip the doomed network call and use the cached profile.
+      if (navigator.onLine === false && readCachedProfile(nextSession.user.id)) {
+        throw new Error("offline");
+      }
+      const nextProfile = await withTimeout(getOrCreateProfile(nextSession.user), PROFILE_TIMEOUT_MS);
       cacheProfile(nextProfile);
 
       if (requestId.current === currentRequestId) {

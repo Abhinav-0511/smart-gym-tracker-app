@@ -1,5 +1,6 @@
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
+import { env } from "@/config/env";
 import { supabase } from "@/lib/supabase";
 
 export interface LoginCredentials {
@@ -122,14 +123,59 @@ export function getAuthErrorMessage(
   return error.message || fallback;
 }
 
-export async function getCurrentSession(): Promise<Session | null> {
-  const { data, error } = await supabase.auth.getSession();
+/** Rejects if `promise` hasn't settled within `ms` (the promise itself keeps running). */
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("Request timed out")), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
-  if (error) {
-    throw error;
+/**
+ * Reads the persisted Supabase session straight from storage, with no network.
+ * Used when offline: `getSession()` tries to refresh an expired token and keeps
+ * retrying with backoff, which would hold the launch screen indefinitely.
+ */
+function readStoredSession(): Session | null {
+  try {
+    const ref = new URL(env.supabaseUrl).hostname.split(".")[0];
+    const raw = window.localStorage.getItem(`sb-${ref}-auth-token`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Session | null;
+    return parsed?.user && parsed.access_token ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+const SESSION_TIMEOUT_MS = 4000;
+
+export async function getCurrentSession(): Promise<Session | null> {
+  // Offline: don't wait on a token refresh that cannot succeed.
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return readStoredSession();
   }
 
-  return data.session;
+  try {
+    const { data, error } = await withTimeout(supabase.auth.getSession(), SESSION_TIMEOUT_MS);
+    if (error) throw error;
+    return data.session;
+  } catch (error) {
+    // Slow / "connected but no internet" network: fall back to the stored session
+    // so the app can open from its local caches instead of spinning forever.
+    const stored = readStoredSession();
+    if (stored) return stored;
+    throw error;
+  }
 }
 
 export function subscribeToAuthChanges(
