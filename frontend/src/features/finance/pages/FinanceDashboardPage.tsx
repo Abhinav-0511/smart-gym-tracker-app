@@ -30,7 +30,7 @@ import { useTransactions } from "@/features/finance/hooks/useTransactions";
 import { computeAllBudgetProgress } from "@/features/finance/lib/budget-progress";
 import { addDays, formatDayLabel } from "@/features/finance/lib/dates";
 import { getFinanceColorClasses, getFinanceColorHex } from "@/features/finance/lib/finance-colors";
-import { sortByRecency } from "@/features/finance/lib/filters";
+import { defaultFilters, filterTransactions, sortByRecency } from "@/features/finance/lib/filters";
 import { computeMonthSummary } from "@/features/finance/lib/finance-summary";
 import { formatCurrency } from "@/features/finance/lib/money";
 import { DEFAULT_CURRENCY } from "@/features/finance/types/common";
@@ -56,14 +56,36 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
   const [month, setMonth] = useState(data.monthKey);
   const [formOpen, setFormOpen] = useState(false);
 
+  const [accountIds, setAccountIds] = useState<string[]>([]);
+
+  const toggleAccount = (id: string) =>
+    setAccountIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  // Drop selections for accounts that no longer exist.
+  const activeAccountIds = useMemo(
+    () => accountIds.filter((id) => data.accounts.some((account) => account.id === id)),
+    [accountIds, data.accounts],
+  );
+
+  const scopedTransactions = useMemo(
+    () =>
+      activeAccountIds.length === 0
+        ? data.transactions
+        : filterTransactions(data.transactions, { ...defaultFilters(), accountIds: activeAccountIds }),
+    [data.transactions, activeAccountIds],
+  );
+
   const summary = useMemo(
-    () => computeMonthSummary(data.transactions, month),
-    [data.transactions, month],
+    () => computeMonthSummary(scopedTransactions, month),
+    [scopedTransactions, month],
   );
 
   const netBalance = useMemo(
-    () => data.accounts.reduce((sum, account) => sum + account.balance, 0),
-    [data.accounts],
+    () =>
+      data.accounts
+        .filter((account) => activeAccountIds.length === 0 || activeAccountIds.includes(account.id))
+        .reduce((sum, account) => sum + account.balance, 0),
+    [data.accounts, activeAccountIds],
   );
 
   const pieSlices = useMemo<CategorySlice[]>(() => {
@@ -91,19 +113,25 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
     [summary.daily],
   );
 
-  const recent = useMemo(() => sortByRecency(data.transactions).slice(0, 5), [data.transactions]);
+  const recent = useMemo(() => sortByRecency(scopedTransactions).slice(0, 5), [scopedTransactions]);
 
   const topBudgets = useMemo(
-    () => computeAllBudgetProgress(budgetsQuery.data ?? [], data.transactions, data.todayKey).slice(0, 3),
-    [budgetsQuery.data, data.transactions, data.todayKey],
+    () => computeAllBudgetProgress(budgetsQuery.data ?? [], scopedTransactions, data.todayKey).slice(0, 3),
+    [budgetsQuery.data, scopedTransactions, data.todayKey],
   );
 
   const upcomingBills = useMemo(() => {
     const horizon = addDays(data.todayKey, 30);
     return (recurringQuery.data ?? [])
-      .filter((item) => item.isActive && item.nextRunOn <= horizon)
+      .filter(
+        (item) =>
+          item.isActive
+          && item.nextRunOn <= horizon
+          && (activeAccountIds.length === 0
+            || (item.accountId !== null && activeAccountIds.includes(item.accountId))),
+      )
       .slice(0, 4);
-  }, [recurringQuery.data, data.todayKey]);
+  }, [recurringQuery.data, data.todayKey, activeAccountIds]);
 
   const handleCreate = async (input: CreateTransactionInput) => {
     await createMutation.mutateAsync(input);
@@ -163,17 +191,33 @@ const FinanceDashboardPage = ({ onNavigate }: FinanceDashboardPageProps) => {
 
       <GlassCard>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">Net worth</h3>
+          <h3 className="text-sm font-bold text-foreground">
+            {activeAccountIds.length > 0 ? "Selected balance" : "Net worth"}
+          </h3>
           <span className="text-lg font-extrabold text-foreground">{formatCurrency(netBalance, currency)}</span>
         </div>
         {data.accounts.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">
-            {data.accounts.map((account) => (
-              <div key={account.id} className="rounded-xl bg-secondary/40 px-3 py-2">
-                <p className="text-xs font-semibold text-muted-foreground">{account.name}</p>
-                <p className="text-sm font-bold text-foreground">{formatCurrency(account.balance, account.currency)}</p>
-              </div>
-            ))}
+            {data.accounts.map((account) => {
+              const selected = activeAccountIds.includes(account.id);
+              return (
+                <button
+                  key={account.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleAccount(account.id)}
+                  className={cn(
+                    "rounded-xl px-3 py-2 text-left transition-colors",
+                    selected
+                      ? "bg-primary/15 ring-2 ring-primary"
+                      : "bg-secondary/40 hover:bg-secondary/60",
+                  )}
+                >
+                  <p className="text-xs font-semibold text-muted-foreground">{account.name}</p>
+                  <p className="text-sm font-bold text-foreground">{formatCurrency(account.balance, account.currency)}</p>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
