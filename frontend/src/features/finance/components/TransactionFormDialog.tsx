@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { slugifyCategory } from "@/features/finance/lib/default-categories";
+import {
+  clearTransactionDraft,
+  readTransactionDraft,
+  saveTransactionDraft,
+} from "@/features/finance/lib/transaction-draft";
 import { parseAmount } from "@/features/finance/lib/money";
 import {
   PAYMENT_METHOD_LABELS,
@@ -82,8 +88,34 @@ const TransactionFormDialog = ({
   const [tags, setTags] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const { pathname } = useLocation();
+  const isNew = transaction === null;
+
+  // Relaunch recovery: if an interrupted new-transaction draft exists for this
+  // screen, reopen the form so the user lands back in it.
+  useEffect(() => {
+    if (!open && isNew && readTransactionDraft(pathname)) onOpenChange(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    const draft = isNew ? readTransactionDraft(pathname) : null;
+    if (draft) {
+      setType(draft.type as TransactionType);
+      setAmount(draft.amount);
+      setTitle(draft.title);
+      setCategoryText(draft.categoryText);
+      setAccountId(draft.accountId);
+      setTransferAccountId(draft.transferAccountId);
+      setPaymentMethod(draft.paymentMethod as PaymentMethod);
+      setOccurredOn(draft.occurredOn);
+      setOccurredAt(draft.occurredAt);
+      setNotes(draft.notes);
+      setTags(draft.tags);
+      setError(null);
+      return;
+    }
     setType(transaction?.type ?? "expense");
     setAmount(transaction ? String(transaction.amount) : "");
     setTitle(transaction?.title ?? "");
@@ -100,6 +132,34 @@ const TransactionFormDialog = ({
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when the dialog opens
   }, [open, transaction, defaultDateKey]);
+
+  // Keep the draft current while a new transaction is being entered.
+  useEffect(() => {
+    if (!open || !isNew) return;
+    saveTransactionDraft({
+      path: pathname,
+      type,
+      amount,
+      title,
+      categoryText,
+      accountId,
+      transferAccountId,
+      paymentMethod,
+      occurredOn,
+      occurredAt,
+      notes,
+      tags,
+    });
+  }, [
+    open, isNew, pathname, type, amount, title, categoryText, accountId,
+    transferAccountId, paymentMethod, occurredOn, occurredAt, notes, tags,
+  ]);
+
+  // Any deliberate close (Cancel, outside tap, Esc, successful save) discards it.
+  const closeDialog = (next: boolean) => {
+    if (!next) clearTransactionDraft();
+    onOpenChange(next);
+  };
 
   const availableCategories = useMemo(
     () => categories.filter((category) => category.kind === type),
@@ -167,14 +227,14 @@ const TransactionFormDialog = ({
         notes: notes.trim() || null,
         tags: parsedTags,
       });
-      onOpenChange(false);
+      closeDialog(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Couldn’t save transaction.");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !saving && onOpenChange(next)}>
+    <Dialog open={open} onOpenChange={(next) => !saving && closeDialog(next)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{transaction ? "Edit Transaction" : "New Transaction"}</DialogTitle>
@@ -368,7 +428,7 @@ const TransactionFormDialog = ({
           {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
 
           <DialogFooter>
-            <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" disabled={saving} onClick={() => closeDialog(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
